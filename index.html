@@ -150,7 +150,6 @@
             } catch (err) { return { success: false, error: err.message }; }
         }
         
-        // 🌟 優化：正規化排序比對邏輯
         normalizeResult(data) {
             if (!data || data.length === 0) return null;
             let res = data[0];
