@@ -110,7 +110,7 @@
     // 核心配置
     // ==========================================
     const USE_LOCAL_DATA = false;
-    const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxR3eHA3KBgU19KCXx0zysRJGctB2A-zJVpyDbU8UvZd_F1tXO2PnXkn9wmkwur52wKrg/exec';
+    const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxR3eHA3KBgU19KCXx0zysRJGctB2A-zJVpyDbU8UvZd_F1tXO2PnXkn9wmkwur52wKrg/exec'; // ⚠️ 替換為你的 URL
 
     // ==========================================
     // 本地備用數據
@@ -254,9 +254,10 @@
     }
     function loadSandboxEnv() { const q = DB_QUESTIONS.find(q=>q.id===currentQId); if(!q) return; const env = DB_ENVIRONMENTS.find(e=>e.id===q.env_id); if(env && sandbox.SQL) sandbox.loadEnvironment(env.create_sql); }
     function renderQuestionDetail() {
-        const q = DB_QUESTIONS.find(q=>q.id===currentQId); if(!q) { questionDetail.innerHTML = '<div class="result-idle"><p>選擇題目開始</p></div>'; return; }
-        let schemaHtml = ''; try { const schema = JSON.parse(q.schema_json); schemaHtml = `<div class="schema-section"><h4><i class="fas fa-database"></i> SCHEMA</h4><table class="schema-table"><thead><tr><th>Column</th><th>Type</th></tr></thead><tbody>${schema.columns.map(c=>`<tr><td class="${c.pk?'pk':''}">${c.name}</td><td>${c.type}</td></tr>`).join('')}</tbody></table></div>`; } catch(e) {}
-        questionDetail.innerHTML = `<div class="detail-title"><span style="font-family:var(--pixel);font-size:0.4rem;color:var(--accent);">[${q.category.toUpperCase()}]</span><br>${q.title}</div><div class="detail-desc">${q.description}</div><div class="dse-tip"><i class="fas fa-lightbulb"></i><span>${q.dse_tip}</span></div>${schemaHtml}`;
+    const q = DB_QUESTIONS.find(q=>q.id===currentQId);
+    if(!q) { questionDetail.innerHTML = '<div class="result-idle"><p>選擇題目開始</p></div>'; return; }
+    let schemaHtml = ''; try { const schema = JSON.parse(q.schema_json); schemaHtml = `<div class="schema-section"><h4><i class="fas fa-database"></i> SCHEMA</h4><table class="schema-table"><thead><tr><th>Column</th><th>Type</th></tr></thead><tbody>${schema.columns.map(c=>`<tr><td class="${c.pk?'pk':''}">${c.name}</td><td>${c.type}</td></tr>`).join('')}</tbody></table></div>`; } catch(e) {}
+    questionDetail.innerHTML = `<div class="detail-title"><span style="font-family:var(--pixel);font-size:0.4rem;color:var(--accent);">[${q.category.toUpperCase()}]</span><br>${q.title}</div><div class="detail-desc">${q.description}</div><div class="dse-tip"><i class="fas fa-lightbulb"></i><span>${q.dse_tip}</span></div>${schemaHtml}`;
     }
     function updateLineNumbers(){const lines=sqlEditor.value.split('\n').length;const nums=[];for(let i=1;i<=Math.max(lines,8);i++)nums.push(`<div>${i}</div>`);lineNumbers.innerHTML=nums.join('');}
     sqlEditor.addEventListener('input',()=>{updateLineNumbers();charCount.textContent=sqlEditor.value.length+' 字元';});
