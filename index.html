@@ -71,6 +71,7 @@
             <button class="cat-tab" data-cat="where">WHERE</button>
             <button class="cat-tab" data-cat="order">ORDER</button>
             <button class="cat-tab" data-cat="join">JOIN</button>
+            <button class="cat-tab" data-cat="groupby">GROUP</button>
         </nav>
         <div class="nav-right">
             <div class="nav-progress"><span id="progressText">0/0</span><div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div></div>
@@ -106,29 +107,26 @@
     <div class="sys-status" id="sysStatus">引擎載入中...</div>
 
     <script>
-    // ==========================================
-    // 核心配置
-    // ==========================================
-    const USE_LOCAL_DATA = false;
-    const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxR3eHA3KBgU19KCXx0zysRJGctB2A-zJVpyDbU8UvZd_F1tXO2PnXkn9wmkwur52wKrg/exec'; // ⚠️ 替換為你的 URL
+    const USE_LOCAL_DATA = true; 
+    const API_BASE_URL = '你的_APPS_SCRIPT_URL';
 
-    // ==========================================
-    // 本地備用數據
-    // ==========================================
+    // 本地備用數據 (示範新格式：不需要 schema_json)
     const LOCAL_ENVIRONMENTS = [
-        { id: 1, name: '學校成績系統', create_sql: "CREATE TABLE STUDENT (StuID TEXT PRIMARY KEY, StuName TEXT, Gender TEXT, Form INTEGER, Class TEXT); INSERT INTO STUDENT VALUES ('S001', '陳大文', 'M', 5, '5A'); INSERT INTO STUDENT VALUES ('S002', '李小美', 'F', 5, '5B'); INSERT INTO STUDENT VALUES ('S003', '張志明', 'M', 4, '4A'); CREATE TABLE ENROLLMENT (StuID TEXT, CourseName TEXT); INSERT INTO ENROLLMENT VALUES ('S001', 'ICT'); INSERT INTO ENROLLMENT VALUES ('S002', 'MATH');" }
+        { id: 1, name: '學校成績系統', create_sql: "CREATE TABLE STUDENT (Stdno TEXT PRIMARY KEY, SName TEXT, Sex TEXT, Class TEXT, ChiMark INTEGER);\nINSERT INTO STUDENT VALUES ('S01', 'Chan Tai Man', 'M', '4A', 85);\nINSERT INTO STUDENT VALUES ('S02', 'Wong May', 'F', '4A', 92);\nINSERT INTO STUDENT VALUES ('S03', 'Cheung San', 'M', '4B', 58);\nINSERT INTO STUDENT VALUES ('S04', 'Lee Lai Ching', 'F', '4B', 74);\nCREATE TABLE CLUB (ClubID TEXT PRIMARY KEY, ClubName TEXT, LeaderID TEXT);\nINSERT INTO CLUB VALUES ('C01', 'Chess Club', 'S01');\nINSERT INTO CLUB VALUES ('C02', 'Art Club', 'S04');" }
     ];
     const LOCAL_QUESTIONS = [
-        { id: 1, env_id: 1, category: 'basic', title: '查詢所有學生資料', description: '從 STUDENT 表中查詢所有學生的全部資料。', dse_tip: 'SELECT * 的基本用法。', schema_json: '{"name":"STUDENT","columns":[{"name":"StuID","type":"TEXT","pk":true},{"name":"StuName","type":"TEXT"},{"name":"Form","type":"INTEGER"}]}', answer_sql: 'SELECT * FROM STUDENT;', difficulty: 1 },
-        { id: 2, env_id: 1, category: 'where', title: '條件篩選', description: '查詢就讀五年級（Form = 5）的學生。', dse_tip: 'WHERE 子句等值篩選。', schema_json: '{"name":"STUDENT","columns":[{"name":"StuID","type":"TEXT","pk":true},{"name":"Form","type":"INTEGER"}]}', answer_sql: 'SELECT * FROM STUDENT WHERE Form = 5;', difficulty: 2 },
-        { id: 3, env_id: 1, category: 'join', title: '雙表連接', description: '查詢每位學生的姓名及其選修課程。', dse_tip: 'INNER JOIN 用法。', schema_json: '{"name":"STUDENT+ENROLLMENT","columns":[{"name":"StuID","type":"TEXT","pk":true},{"name":"CourseName","type":"TEXT"}]}', answer_sql: 'SELECT STUDENT.StuName, ENROLLMENT.CourseName FROM STUDENT INNER JOIN ENROLLMENT ON STUDENT.StuID = ENROLLMENT.StuID;', difficulty: 3 }
+        { id: 1, env_id: 1, category: 'basic', title: '檢索所有學生記錄', description: '從 STUDENT 表中查詢所有學生的所有欄位資料。', dse_tip: '使用 SELECT * 選取所有欄位。', answer_sql: 'SELECT * FROM STUDENT ORDER BY Stdno;', difficulty: 1 },
+        { id: 2, env_id: 1, category: 'where', title: '查詢及格學生', description: '查詢中文成績 大於或等於 60 分的學生的姓名 和班別。', dse_tip: 'WHERE 子句設定篩選條件 >= 60。', answer_sql: 'SELECT SName, Class FROM STUDENT WHERE ChiMark >= 60 ORDER BY Stdno;', difficulty: 1 },
+        { id: 3, env_id: 1, category: 'order', title: '按班別排序', description: '查詢學號、姓名 和班別，並按班別 遞升排序。', dse_tip: 'ORDER BY Class 遞升排序。', answer_sql: 'SELECT Stdno, SName, Class FROM STUDENT ORDER BY Class, Stdno;', difficulty: 1 },
+        { id: 4, env_id: 1, category: 'groupby', title: '按性別統計人數', description: '按性別 分組，統計男生和女生各自的總人數。', dse_tip: 'GROUP BY Sex 搭配 COUNT(*)。', answer_sql: 'SELECT Sex, COUNT(*) AS StuCount FROM STUDENT GROUP BY Sex ORDER BY Sex;', difficulty: 2 },
+        { id: 5, env_id: 1, category: 'join', title: '查詢學會與主席', description: '連接 CLUB 和 STUDENT 表，查詢學會名稱 及其主席姓名。', dse_tip: 'INNER JOIN 透過 CLUB.LeaderID = STUDENT.Stdno 連接。', answer_sql: 'SELECT CLUB.ClubName, STUDENT.SName FROM CLUB INNER JOIN STUDENT ON CLUB.LeaderID = STUDENT.Stdno ORDER BY CLUB.ClubID;', difficulty: 2 }
     ];
 
     // ==========================================
-    // 瀏覽器內 SQL 執行引擎
+    // 🌟 核心：SQL 解析與執行引擎
     // ==========================================
     class SqlSandbox {
-        constructor() { this.db = null; this.SQL = null; }
+        constructor() { this.db = null; this.SQL = null; this.currentSchema = []; }
         async init() {
             try {
                 this.SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` });
@@ -138,9 +136,52 @@
                 return true;
             } catch (err) { document.getElementById('sysStatus').textContent = '❌ 引擎載入失敗'; return false; }
         }
-        loadEnvironment(createSql) { this.db = new this.SQL.Database(); try { this.db.run(createSql); return true; } catch (err) { console.error(err); return false; } }
+        
+        // 🌟 自動從 CREATE TABLE 語句解析 Schema
+        parseCreateSql(createSql) {
+            const tables = [];
+            const regex = /CREATE\s+TABLE\s+(\w+)\s*\(([\s\S]*?)\)/gi;
+            let match;
+            while ((match = regex.exec(createSql)) !== null) {
+                const tableName = match[1];
+                const columnsStr = match[2];
+                const columns = [];
+                let pkCol = null;
+                const lines = columnsStr.split(',');
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    const pkMatch = trimmed.match(/PRIMARY\s+KEY\s*\(([^)]+)\)/i);
+                    if (pkMatch) { pkCol = pkMatch[1].trim(); continue; }
+                    const colMatch = trimmed.match(/^(\w+)\s+(TEXT|INTEGER|INT|VARCHAR\(\d+\)|CHAR\(\d+\))/i);
+                    if (colMatch) {
+                        const colName = colMatch[1];
+                        const colType = colMatch[2].toUpperCase().replace(/VARCHAR\(\d+\)/, 'TEXT').replace(/CHAR\(\d+\)/, 'TEXT').replace(/INT$/, 'INTEGER');
+                        const isPk = trimmed.toUpperCase().includes('PRIMARY KEY') || pkCol === colName;
+                        columns.push({ name: colName, type: colType, pk: isPk });
+                    }
+                }
+                if (columns.length > 0) tables.push({ name: tableName, columns });
+            }
+            this.currentSchema = tables;
+            return tables;
+        }
+        
+        loadEnvironment(createSql) { 
+            this.db = new this.SQL.Database(); 
+            try { 
+                if (!createSql) throw new Error('create_sql 為空');
+                const stmts = createSql.split(';').map(s => s.trim()).filter(s => s.length > 0);
+                for (const stmt of stmts) this.db.run(stmt);
+                this.parseCreateSql(createSql); // 解析並存取 Schema
+                return true; 
+            } catch (err) { 
+                console.error('❌ 環境建置失敗:', err.message); 
+                return false; 
+            } 
+        }
+        
         executeSql(sql) {
-            if (!this.db) return { success: false, error: '資料庫未初始化' };
+            if (!this.db) return { success: false, error: '資料庫未初始化。請點擊左側題目載入環境。' };
             try {
                 const dangerousRegex = /\b(DROP|ALTER|TRUNCATE|CREATE|INSERT|UPDATE|DELETE|GRANT)\b/i;
                 if (dangerousRegex.test(sql)) return { success: false, error: '安全限制：僅允許 SELECT 查詢。' };
@@ -150,33 +191,25 @@
             } catch (err) { return { success: false, error: err.message }; }
         }
         
+        // 🌟 答案比對：統一排序正規化
         normalizeResult(data) {
             if (!data || data.length === 0) return null;
             let res = data[0];
             if (!res || !res.columns || !res.rows) return null;
-            
-            // 將每一行轉換為字串並排序，解決資料庫回傳順序不一致的問題
-            let sortedRows = res.rows.map(row => {
-                return row.map(cell => cell === null ? 'NULL' : String(cell)).join('|||');
-            });
+            let sortedRows = res.rows.map(row => row.map(cell => cell === null ? 'NULL' : String(cell)).join('|||'));
             sortedRows.sort();
-            
-            return { columns: res.columns, sortedRows: sortedRows };
+            return { columns: res.columns, sortedRows };
         }
 
         checkAnswer(studentSql, answerSql) {
             const studentRes = this.executeSql(studentSql);
             const answerRes = this.executeSql(answerSql);
             if (!studentRes.success) return { isCorrect: false, message: studentRes.error, studentData: null };
-            if (!answerRes.success) return { isCorrect: false, message: '標準答案語法錯誤', studentData: null };
-            
+            if (!answerRes.success) return { isCorrect: false, message: '標準答案語法錯誤: ' + answerRes.error, studentData: null };
             const normStudent = this.normalizeResult(studentRes.data);
             const normAnswer = this.normalizeResult(answerRes.data);
-            
-            // 比對欄位名稱與排序後的資料行
             const isCorrect = JSON.stringify(normStudent) === JSON.stringify(normAnswer);
-            
-            return { isCorrect: isCorrect, studentData: studentRes.data[0] };
+            return { isCorrect, studentData: studentRes.data[0] };
         }
     }
 
@@ -201,7 +234,7 @@
           toastContainer=$('toastContainer'), sysStatus=$('sysStatus');
 
     // ==========================================
-    // API 模組 (加強錯誤捕獲)
+    // API 模組
     // ==========================================
     async function loadData() {
         if (USE_LOCAL_DATA) {
@@ -209,19 +242,13 @@
             sysStatus.textContent = '✅ 本地數據模式';
         } else {
             try {
-                const qRes = await fetch(`${API_BASE_URL}?action=getQuestions`);
-                if (!qRes.ok) throw new Error(`HTTP Status: ${qRes.status}`);
-                const qText = await qRes.text();
-                DB_QUESTIONS = JSON.parse(qText); // 若收到 HTML 登入頁會在此報錯
-                
-                const eRes = await fetch(`${API_BASE_URL}?action=getEnvironments`);
-                if (!eRes.ok) throw new Error(`HTTP Status: ${eRes.status}`);
-                const eText = await eRes.text();
-                DB_ENVIRONMENTS = JSON.parse(eText);
-                
+                const qRes = await fetch(`${API_BASE_URL}?action=getQuestions`); if (!qRes.ok) throw new Error(`HTTP ${qRes.status}`);
+                DB_QUESTIONS = await qRes.json();
+                const eRes = await fetch(`${API_BASE_URL}?action=getEnvironments`); if (!eRes.ok) throw new Error(`HTTP ${eRes.status}`);
+                DB_ENVIRONMENTS = await eRes.json();
                 sysStatus.textContent = '✅ 雲端數據已同步';
             } catch (err) {
-                console.error("雲端同步錯誤詳情:", err);
+                console.error("雲端同步錯誤:", err);
                 showToast('error', '雲端同步失敗 (請按F12查看Console)');
                 DB_QUESTIONS = LOCAL_QUESTIONS; DB_ENVIRONMENTS = LOCAL_ENVIRONMENTS;
                 sysStatus.textContent = '⚠️ 雲端失敗，本地模式';
@@ -234,11 +261,11 @@
         if (!isLoggedIn || USE_LOCAL_DATA) return;
         try {
             await fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ username: studentName, question_id: qId, is_correct: isCorrect, submitted_sql: sql }) });
-        } catch (err) { console.error('成績上傳失敗', err); }
+        } catch (err) { console.error('上傳失敗'); }
     }
 
     // ==========================================
-    // UI 渲染邏輯 (維持不變)
+    // UI 渲染邏輯
     // ==========================================
     loginBtn.addEventListener('click', doLogin);
     loginInput.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
@@ -251,13 +278,44 @@
         questionList.innerHTML = filtered.map(q => { const isActive = q.id===currentQId, isDone = completedIds.has(q.id); return `<div class="q-item ${isActive?'active':''} ${isDone?'completed':''}" data-id="${q.id}" tabindex="0"><div class="q-num"><span>${q.id}</span></div><div class="q-title">${q.title}</div><div class="q-diff">${[1,2,3].map(d=>`<div class="dot ${d<=q.difficulty?'filled':''}"></div>`).join('')}</div></div>`; }).join('');
         questionList.querySelectorAll('.q-item').forEach(item=>{item.addEventListener('click',()=>{currentQId=parseInt(item.dataset.id);renderQuestionList();renderQuestionDetail();resetResult();loadSandboxEnv();});});
     }
-    function loadSandboxEnv() { const q = DB_QUESTIONS.find(q=>q.id===currentQId); if(!q) return; const env = DB_ENVIRONMENTS.find(e=>e.id===q.env_id); if(env && sandbox.SQL) sandbox.loadEnvironment(env.create_sql); }
-    function renderQuestionDetail() {
-    const q = DB_QUESTIONS.find(q=>q.id===currentQId);
-    if(!q) { questionDetail.innerHTML = '<div class="result-idle"><p>選擇題目開始</p></div>'; return; }
-    let schemaHtml = ''; try { const schema = JSON.parse(q.schema_json); schemaHtml = `<div class="schema-section"><h4><i class="fas fa-database"></i> SCHEMA</h4><table class="schema-table"><thead><tr><th>Column</th><th>Type</th></tr></thead><tbody>${schema.columns.map(c=>`<tr><td class="${c.pk?'pk':''}">${c.name}</td><td>${c.type}</td></tr>`).join('')}</tbody></table></div>`; } catch(e) {}
-    questionDetail.innerHTML = `<div class="detail-title"><span style="font-family:var(--pixel);font-size:0.4rem;color:var(--accent);">[${q.category.toUpperCase()}]</span><br>${q.title}</div><div class="detail-desc">${q.description}</div><div class="dse-tip"><i class="fas fa-lightbulb"></i><span>${q.dse_tip}</span></div>${schemaHtml}`;
+    
+    function loadSandboxEnv() {
+        const q = DB_QUESTIONS.find(q=>q.id===currentQId); if(!q) return;
+        const targetEnvId = parseInt(q.env_id);
+        const env = DB_ENVIRONMENTS.find(e => parseInt(e.id) === targetEnvId);
+        if (!env) { showToast('error', '找不到對應的資料庫環境 (env_id: ' + q.env_id + ')'); return; }
+        if (!sandbox.SQL) return;
+        const success = sandbox.loadEnvironment(env.create_sql);
+        if (!success) showToast('error', '資料庫建置失敗，請檢查 create_sql');
     }
+    
+    // 🌟 嶄新的題目詳情渲染：自動從 create_sql 解析 Schema
+    function renderQuestionDetail() {
+        const q = DB_QUESTIONS.find(q=>q.id===currentQId);
+        if(!q) { questionDetail.innerHTML = '<div class="result-idle"><p>選擇題目開始</p></div>'; return; }
+        
+        let schemaHtml = '';
+        const tables = sandbox.currentSchema; // 直接從引擎拿解析好的 Schema
+        if (tables && tables.length > 0) {
+            schemaHtml = `<div class="schema-section"><h4><i class="fas fa-database" style="margin-right:3px"></i> SCHEMA</h4>`;
+            tables.forEach(table => {
+                schemaHtml += `
+                <div style="margin-bottom:10px;">
+                    <div style="font-family:var(--pixel);font-size:0.38rem;color:var(--accent);margin-bottom:4px;letter-spacing:0.3px;">TABLE: ${table.name}</div>
+                    <table class="schema-table"><thead><tr><th>Column</th><th>Type</th></tr></thead>
+                    <tbody>${table.columns.map(c=>`<tr><td class="${c.pk?'pk':''}">${c.name}</td><td>${c.type}</td></tr>`).join('')}</tbody></table>
+                </div>`;
+            });
+            schemaHtml += `</div>`;
+        }
+
+        questionDetail.innerHTML = `
+            <div class="detail-title"><span style="font-family:var(--pixel);font-size:0.4rem;color:var(--accent);">[${q.category.toUpperCase()}]</span><br>${q.title}</div>
+            <div class="detail-desc">${q.description}</div>
+            <div class="dse-tip"><i class="fas fa-lightbulb"></i><span>${q.dse_tip}</span></div>
+            ${schemaHtml}`;
+    }
+
     function updateLineNumbers(){const lines=sqlEditor.value.split('\n').length;const nums=[];for(let i=1;i<=Math.max(lines,8);i++)nums.push(`<div>${i}</div>`);lineNumbers.innerHTML=nums.join('');}
     sqlEditor.addEventListener('input',()=>{updateLineNumbers();charCount.textContent=sqlEditor.value.length+' 字元';});
     sqlEditor.addEventListener('scroll',()=>{lineNumbers.scrollTop=sqlEditor.scrollTop;});
