@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@300;400;500;700;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
             --bg: #F0F2F5; --glass: rgba(255,255,255,0.48); --glass-strong: rgba(255,255,255,0.68);
@@ -130,9 +131,17 @@
         </aside>
     </main>
     
-    <!-- 登入彈窗 -->
-    <div class="modal-overlay" id="loginModal"><div class="modal-box"><h2>SQL Quest LOGIN</h2><p style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.9rem;position:relative;z-index:2;">輸入學生代碼開始</p><input type="text" class="modal-input" id="loginInput" placeholder="代碼 (例如 S001)"><br><button class="modal-btn" id="loginBtn">START</button></div></div>
-    
+    <!-- 登入彈窗 (Google OAuth) -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-box">
+            <h2>SQL Quest LOGIN</h2>
+            <p style="font-size:0.8rem;color:var(--text-light);margin-bottom:1.2rem;position:relative;z-index:2;">請使用學校 Google 帳戶登入</p>
+            <!-- Google 登入按鈕將渲染在這裡 -->
+            <div id="googleLoginBtn" style="position:relative;z-index:2;display:flex;justify-content:center;"></div>
+            <p id="loginErrorMsg" style="font-size:0.75rem;color:var(--error);margin-top:1rem;display:none;position:relative;z-index:2;"></p>
+        </div>
+    </div>
+
     <!-- 連線錯誤彈窗 (新增) -->
     <div class="modal-overlay hidden" id="connErrorModal" style="z-index:305;">
         <div class="modal-box" style="border-color:var(--error);">
@@ -154,6 +163,7 @@
     // 核心配置
     // ==========================================
     const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxR3eHA3KBgU19KCXx0zysRJGctB2A-zJVpyDbU8UvZd_F1tXO2PnXkn9wmkwur52wKrg/exec';
+    const GOOGLE_CLIENT_ID = '947607172653-ror27p5j0l16shgm5ta712iq676deaop.apps.googleusercontent.com'; // 例如：123456789-xxxx.apps.googleusercontent.com
 
     // ==========================================
     // SQL 沙盒執行引擎
@@ -349,15 +359,55 @@
     // ==========================================
     // 登入與 UI 邏輯
     // ==========================================
-    loginBtn.addEventListener('click', doLogin);
-    loginInput.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-    
-    function doLogin() { 
-        const code = loginInput.value.trim(); 
-        if(!code){loginInput.style.borderColor='var(--error)';loginInput.focus();return;} 
-        studentName=code; isLoggedIn=true; loginModal.classList.add('hidden'); 
-        showToast('info', '正在讀取作答紀錄...');
-        loadUserProgress(studentName);
+    // 🌟 Google 登入初始化
+    window.onload = function() {
+        if (window.google) {
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse
+            });
+            google.accounts.id.renderButton(
+                document.getElementById('googleLoginBtn'),
+                { theme: "outline", size: "large", text: "signin_with", shape: "pill", width: 280, locale: "zh-HK" }
+            );
+        }
+    };
+
+    // 🌟 接收 Google 返回的 Token
+    function handleCredentialResponse(response) {
+        const errorMsgEl = document.getElementById('loginErrorMsg');
+        errorMsgEl.style.display = 'none';
+        
+        showToast('info', '正在驗證學校身份...');
+        
+        // 將 Token 傳給 GAS 後端驗證
+        fetch(API_BASE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'verifyToken', id_token: response.credential })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.email) {
+                studentName = data.email; // 使用真實 Email 作為學生身份
+                isLoggedIn = true;
+                loginModal.classList.add('hidden');
+                
+                // 開始讀取雲端進度
+                showToast('info', '正在讀取作答紀錄...');
+                loadUserProgress(studentName);
+            } else {
+                // 顯示錯誤訊息 (例如非本校帳號)
+                errorMsgEl.textContent = data.error || '登入失敗，請重試。';
+                errorMsgEl.style.display = 'block';
+                showToast('error', data.error || '登入失敗');
+            }
+        })
+        .catch(err => {
+            console.error('Token驗證請求失敗:', err);
+            errorMsgEl.textContent = '網路錯誤，請重試。';
+            errorMsgEl.style.display = 'block';
+        });
     }
     
     avatarBtn.addEventListener('click',()=>{if(!isLoggedIn){loginModal.classList.remove('hidden');loginInput.focus();}else showToast('info','身份：'+studentName);});
