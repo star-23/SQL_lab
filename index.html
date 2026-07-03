@@ -151,7 +151,7 @@
 
     <script>
     // 🌟 取消本地備用數據，強制連線雲端
-    const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxR3eHA3KBgU19KCXx0zysRJGctB2A-zJVpyDbU8UvZd_F1tXO2PnXkn9wmkwur52wKrg/exec'; // 必須替換為你的實際 URL
+    const API_BASE_URL = '你的_APPS_SCRIPT_URL'; // 必須替換為你的實際 URL
 
     class SqlSandbox {
         constructor() { this.db = null; this.SQL = null; this.currentSchema = []; }
@@ -166,61 +166,62 @@
         parseTableData(tableDataStr) {
             const tables = [];
             const sqlStatements = [];
-            const blocks = tableDataStr.trim().split(/\n\s*\[(.*?)\]\s*\n/);
+            // 統一換行符並逐行分割
+            const lines = tableDataStr.replace(/\r\n/g, '\n').split('\n').map(l => l.trim());
             
-            for (let i = 1; i < blocks.length; i += 2) {
-                const tableName = blocks[i];
-                const content = blocks[i+1].trim();
-                const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                
-                const columns = [];
-                const dataRows = [];
-                
-                lines.forEach(line => {
+            let currentTable = null;
+            let currentColumns = [];
+            let currentData = [];
+
+            for (const line of lines) {
+                if (line.startsWith('[') && line.endsWith(']')) {
+                    // 遇到新表頭，先保存上一個表的資料
+                    if (currentTable) {
+                        tables.push({ name: currentTable, columns: currentColumns });
+                        const colDef = currentColumns.map(c => `${c.name} ${c.type}${c.pk ? ' PRIMARY KEY' : ''}`).join(', ');
+                        sqlStatements.push(`CREATE TABLE ${currentTable} (${colDef});`);
+                        if (currentData.length > 0) {
+                            const colNames = currentColumns.map(c => c.name).join(', ');
+                            currentData.forEach(row => {
+                                const values = row.map(v => (isNaN(v) || v === '') ? `'${v.replace(/'/g, "''")}'` : v).join(', ');
+                                sqlStatements.push(`INSERT INTO ${currentTable} (${colNames}) VALUES (${values});`);
+                            });
+                        }
+                    }
+                    // 開始解析新表
+                    currentTable = line.substring(1, line.length - 1);
+                    currentColumns = [];
+                    currentData = [];
+                } else if (currentTable) {
                     const colMatch = line.match(/^(.*?)\s*\((.*?)\)$/);
                     if (colMatch) {
                         const colName = colMatch[1].trim();
                         const props = colMatch[2].toUpperCase();
                         const type = props.match(/TEXT|INTEGER/)?.[0] || 'TEXT';
                         const isPk = props.includes('PK');
-                        columns.push({ name: colName, type, pk: isPk });
-                    } else {
-                        dataRows.push(line.split(',').map(v => v.trim()));
-                    }
-                });
-                
-                if (columns.length > 0) {
-                    tables.push({ name: tableName, columns });
-                    const colDef = columns.map(c => `${c.name} ${c.type}${c.pk ? ' PRIMARY KEY' : ''}`).join(', ');
-                    sqlStatements.push(`CREATE TABLE ${tableName} (${colDef});`);
-                    
-                    if (dataRows.length > 0) {
-                        const colNames = columns.map(c => c.name).join(', ');
-                        dataRows.forEach(row => {
-                            const values = row.map(v => {
-                                return (isNaN(v) || v === '') ? `'${v.replace(/'/g, "''")}'` : v;
-                            }).join(', ');
-                            sqlStatements.push(`INSERT INTO ${tableName} (${colNames}) VALUES (${values});`);
-                        });
+                        currentColumns.push({ name: colName, type, pk: isPk });
+                    } else if (line.length > 0) {
+                        currentData.push(line.split(',').map(v => v.trim()));
                     }
                 }
             }
+            
+            // 處理最後一個表的資料
+            if (currentTable) {
+                tables.push({ name: currentTable, columns: currentColumns });
+                const colDef = currentColumns.map(c => `${c.name} ${c.type}${c.pk ? ' PRIMARY KEY' : ''}`).join(', ');
+                sqlStatements.push(`CREATE TABLE ${currentTable} (${colDef});`);
+                if (currentData.length > 0) {
+                    const colNames = currentColumns.map(c => c.name).join(', ');
+                    currentData.forEach(row => {
+                        const values = row.map(v => (isNaN(v) || v === '') ? `'${v.replace(/'/g, "''")}'` : v).join(', ');
+                        sqlStatements.push(`INSERT INTO ${currentTable} (${colNames}) VALUES (${values});`);
+                    });
+                }
+            }
+            
             this.currentSchema = tables;
             return sqlStatements.join('\n');
-        }
-        
-        loadEnvironment(tableDataStr) { 
-            this.db = new this.SQL.Database(); 
-            try { 
-                if (!tableDataStr) throw new Error('table_data 為空');
-                const sqlStr = this.parseTableData(tableDataStr); // 轉換為 SQL
-                const stmts = sqlStr.split(';').map(s => s.trim()).filter(s => s.length > 0);
-                for (const stmt of stmts) this.db.run(stmt);
-                return true; 
-            } catch (err) { 
-                console.error('❌ 環境建置失敗:', err.message); 
-                return false; 
-            } 
         }
         
         executeSql(sql) {
