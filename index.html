@@ -297,17 +297,29 @@
         dot.className = 'status-dot ' + state;
     }
 
-    // 🌟 嚴格連線邏輯：失敗則彈窗報錯
+    // 🌟 嚴格連線邏輯：失敗則彈窗報錯並顯示原因
     async function loadData() {
         updateStatus('cloud', 'off');
         try {
             const qRes = await fetch(`${API_BASE_URL}?action=getQuestions`); 
-            if (!qRes.ok) throw new Error(`HTTP ${qRes.status}`);
-            DB_QUESTIONS = await qRes.json();
+            if (!qRes.ok) throw new Error(`HTTP 狀態碼: ${qRes.status}`);
+            
+            // 嘗試解析 JSON，如果失敗代表後端返回了 HTML (通常是 Google 登入頁面)
+            const qText = await qRes.text();
+            try {
+                DB_QUESTIONS = JSON.parse(qText);
+            } catch (e) {
+                throw new Error('後台返回了非 JSON 數據 (請檢查 Apps Script 部署權限是否設為「任何人」)');
+            }
             
             const eRes = await fetch(`${API_BASE_URL}?action=getEnvironments`); 
-            if (!eRes.ok) throw new Error(`HTTP ${eRes.status}`);
-            DB_ENVIRONMENTS = await eRes.json();
+            if (!eRes.ok) throw new Error(`HTTP 狀態碼: ${eRes.status}`);
+            const eText = await eRes.text();
+            try {
+                DB_ENVIRONMENTS = JSON.parse(eText);
+            } catch (e) {
+                throw new Error('後台返回了非 JSON 數據 (請檢查 Apps Script 部署權限)');
+            }
             
             updateStatus('cloud', 'on'); // 🟢 雲端連線成功
             updateStatus('db', 'off');
@@ -315,6 +327,11 @@
         } catch (err) {
             console.error("雲端同步錯誤:", err);
             updateStatus('cloud', 'err'); // 🔴 雲端連線失敗
+            
+            // 將具體錯誤原因顯示在彈窗中
+            const errorP = document.querySelector('#connErrorModal p');
+            if(errorP) errorP.innerHTML = `無法連接至后臺伺服器。<br><span style="font-size:0.7rem;color:var(--error);">原因：${err.message}</span><br>請檢查網路連線或聯絡管理員。`;
+            
             connErrorModal.classList.remove('hidden'); // 顯示連線錯誤彈窗
         }
     }
