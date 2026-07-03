@@ -150,16 +150,20 @@
     </div>
 
     <script>
-    // 🌟 取消本地備用數據，強制連線雲端
-    const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxR3eHA3KBgU19KCXx0zysRJGctB2A-zJVpyDbU8UvZd_F1tXO2PnXkn9wmkwur52wKrg/exec'; // 必須替換為你的實際 URL
+    // ==========================================
+    // 核心配置
+    // ==========================================
+    const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxR3eHA3KBgU19KCXx0zysRJGctB2A-zJVpyDbU8UvZd_F1tXO2PnXkn9wmkwur52wKrg/exec';
 
+    // ==========================================
+    // SQL 沙盒執行引擎
+    // ==========================================
     class SqlSandbox {
         constructor() { this.db = null; this.SQL = null; this.currentSchema = []; }
         
         async init() {
             try {
                 this.SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` });
-                // 🌟 解除輸入框鎖定
                 document.getElementById('sqlEditor').disabled = false;
                 document.getElementById('sqlEditor').placeholder = '-- 在此輸入 SQL 語句...';
                 return true;
@@ -169,12 +173,9 @@
             }
         }
         
-        // 🌟 全新：解析簡易表格定義語言 (強化換行符相容性)
         parseTableData(tableDataStr) {
             const tables = [];
             const sqlStatements = [];
-            
-            // 統一換行符，處理各種可能的 \r\n, \r, \n
             const normalizedStr = String(tableDataStr).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
             const lines = normalizedStr.split('\n').map(l => l.trim());
             
@@ -187,7 +188,6 @@
                     tables.push({ name: currentTable, columns: currentColumns });
                     const colDef = currentColumns.map(c => `${c.name} ${c.type}${c.pk ? ' PRIMARY KEY' : ''}`).join(', ');
                     sqlStatements.push(`CREATE TABLE ${currentTable} (${colDef});`);
-                    
                     if (currentData.length > 0) {
                         const colNames = currentColumns.map(c => c.name).join(', ');
                         currentData.forEach(row => {
@@ -202,10 +202,9 @@
             };
 
             for (const line of lines) {
-                if (line.length === 0) continue; // 跳過空行
-                
+                if (line.length === 0) continue;
                 if (line.startsWith('[') && line.endsWith(']')) {
-                    saveCurrentTable(); // 遇到新表，先保存上一個表
+                    saveCurrentTable();
                     currentTable = line.substring(1, line.length - 1).trim();
                     currentColumns = [];
                     currentData = [];
@@ -222,24 +221,19 @@
                     }
                 }
             }
-            saveCurrentTable(); // 保存最後一個表
-            
+            saveCurrentTable();
             this.currentSchema = tables;
             return sqlStatements.join('\n');
         }
         
-        // 🌟 載入環境並建置資料庫
         loadEnvironment(tableDataStr) { 
             this.db = new this.SQL.Database(); 
             try { 
                 if (!tableDataStr) throw new Error('table_data 為空');
-                const sqlStr = this.parseTableData(tableDataStr); // 轉換為 SQL
+                const sqlStr = this.parseTableData(tableDataStr); 
                 if (!sqlStr) throw new Error('無法解析出有效的 SQL 語句');
-                
                 const stmts = sqlStr.split(';').map(s => s.trim()).filter(s => s.length > 0);
-                for (const stmt of stmts) {
-                    this.db.run(stmt);
-                }
+                for (const stmt of stmts) this.db.run(stmt);
                 return true; 
             } catch (err) { 
                 console.error('❌ 環境建置失敗:', err.message); 
@@ -247,7 +241,6 @@
             } 
         }
 
-        // 🌟 執行學生的 SQL 語句
         executeSql(sql) {
             if (!this.db) return { success: false, error: '資料庫未初始化。請點擊左側題目載入環境。' };
             try {
@@ -259,19 +252,13 @@
             } catch (err) { return { success: false, error: err.message }; }
         }
         
-        // 🌟 答案比對：根據 autoOrder 參數決定是否排序
         normalizeResult(data, autoOrder) {
             if (!data || data.length === 0) return null;
             let res = data[0];
             if (!res || !res.columns || !res.rows) return null;
-            
             let processedRows = res.rows.map(row => row.map(cell => cell === null ? 'NULL' : String(cell)));
             processedRows = processedRows.map(r => r.join('|||'));
-            
-            if (autoOrder) {
-                // 自動排序：將每一行轉為字串後排序
-                processedRows.sort();
-            }
+            if (autoOrder) processedRows.sort();
             return { columns: res.columns, sortedRows: processedRows };
         }
 
@@ -280,7 +267,6 @@
             const answerRes = this.executeSql(answerSql);
             if (!studentRes.success) return { isCorrect: false, message: studentRes.error, studentData: null };
             if (!answerRes.success) return { isCorrect: false, message: '標準答案語法錯誤: ' + answerRes.error, studentData: null };
-            
             const normStudent = this.normalizeResult(studentRes.data, autoOrder);
             const normAnswer = this.normalizeResult(answerRes.data, autoOrder);
             const isCorrect = JSON.stringify(normStudent) === JSON.stringify(normAnswer);
@@ -288,6 +274,9 @@
         }
     }
 
+    // ==========================================
+    // 全局狀態與 DOM
+    // ==========================================
     const sandbox = new SqlSandbox();
     let currentCat = 'all', currentQId = null, completedIds = new Set();
     let isLoggedIn = false, studentName = '';
@@ -308,46 +297,31 @@
     function updateStatus(target, state) {
         const dotMap = { cloud: 'dotCloud', engine: 'dotEngine', db: 'dotDB' };
         const dot = document.getElementById(dotMap[target]);
-        if (!dot) return;
-        dot.className = 'status-dot ' + state;
+        if (dot) dot.className = 'status-dot ' + state;
     }
 
-    // 🌟 嚴格連線邏輯：失敗則彈窗報錯並顯示原因
+    // ==========================================
+    // API 模組
+    // ==========================================
     async function loadData() {
         updateStatus('cloud', 'off');
         try {
             const qRes = await fetch(`${API_BASE_URL}?action=getQuestions`); 
-            if (!qRes.ok) throw new Error(`HTTP 狀態碼: ${qRes.status}`);
-            
-            // 嘗試解析 JSON，如果失敗代表後端返回了 HTML (通常是 Google 登入頁面)
-            const qText = await qRes.text();
-            try {
-                DB_QUESTIONS = JSON.parse(qText);
-            } catch (e) {
-                throw new Error('後台返回了非 JSON 數據 (請檢查 Apps Script 部署權限是否設為「任何人」)');
-            }
+            if (!qRes.ok) throw new Error(`HTTP ${qRes.status}`);
+            DB_QUESTIONS = await qRes.json();
             
             const eRes = await fetch(`${API_BASE_URL}?action=getEnvironments`); 
-            if (!eRes.ok) throw new Error(`HTTP 狀態碼: ${eRes.status}`);
-            const eText = await eRes.text();
-            try {
-                DB_ENVIRONMENTS = JSON.parse(eText);
-            } catch (e) {
-                throw new Error('後台返回了非 JSON 數據 (請檢查 Apps Script 部署權限)');
-            }
+            if (!eRes.ok) throw new Error(`HTTP ${eRes.status}`);
+            DB_ENVIRONMENTS = await eRes.json();
             
-            updateStatus('cloud', 'on'); // 🟢 雲端連線成功
-            updateStatus('db', 'off');
+            updateStatus('cloud', 'on'); updateStatus('db', 'off');
             renderQuestionList(); updateProgress();
         } catch (err) {
             console.error("雲端同步錯誤:", err);
-            updateStatus('cloud', 'err'); // 🔴 雲端連線失敗
-            
-            // 將具體錯誤原因顯示在彈窗中
+            updateStatus('cloud', 'err'); 
             const errorP = document.querySelector('#connErrorModal p');
-            if(errorP) errorP.innerHTML = `無法連接至后臺伺服器。<br><span style="font-size:0.7rem;color:var(--error);">原因：${err.message}</span><br>請檢查網路連線或聯絡管理員。`;
-            
-            connErrorModal.classList.remove('hidden'); // 顯示連線錯誤彈窗
+            if(errorP) errorP.innerHTML = `無法連接至后臺伺服器。<br><span style="font-size:0.7rem;color:var(--error);">原因：${err.message}</span>`;
+            connErrorModal.classList.remove('hidden'); 
         }
     }
 
@@ -358,41 +332,36 @@
         } catch (err) { console.error('上傳失敗'); }
     }
 
-    loginBtn.addEventListener('click', doLogin);
-    loginInput.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-    function doLogin() { 
-        const code = loginInput.value.trim(); 
-        if(!code){loginInput.style.borderColor='var(--error)';loginInput.focus();return;} 
-        studentName=code; 
-        isLoggedIn=true; 
-        loginModal.classList.add('hidden'); 
-        
-        // 🌟 開始讀取雲端進度
-        showToast('info', '正在讀取作答紀錄...');
-        loadUserProgress(studentName);
-    }
-
-    // 🌟 新增：讀取用戶進度
     async function loadUserProgress(username) {
         try {
             const res = await fetch(`${API_BASE_URL}?action=getUserProgress&username=${username}`);
             if (!res.ok) throw new Error('讀取進度失敗');
             const correctIds = await res.json();
-            
-            // 將雲端撈到的正確題目 ID 存入 completedIds
             correctIds.forEach(id => completedIds.add(parseInt(id)));
-            
-            // 重新渲染介面
-            renderQuestionList();
-            updateProgress();
-            updatePlant();
-            
+            renderQuestionList(); updateProgress(); updatePlant();
             showToast('success', `歡迎，${username}！已恢復 ${completedIds.size} 題進度`);
         } catch (err) {
             console.error('讀取進度錯誤:', err);
-            showToast('error', '讀取進度失敗，請重新整理');
+            showToast('error', '讀取進度失敗');
         }
     }
+
+    // ==========================================
+    // 登入與 UI 邏輯
+    // ==========================================
+    loginBtn.addEventListener('click', doLogin);
+    loginInput.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+    
+    function doLogin() { 
+        const code = loginInput.value.trim(); 
+        if(!code){loginInput.style.borderColor='var(--error)';loginInput.focus();return;} 
+        studentName=code; isLoggedIn=true; loginModal.classList.add('hidden'); 
+        showToast('info', '正在讀取作答紀錄...');
+        loadUserProgress(studentName);
+    }
+    
+    avatarBtn.addEventListener('click',()=>{if(!isLoggedIn){loginModal.classList.remove('hidden');loginInput.focus();}else showToast('info','身份：'+studentName);});
+    document.querySelectorAll('.cat-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');currentCat=tab.dataset.cat;renderQuestionList();});});
 
     function renderQuestionList() {
         const filtered = currentCat==='all' ? DB_QUESTIONS : DB_QUESTIONS.filter(q=>q.category===currentCat);
@@ -401,53 +370,39 @@
     }
     
     function loadSandboxEnv() {
-        console.log('--- 開始載入沙盒環境 ---');
-        console.log('當前點擊的題目 ID:', currentQId);
-        
-        const q = DB_QUESTIONS.find(q => parseInt(q.id) === parseInt(currentQId)); 
-        console.log('找到的題目數據:', q);
-        
-        if(!q) { 
-            console.warn('❌ 找不到題目，請檢查 Questions 表的 id 欄位');
-            updateStatus('db', 'off'); 
-            return; 
-        }
-        
+        const q = DB_QUESTIONS.find(q=>q.id===currentQId); 
+        if(!q) { updateStatus('db', 'off'); return; }
         const targetEnvId = parseInt(q.env_id);
-        console.log('題目要求的环境 ID (env_id):', targetEnvId);
-        
         const env = DB_ENVIRONMENTS.find(e => parseInt(e.id) === targetEnvId);
-        console.log('找到的環境數據:', env);
-        
-        if (!env) { 
-            console.error('❌ 找不到環境！請檢查 Environments 表的 id 是否與題目的 env_id 對應');
-            showToast('error', '找不到對應的資料庫環境 (env_id: ' + q.env_id + ')'); 
-            updateStatus('db', 'err'); 
-            return; 
-        }
+        if (!env) { showToast('error', '找不到對應的資料庫環境 (env_id: ' + q.env_id + ')'); updateStatus('db', 'err'); return; }
+        if (!sandbox.SQL) { updateStatus('db', 'err'); return; }
         
         const tableData = env.table_data || env.create_sql;
-        console.log('提取出的 table_data 內容:', tableData);
-        
-        if (!tableData) {
-            console.error('❌ table_data 為空！請檢查 Environments 表是否有 table_data 欄位');
-            showToast('error', 'Google Sheet 中找不到資料表數據'); 
-            updateStatus('db', 'err');
-            return;
-        }
-        
-        if (!sandbox.SQL) { 
-            console.error('❌ sandbox.SQL 引擎未載入');
-            updateStatus('db', 'err'); 
-            return; 
-        }
+        if (!tableData) { showToast('error', 'Google Sheet 中找不到資料表數據'); updateStatus('db', 'err'); return; }
         
         const success = sandbox.loadEnvironment(tableData);
-        console.log('環境建置結果:', success ? '✅ 成功' : '❌ 失敗');
-        
         updateStatus('db', success ? 'on' : 'err'); 
-        if (!success) showToast('error', '資料庫建置失敗');
+        if (!success) showToast('error', '資料庫建置失敗，請檢查 table_data 格式');
         renderQuestionDetail(); 
+    }
+    
+    function renderQuestionDetail() {
+        const q = DB_QUESTIONS.find(q=>q.id===currentQId);
+        if(!q) { questionDetail.innerHTML = '<div class="result-idle"><p>選擇題目開始</p></div>'; return; }
+        
+        let schemaHtml = '';
+        const tables = sandbox.currentSchema; 
+        if (tables && tables.length > 0) {
+            schemaHtml = `<div class="schema-section"><h4><i class="fas fa-database" style="margin-right:3px"></i> SCHEMA</h4>`;
+            tables.forEach(table => {
+                schemaHtml += `<div class="schema-table-title">TABLE: ${table.name}</div>
+                <table class="schema-table"><thead><tr><th>Column</th><th>Type</th></tr></thead>
+                <tbody>${table.columns.map(c=>`<tr><td class="${c.pk?'pk':''}">${c.name}</td><td>${c.type}</td></tr>`).join('')}</tbody></table>`;
+            });
+            schemaHtml += `</div>`;
+        }
+
+        questionDetail.innerHTML = `<div class="detail-title"><span style="font-family:var(--pixel);font-size:0.4rem;color:var(--accent);">[${q.category.toUpperCase()}]</span><br>${q.title}</div><div class="detail-desc">${q.description}</div><div class="dse-tip"><i class="fas fa-lightbulb"></i><span>${q.dse_tip}</span></div>${schemaHtml}`;
     }
 
     function updateLineNumbers(){const lines=sqlEditor.value.split('\n').length;const nums=[];for(let i=1;i<=Math.max(lines,8);i++)nums.push(`<div>${i}</div>`);lineNumbers.innerHTML=nums.join('');}
@@ -458,12 +413,14 @@
     runBtn.addEventListener('click',executeSQL);
     hintBtn.addEventListener('click',()=>{const q=DB_QUESTIONS.find(q=>q.id===currentQId);if(!q)return;showToast('info','提示：答案開頭為 "'+q.answer_sql.substring(0,18)+'..."');});
 
+    // ==========================================
+    // 核心執行流程
+    // ==========================================
     function executeSQL() {
         if(!currentQId) { showToast('error','請先選擇題目'); return; } 
         const sql = sqlEditor.value.trim(); if(!sql) { showToast('error','請輸入 SQL 語句'); return; } 
         const q = DB_QUESTIONS.find(q=>q.id===currentQId); if(!q) return; 
         
-        // 🌟 讀取 auto_order 設定 (預設 Y)
         const autoOrder = (q.auto_order && q.auto_order.toUpperCase() === 'N') ? false : true;
         
         runBtn.classList.add('running'); runBtn.innerHTML='<span class="loading-dots"><span></span><span></span><span></span></span>';
@@ -485,6 +442,7 @@
             } 
         }, 400);
     }
+    
     function showResult(type, message, data, answer) {
         let html = `<div class="result-dialog ${type}"><span class="dialog-icon">${type==='success'?'✓':'✗'}</span>${message}</div>`;
         if(data && data.columns && data.rows) { html += `<div class="result-table-wrap"><div class="result-table-label">COLUMNS: ${data.columns.join(', ')}</div><table class="result-table"><thead><tr>${data.columns.map(c=>'<th>'+c+'</th>').join('')}</tr></thead><tbody>${data.rows.map(r=>'<tr>'+r.map(v=>'<td>'+(v===null?'NULL':v)+'</td>').join('')+'</tr>').join('')}</tbody></table></div>`; }
@@ -492,27 +450,22 @@
         if(type==='success'){ const nextQ=DB_QUESTIONS.find(q=>q.id>currentQId&&!completedIds.has(q.id)); if(nextQ)html+=`<button class="btn-next" id="nextBtn">NEXT QUEST <i class="fas fa-arrow-right"></i></button>`; else if(completedIds.size===DB_QUESTIONS.length)html+=`<button class="btn-next" style="background:linear-gradient(135deg,var(--success),#34D399);">ALL CLEAR</button>`; }
         resultDisplay.innerHTML=html; const nextBtn=document.getElementById('nextBtn'); if(nextBtn)nextBtn.addEventListener('click',()=>{const n=DB_QUESTIONS.find(q=>q.id>currentQId);if(n){currentQId=n.id;renderQuestionList();renderQuestionDetail();resetResult();loadSandboxEnv();sqlEditor.value='';sqlEditor.dispatchEvent(new Event('input'));}});
     }
+    
     function resetResult(){resultDisplay.innerHTML=`<div class="result-idle"><div class="idle-icon"><i class="fas fa-database"></i></div><p>輸入 SQL 語句並按下<br><strong>RUN</strong> 來執行查詢</p></div>`;}
     function updateProgress(){const t=DB_QUESTIONS.length,d=completedIds.size;progressText.textContent=d+'/'+t;progressFill.style.width=(d/t)*100+'%';}
+    
     function updatePlant(){ const total=DB_QUESTIONS.length,done=completedIds.size; const stemH=Math.round((done/total)*30);stemModern.style.height=stemH+'px'; plantContainer.querySelectorAll('.leaf-modern,.flower-modern').forEach(el=>el.remove()); const leafCount=Math.min(Math.floor(done*1.5),6); for(let i=0;i<leafCount;i++){const leaf=document.createElement('div');leaf.className='leaf-modern '+(i%2===0?'left':'right'); leaf.style.position='absolute';leaf.style.bottom=(stemH-(i+1)*5+32)+'px'; leaf.style.left=`calc(50% + ${(i%2===0?-1:1)*6}px)`;stemModern.appendChild(leaf); } if(done>=total){const f=document.createElement('div');f.className='flower-modern';f.style.position='absolute';f.style.top='-6px';f.style.left='-3px';stemModern.appendChild(f);} plantLabel.textContent='已完成 '+done+' 題'; }
+    
     function spawnPixelStars(anchor){ const rect=anchor.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2; for(let i=0;i<8;i++){const star=document.createElement('div');star.className='pixel-star';star.textContent=['★','✦'][Math.floor(Math.random()*2)]; const angle=(Math.PI*2/8)*i,dist=30+Math.random()*50; star.style.left=cx+'px';star.style.top=cy+'px';star.style.setProperty('--tx',Math.cos(angle)*dist+'px');star.style.setProperty('--ty',Math.sin(angle)*dist+'px'); star.style.color=['var(--accent)','#10B981','#FBBF24'][Math.floor(Math.random()*3)];star.style.fontSize=(6+Math.random()*8)+'px'; document.body.appendChild(star);setTimeout(()=>star.remove(),1100); } }
+    
     function showToast(type,msg){ const toast=document.createElement('div');toast.className='toast '+type; toast.innerHTML=`<i class="fas ${type==='success'?'fa-check-circle':'fa-times-circle'}"></i> ${msg}`;toastContainer.appendChild(toast); setTimeout(()=>{toast.style.opacity='0';toast.style.transform='translateX(24px)';toast.style.transition='all 0.3s';setTimeout(()=>toast.remove(),350);},3000); }
 
     async function initApp() {
-        updateStatus('engine', 'off');
-        updateStatus('cloud', 'off');
-        updateStatus('db', 'off');
-        
+        updateStatus('engine', 'off'); updateStatus('cloud', 'off'); updateStatus('db', 'off');
         const engineReady = await sandbox.init();
         updateStatus('engine', engineReady ? 'on' : 'err');
-        
-        if(engineReady) {
-            // 🌟 啟動時直接嘗試連線，若失敗會在 loadData 內部顯示彈窗
-            await loadData();
-            loginInput.focus();
-        } else {
-            showToast('error', 'SQLite 引擎載入失敗，請重新整理');
-        }
+        if(engineReady) { await loadData(); loginInput.focus(); } 
+        else { showToast('error', 'SQLite 引擎載入失敗，請重新整理'); }
     }
     initApp();
     </script>
