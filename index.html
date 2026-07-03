@@ -371,60 +371,53 @@
     }
     
     function loadSandboxEnv() {
-        const q = DB_QUESTIONS.find(q=>q.id===currentQId); 
-        if(!q) { updateStatus('db', 'off'); return; }
+        console.log('--- 開始載入沙盒環境 ---');
+        console.log('當前點擊的題目 ID:', currentQId);
+        
+        const q = DB_QUESTIONS.find(q => parseInt(q.id) === parseInt(currentQId)); 
+        console.log('找到的題目數據:', q);
+        
+        if(!q) { 
+            console.warn('❌ 找不到題目，請檢查 Questions 表的 id 欄位');
+            updateStatus('db', 'off'); 
+            return; 
+        }
         
         const targetEnvId = parseInt(q.env_id);
+        console.log('題目要求的环境 ID (env_id):', targetEnvId);
+        
         const env = DB_ENVIRONMENTS.find(e => parseInt(e.id) === targetEnvId);
+        console.log('找到的環境數據:', env);
         
         if (!env) { 
+            console.error('❌ 找不到環境！請檢查 Environments 表的 id 是否與題目的 env_id 對應');
             showToast('error', '找不到對應的資料庫環境 (env_id: ' + q.env_id + ')'); 
             updateStatus('db', 'err'); 
             return; 
         }
         
-        // 🌟 同時兼容新的 table_data 和舊的 create_sql 欄位
         const tableData = env.table_data || env.create_sql;
+        console.log('提取出的 table_data 內容:', tableData);
         
         if (!tableData) {
-            showToast('error', 'Google Sheet 中找不到資料表數據，請檢查 table_data 欄位');
+            console.error('❌ table_data 為空！請檢查 Environments 表是否有 table_data 欄位');
+            showToast('error', 'Google Sheet 中找不到資料表數據'); 
             updateStatus('db', 'err');
             return;
         }
         
-        if (!sandbox.SQL) { updateStatus('db', 'err'); return; }
+        if (!sandbox.SQL) { 
+            console.error('❌ sandbox.SQL 引擎未載入');
+            updateStatus('db', 'err'); 
+            return; 
+        }
         
         const success = sandbox.loadEnvironment(tableData);
+        console.log('環境建置結果:', success ? '✅ 成功' : '❌ 失敗');
+        
         updateStatus('db', success ? 'on' : 'err'); 
-        
-        if (!success) {
-            showToast('error', '資料庫建置失敗，請按 F12 查看 Console 中的錯誤');
-        }
-        renderQuestionDetail(); // 環境載入後立即刷新介面顯示 Schema
-    }
-    
-    function renderQuestionDetail() {
-        const q = DB_QUESTIONS.find(q=>q.id===currentQId);
-        if(!q) { questionDetail.innerHTML = '<div class="result-idle"><p>選擇題目開始</p></div>'; return; }
-        
-        let schemaHtml = '';
-        const tables = sandbox.currentSchema; 
-        if (tables && tables.length > 0) {
-            schemaHtml = `<div class="schema-section"><h4><i class="fas fa-database" style="margin-right:3px"></i> SCHEMA</h4>`;
-            tables.forEach(table => {
-                schemaHtml += `
-                <div class="schema-table-title">TABLE: ${table.name}</div>
-                <table class="schema-table"><thead><tr><th>Column</th><th>Type</th></tr></thead>
-                <tbody>${table.columns.map(c=>`<tr><td class="${c.pk?'pk':''}">${c.name}</td><td>${c.type}</td></tr>`).join('')}</tbody></table>`;
-            });
-            schemaHtml += `</div>`;
-        }
-
-        questionDetail.innerHTML = `
-            <div class="detail-title"><span style="font-family:var(--pixel);font-size:0.4rem;color:var(--accent);">[${q.category.toUpperCase()}]</span><br>${q.title}</div>
-            <div class="detail-desc">${q.description}</div>
-            <div class="dse-tip"><i class="fas fa-lightbulb"></i><span>${q.dse_tip}</span></div>
-            ${schemaHtml}`;
+        if (!success) showToast('error', '資料庫建置失敗');
+        renderQuestionDetail(); 
     }
 
     function updateLineNumbers(){const lines=sqlEditor.value.split('\n').length;const nums=[];for(let i=1;i<=Math.max(lines,8);i++)nums.push(`<div>${i}</div>`);lineNumbers.innerHTML=nums.join('');}
