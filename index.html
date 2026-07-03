@@ -172,61 +172,59 @@
         parseTableData(tableDataStr) {
             const tables = [];
             const sqlStatements = [];
-            // 統一換行符並逐行分割
-            const lines = tableDataStr.replace(/\r\n/g, '\n').split('\n').map(l => l.trim());
+            
+            // 🌟 統一換行符，處理各種可能的 \r\n, \r, \n
+            const normalizedStr = String(tableDataStr).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            const lines = normalizedStr.split('\n').map(l => l.trim());
             
             let currentTable = null;
             let currentColumns = [];
             let currentData = [];
 
-            for (const line of lines) {
-                if (line.startsWith('[') && line.endsWith(']')) {
-                    // 遇到新表頭，先保存上一個表的資料
-                    if (currentTable) {
-                        tables.push({ name: currentTable, columns: currentColumns });
-                        const colDef = currentColumns.map(c => `${c.name} ${c.type}${c.pk ? ' PRIMARY KEY' : ''}`).join(', ');
-                        sqlStatements.push(`CREATE TABLE ${currentTable} (${colDef});`);
-                        if (currentData.length > 0) {
-                            const colNames = currentColumns.map(c => c.name).join(', ');
-                            currentData.forEach(row => {
-                                const values = row.map(v => (isNaN(v) || v === '') ? `'${v.replace(/'/g, "''")}'` : v).join(', ');
-                                sqlStatements.push(`INSERT INTO ${currentTable} (${colNames}) VALUES (${values});`);
-                            });
-                        }
+            const saveCurrentTable = () => {
+                if (currentTable && currentColumns.length > 0) {
+                    tables.push({ name: currentTable, columns: currentColumns });
+                    const colDef = currentColumns.map(c => `${c.name} ${c.type}${c.pk ? ' PRIMARY KEY' : ''}`).join(', ');
+                    sqlStatements.push(`CREATE TABLE ${currentTable} (${colDef});`);
+                    
+                    if (currentData.length > 0) {
+                        const colNames = currentColumns.map(c => c.name).join(', ');
+                        currentData.forEach(row => {
+                            const values = row.map(v => {
+                                if (v === null || v === '') return "''";
+                                return isNaN(v) ? `'${v.replace(/'/g, "''")}'` : v;
+                            }).join(', ');
+                            sqlStatements.push(`INSERT INTO ${currentTable} (${colNames}) VALUES (${values});`);
+                        });
                     }
-                    // 開始解析新表
-                    currentTable = line.substring(1, line.length - 1);
+                }
+            };
+
+            for (const line of lines) {
+                if (line.length === 0) continue; // 跳過空行
+                
+                if (line.startsWith('[') && line.endsWith(']')) {
+                    saveCurrentTable(); // 遇到新表，先保存上一個表
+                    currentTable = line.substring(1, line.length - 1).trim();
                     currentColumns = [];
                     currentData = [];
                 } else if (currentTable) {
-                    const colMatch = line.match(/^(.*?)\s*\((.*?)\)$/);
+                    const colMatch = line.match(/^([a-zA-Z_]\w*)\s*\((.*?)\)$/i);
                     if (colMatch) {
                         const colName = colMatch[1].trim();
                         const props = colMatch[2].toUpperCase();
-                        const type = props.match(/TEXT|INTEGER/)?.[0] || 'TEXT';
+                        const type = props.match(/TEXT|INTEGER|INT|REAL/)?.[0] || 'TEXT';
                         const isPk = props.includes('PK');
                         currentColumns.push({ name: colName, type, pk: isPk });
-                    } else if (line.length > 0) {
+                    } else {
                         currentData.push(line.split(',').map(v => v.trim()));
                     }
                 }
             }
-            
-            // 處理最後一個表的資料
-            if (currentTable) {
-                tables.push({ name: currentTable, columns: currentColumns });
-                const colDef = currentColumns.map(c => `${c.name} ${c.type}${c.pk ? ' PRIMARY KEY' : ''}`).join(', ');
-                sqlStatements.push(`CREATE TABLE ${currentTable} (${colDef});`);
-                if (currentData.length > 0) {
-                    const colNames = currentColumns.map(c => c.name).join(', ');
-                    currentData.forEach(row => {
-                        const values = row.map(v => (isNaN(v) || v === '') ? `'${v.replace(/'/g, "''")}'` : v).join(', ');
-                        sqlStatements.push(`INSERT INTO ${currentTable} (${colNames}) VALUES (${values});`);
-                    });
-                }
-            }
+            saveCurrentTable(); // 保存最後一個表
             
             this.currentSchema = tables;
+            console.log('📝 解析出的 Schema:', tables); // 按 F12 可查看
             return sqlStatements.join('\n');
         }
         
@@ -358,15 +356,33 @@
     function loadSandboxEnv() {
         const q = DB_QUESTIONS.find(q=>q.id===currentQId); 
         if(!q) { updateStatus('db', 'off'); return; }
+        
         const targetEnvId = parseInt(q.env_id);
         const env = DB_ENVIRONMENTS.find(e => parseInt(e.id) === targetEnvId);
-        if (!env) { showToast('error', '找不到對應的資料庫環境 (env_id: ' + q.env_id + ')'); updateStatus('db', 'err'); return; }
+        
+        if (!env) { 
+            showToast('error', '找不到對應的資料庫環境 (env_id: ' + q.env_id + ')'); 
+            updateStatus('db', 'err'); 
+            return; 
+        }
+        
+        // 🌟 同時兼容新的 table_data 和舊的 create_sql 欄位
+        const tableData = env.table_data || env.create_sql;
+        
+        if (!tableData) {
+            showToast('error', 'Google Sheet 中找不到資料表數據，請檢查 table_data 欄位');
+            updateStatus('db', 'err');
+            return;
+        }
+        
         if (!sandbox.SQL) { updateStatus('db', 'err'); return; }
         
-        // 🌟 傳入新的 table_data 而非 create_sql
-        const success = sandbox.loadEnvironment(env.table_data);
+        const success = sandbox.loadEnvironment(tableData);
         updateStatus('db', success ? 'on' : 'err'); 
-        if (!success) showToast('error', '資料庫建置失敗，請檢查 table_data 格式');
+        
+        if (!success) {
+            showToast('error', '資料庫建置失敗，請按 F12 查看 Console 中的錯誤');
+        }
         renderQuestionDetail(); // 環境載入後立即刷新介面顯示 Schema
     }
     
