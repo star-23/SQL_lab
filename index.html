@@ -360,9 +360,39 @@
 
     loginBtn.addEventListener('click', doLogin);
     loginInput.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-    function doLogin() { const code = loginInput.value.trim(); if(!code){loginInput.style.borderColor='var(--error)';loginInput.focus();return;} studentName=code; isLoggedIn=true; loginModal.classList.add('hidden'); showToast('success','歡迎，'+code+'！'); }
-    avatarBtn.addEventListener('click',()=>{if(!isLoggedIn){loginModal.classList.remove('hidden');loginInput.focus();}else showToast('info','身份：'+studentName);});
-    document.querySelectorAll('.cat-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');currentCat=tab.dataset.cat;renderQuestionList();});});
+    function doLogin() { 
+        const code = loginInput.value.trim(); 
+        if(!code){loginInput.style.borderColor='var(--error)';loginInput.focus();return;} 
+        studentName=code; 
+        isLoggedIn=true; 
+        loginModal.classList.add('hidden'); 
+        
+        // 🌟 開始讀取雲端進度
+        showToast('info', '正在讀取作答紀錄...');
+        loadUserProgress(studentName);
+    }
+
+    // 🌟 新增：讀取用戶進度
+    async function loadUserProgress(username) {
+        try {
+            const res = await fetch(`${API_BASE_URL}?action=getUserProgress&username=${username}`);
+            if (!res.ok) throw new Error('讀取進度失敗');
+            const correctIds = await res.json();
+            
+            // 將雲端撈到的正確題目 ID 存入 completedIds
+            correctIds.forEach(id => completedIds.add(parseInt(id)));
+            
+            // 重新渲染介面
+            renderQuestionList();
+            updateProgress();
+            updatePlant();
+            
+            showToast('success', `歡迎，${username}！已恢復 ${completedIds.size} 題進度`);
+        } catch (err) {
+            console.error('讀取進度錯誤:', err);
+            showToast('error', '讀取進度失敗，請重新整理');
+        }
+    }
 
     function renderQuestionList() {
         const filtered = currentCat==='all' ? DB_QUESTIONS : DB_QUESTIONS.filter(q=>q.category===currentCat);
