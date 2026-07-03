@@ -155,6 +155,7 @@
 
     class SqlSandbox {
         constructor() { this.db = null; this.SQL = null; this.currentSchema = []; }
+        
         async init() {
             try {
                 this.SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` });
@@ -168,12 +169,12 @@
             }
         }
         
-        // 🌟 全新：解析簡易表格定義語言
+        // 🌟 全新：解析簡易表格定義語言 (強化換行符相容性)
         parseTableData(tableDataStr) {
             const tables = [];
             const sqlStatements = [];
             
-            // 🌟 統一換行符，處理各種可能的 \r\n, \r, \n
+            // 統一換行符，處理各種可能的 \r\n, \r, \n
             const normalizedStr = String(tableDataStr).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
             const lines = normalizedStr.split('\n').map(l => l.trim());
             
@@ -224,10 +225,29 @@
             saveCurrentTable(); // 保存最後一個表
             
             this.currentSchema = tables;
-            console.log('📝 解析出的 Schema:', tables); // 按 F12 可查看
             return sqlStatements.join('\n');
         }
         
+        // 🌟 載入環境並建置資料庫
+        loadEnvironment(tableDataStr) { 
+            this.db = new this.SQL.Database(); 
+            try { 
+                if (!tableDataStr) throw new Error('table_data 為空');
+                const sqlStr = this.parseTableData(tableDataStr); // 轉換為 SQL
+                if (!sqlStr) throw new Error('無法解析出有效的 SQL 語句');
+                
+                const stmts = sqlStr.split(';').map(s => s.trim()).filter(s => s.length > 0);
+                for (const stmt of stmts) {
+                    this.db.run(stmt);
+                }
+                return true; 
+            } catch (err) { 
+                console.error('❌ 環境建置失敗:', err.message); 
+                return false; 
+            } 
+        }
+
+        // 🌟 執行學生的 SQL 語句
         executeSql(sql) {
             if (!this.db) return { success: false, error: '資料庫未初始化。請點擊左側題目載入環境。' };
             try {
@@ -239,21 +259,18 @@
             } catch (err) { return { success: false, error: err.message }; }
         }
         
-        // 🌟 加入 autoOrder 參數控制是否排序
+        // 🌟 答案比對：根據 autoOrder 參數決定是否排序
         normalizeResult(data, autoOrder) {
             if (!data || data.length === 0) return null;
             let res = data[0];
             if (!res || !res.columns || !res.rows) return null;
             
             let processedRows = res.rows.map(row => row.map(cell => cell === null ? 'NULL' : String(cell)));
+            processedRows = processedRows.map(r => r.join('|||'));
             
             if (autoOrder) {
                 // 自動排序：將每一行轉為字串後排序
-                processedRows = processedRows.map(r => r.join('|||'));
                 processedRows.sort();
-            } else {
-                // 不排序：直接轉為字串比對原始順序
-                processedRows = processedRows.map(r => r.join('|||'));
             }
             return { columns: res.columns, sortedRows: processedRows };
         }
