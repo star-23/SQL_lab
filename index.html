@@ -130,8 +130,18 @@
         </aside>
     </main>
     
+    <!-- 登入彈窗 -->
     <div class="modal-overlay" id="loginModal"><div class="modal-box"><h2>SQL Quest LOGIN</h2><p style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.9rem;position:relative;z-index:2;">輸入學生代碼開始</p><input type="text" class="modal-input" id="loginInput" placeholder="代碼 (例如 S001)"><br><button class="modal-btn" id="loginBtn">START</button></div></div>
     
+    <!-- 連線錯誤彈窗 (新增) -->
+    <div class="modal-overlay hidden" id="connErrorModal" style="z-index:305;">
+        <div class="modal-box" style="border-color:var(--error);">
+            <h2 style="color:var(--error);">CONNECTION ERROR</h2>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1.2rem;position:relative;z-index:2;line-height:1.6;">無法連接至后臺伺服器。<br>請檢查網路連線或聯絡管理員。</p>
+            <button class="modal-btn" style="background:var(--error);" onclick="location.reload()">重試連線</button>
+        </div>
+    </div>
+
     <div class="toast-container" id="toastContainer"></div>
     <div class="sys-status" id="sysStatus">
         <div class="status-item"><div class="status-dot off" id="dotCloud"></div>CLOUD</div>
@@ -140,19 +150,8 @@
     </div>
 
     <script>
-    const USE_LOCAL_DATA = true; 
-    const API_BASE_URL = '你的_APPS_SCRIPT_URL';
-
-    const LOCAL_ENVIRONMENTS = [
-        { id: 1, name: '學校成績系統', create_sql: "CREATE TABLE STUDENT (Stdno TEXT PRIMARY KEY, SName TEXT, Sex TEXT, Class TEXT, ChiMark INTEGER); INSERT INTO STUDENT VALUES ('S01', 'Chan Tai Man', 'M', '4A', 85); INSERT INTO STUDENT VALUES ('S02', 'Wong May', 'F', '4A', 92); INSERT INTO STUDENT VALUES ('S03', 'Cheung San', 'M', '4B', 58); INSERT INTO STUDENT VALUES ('S04', 'Lee Lai Ching', 'F', '4B', 74); CREATE TABLE CLUB (ClubID TEXT PRIMARY KEY, ClubName TEXT, LeaderID TEXT); INSERT INTO CLUB VALUES ('C01', 'Chess Club', 'S01'); INSERT INTO CLUB VALUES ('C02', 'Art Club', 'S04');" }
-    ];
-    const LOCAL_QUESTIONS = [
-        { id: 1, env_id: 1, category: 'basic', title: '檢索所有學生記錄', description: '從 STUDENT 表中查詢所有學生的所有欄位資料。', dse_tip: '使用 SELECT * 選取所有欄位。', answer_sql: 'SELECT * FROM STUDENT ORDER BY Stdno;', difficulty: 1 },
-        { id: 2, env_id: 1, category: 'where', title: '查詢及格學生', description: '查詢中文成績 大於或等於 60 分的學生的姓名 和班別。', dse_tip: 'WHERE 子句設定篩選條件 >= 60。', answer_sql: 'SELECT SName, Class FROM STUDENT WHERE ChiMark >= 60 ORDER BY Stdno;', difficulty: 1 },
-        { id: 3, env_id: 1, category: 'order', title: '按班別排序', description: '查詢學號、姓名 和班別，並按班別 遞升排序。', dse_tip: 'ORDER BY Class 遞升排序。', answer_sql: 'SELECT Stdno, SName, Class FROM STUDENT ORDER BY Class, Stdno;', difficulty: 1 },
-        { id: 4, env_id: 1, category: 'groupby', title: '按性別統計人數', description: '按性別 分組，統計男生和女生各自的總人數。', dse_tip: 'GROUP BY Sex 搭配 COUNT(*)。', answer_sql: 'SELECT Sex, COUNT(*) AS StuCount FROM STUDENT GROUP BY Sex ORDER BY Sex;', difficulty: 2 },
-        { id: 5, env_id: 1, category: 'join', title: '查詢學會與主席', description: '連接 CLUB 和 STUDENT 表，查詢學會名稱 及其主席姓名。', dse_tip: 'INNER JOIN 透過 CLUB.LeaderID = STUDENT.Stdno 連接。', answer_sql: 'SELECT CLUB.ClubName, STUDENT.SName FROM CLUB INNER JOIN STUDENT ON CLUB.LeaderID = STUDENT.Stdno ORDER BY CLUB.ClubID;', difficulty: 2 }
-    ];
+    // 🌟 取消本地備用數據，強制連線雲端
+    const API_BASE_URL = '你的_APPS_SCRIPT_URL'; // 必須替換為你的實際 URL
 
     class SqlSandbox {
         constructor() { this.db = null; this.SQL = null; this.currentSchema = []; }
@@ -163,41 +162,60 @@
             } catch (err) { return false; }
         }
         
-        parseCreateSql(createSql) {
+        // 🌟 全新：解析簡易表格定義語言
+        parseTableData(tableDataStr) {
             const tables = [];
-            const regex = /CREATE\s+TABLE\s+(\w+)\s*\(([\s\S]*?)\)/gi;
-            let match;
-            while ((match = regex.exec(createSql)) !== null) {
-                const tableName = match[1];
-                const columnsStr = match[2];
+            const sqlStatements = [];
+            const blocks = tableDataStr.trim().split(/\n\s*\[(.*?)\]\s*\n/);
+            
+            for (let i = 1; i < blocks.length; i += 2) {
+                const tableName = blocks[i];
+                const content = blocks[i+1].trim();
+                const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                
                 const columns = [];
-                let pkCol = null;
-                const lines = columnsStr.split(',');
-                for (const line of lines) {
-                    const trimmed = line.trim();
-                    const pkMatch = trimmed.match(/PRIMARY\s+KEY\s*\(([^)]+)\)/i);
-                    if (pkMatch) { pkCol = pkMatch[1].trim(); continue; }
-                    const colMatch = trimmed.match(/^(\w+)\s+(TEXT|INTEGER|INT|VARCHAR\(\d+\)|CHAR\(\d+\))/i);
+                const dataRows = [];
+                
+                lines.forEach(line => {
+                    const colMatch = line.match(/^(.*?)\s*\((.*?)\)$/);
                     if (colMatch) {
-                        const colName = colMatch[1];
-                        const colType = colMatch[2].toUpperCase().replace(/VARCHAR\(\d+\)/, 'TEXT').replace(/CHAR\(\d+\)/, 'TEXT').replace(/INT$/, 'INTEGER');
-                        const isPk = trimmed.toUpperCase().includes('PRIMARY KEY') || pkCol === colName;
-                        columns.push({ name: colName, type: colType, pk: isPk });
+                        const colName = colMatch[1].trim();
+                        const props = colMatch[2].toUpperCase();
+                        const type = props.match(/TEXT|INTEGER/)?.[0] || 'TEXT';
+                        const isPk = props.includes('PK');
+                        columns.push({ name: colName, type, pk: isPk });
+                    } else {
+                        dataRows.push(line.split(',').map(v => v.trim()));
+                    }
+                });
+                
+                if (columns.length > 0) {
+                    tables.push({ name: tableName, columns });
+                    const colDef = columns.map(c => `${c.name} ${c.type}${c.pk ? ' PRIMARY KEY' : ''}`).join(', ');
+                    sqlStatements.push(`CREATE TABLE ${tableName} (${colDef});`);
+                    
+                    if (dataRows.length > 0) {
+                        const colNames = columns.map(c => c.name).join(', ');
+                        dataRows.forEach(row => {
+                            const values = row.map(v => {
+                                return (isNaN(v) || v === '') ? `'${v.replace(/'/g, "''")}'` : v;
+                            }).join(', ');
+                            sqlStatements.push(`INSERT INTO ${tableName} (${colNames}) VALUES (${values});`);
+                        });
                     }
                 }
-                if (columns.length > 0) tables.push({ name: tableName, columns });
             }
             this.currentSchema = tables;
-            return tables;
+            return sqlStatements.join('\n');
         }
         
-        loadEnvironment(createSql) { 
+        loadEnvironment(tableDataStr) { 
             this.db = new this.SQL.Database(); 
             try { 
-                if (!createSql) throw new Error('create_sql 為空');
-                const stmts = createSql.split(';').map(s => s.trim()).filter(s => s.length > 0);
+                if (!tableDataStr) throw new Error('table_data 為空');
+                const sqlStr = this.parseTableData(tableDataStr); // 轉換為 SQL
+                const stmts = sqlStr.split(';').map(s => s.trim()).filter(s => s.length > 0);
                 for (const stmt of stmts) this.db.run(stmt);
-                this.parseCreateSql(createSql); 
                 return true; 
             } catch (err) { 
                 console.error('❌ 環境建置失敗:', err.message); 
@@ -216,22 +234,33 @@
             } catch (err) { return { success: false, error: err.message }; }
         }
         
-        normalizeResult(data) {
+        // 🌟 加入 autoOrder 參數控制是否排序
+        normalizeResult(data, autoOrder) {
             if (!data || data.length === 0) return null;
             let res = data[0];
             if (!res || !res.columns || !res.rows) return null;
-            let sortedRows = res.rows.map(row => row.map(cell => cell === null ? 'NULL' : String(cell)).join('|||'));
-            sortedRows.sort();
-            return { columns: res.columns, sortedRows };
+            
+            let processedRows = res.rows.map(row => row.map(cell => cell === null ? 'NULL' : String(cell)));
+            
+            if (autoOrder) {
+                // 自動排序：將每一行轉為字串後排序
+                processedRows = processedRows.map(r => r.join('|||'));
+                processedRows.sort();
+            } else {
+                // 不排序：直接轉為字串比對原始順序
+                processedRows = processedRows.map(r => r.join('|||'));
+            }
+            return { columns: res.columns, sortedRows: processedRows };
         }
 
-        checkAnswer(studentSql, answerSql) {
+        checkAnswer(studentSql, answerSql, autoOrder) {
             const studentRes = this.executeSql(studentSql);
             const answerRes = this.executeSql(answerSql);
             if (!studentRes.success) return { isCorrect: false, message: studentRes.error, studentData: null };
             if (!answerRes.success) return { isCorrect: false, message: '標準答案語法錯誤: ' + answerRes.error, studentData: null };
-            const normStudent = this.normalizeResult(studentRes.data);
-            const normAnswer = this.normalizeResult(answerRes.data);
+            
+            const normStudent = this.normalizeResult(studentRes.data, autoOrder);
+            const normAnswer = this.normalizeResult(answerRes.data, autoOrder);
             const isCorrect = JSON.stringify(normStudent) === JSON.stringify(normAnswer);
             return { isCorrect, studentData: studentRes.data[0] };
         }
@@ -252,7 +281,7 @@
           plantContainer=$('plantContainer'), plantLabel=$('plantLabel'),
           loginModal=$('loginModal'), loginInput=$('loginInput'),
           loginBtn=$('loginBtn'), avatarBtn=$('avatarBtn'),
-          toastContainer=$('toastContainer');
+          toastContainer=$('toastContainer'), connErrorModal=$('connErrorModal');
 
     function updateStatus(target, state) {
         const dotMap = { cloud: 'dotCloud', engine: 'dotEngine', db: 'dotDB' };
@@ -261,32 +290,30 @@
         dot.className = 'status-dot ' + state;
     }
 
+    // 🌟 嚴格連線邏輯：失敗則彈窗報錯
     async function loadData() {
-        if (USE_LOCAL_DATA) {
-            DB_QUESTIONS = LOCAL_QUESTIONS; DB_ENVIRONMENTS = LOCAL_ENVIRONMENTS;
-            updateStatus('cloud', 'warn'); 
+        updateStatus('cloud', 'off');
+        try {
+            const qRes = await fetch(`${API_BASE_URL}?action=getQuestions`); 
+            if (!qRes.ok) throw new Error(`HTTP ${qRes.status}`);
+            DB_QUESTIONS = await qRes.json();
+            
+            const eRes = await fetch(`${API_BASE_URL}?action=getEnvironments`); 
+            if (!eRes.ok) throw new Error(`HTTP ${eRes.status}`);
+            DB_ENVIRONMENTS = await eRes.json();
+            
+            updateStatus('cloud', 'on'); // 🟢 雲端連線成功
             updateStatus('db', 'off');
-        } else {
-            try {
-                const qRes = await fetch(`${API_BASE_URL}?action=getQuestions`); if (!qRes.ok) throw new Error(`HTTP ${qRes.status}`);
-                DB_QUESTIONS = await qRes.json();
-                const eRes = await fetch(`${API_BASE_URL}?action=getEnvironments`); if (!eRes.ok) throw new Error(`HTTP ${eRes.status}`);
-                DB_ENVIRONMENTS = await eRes.json();
-                updateStatus('cloud', 'on'); 
-                updateStatus('db', 'off');
-            } catch (err) {
-                console.error("雲端同步錯誤:", err);
-                showToast('error', '雲端同步失敗 (請按F12查看Console)');
-                DB_QUESTIONS = LOCAL_QUESTIONS; DB_ENVIRONMENTS = LOCAL_ENVIRONMENTS;
-                updateStatus('cloud', 'err'); 
-                updateStatus('db', 'off');
-            }
+            renderQuestionList(); updateProgress();
+        } catch (err) {
+            console.error("雲端同步錯誤:", err);
+            updateStatus('cloud', 'err'); // 🔴 雲端連線失敗
+            connErrorModal.classList.remove('hidden'); // 顯示連線錯誤彈窗
         }
-        renderQuestionList(); updateProgress();
     }
 
     async function submitResult(qId, isCorrect, sql) {
-        if (!isLoggedIn || USE_LOCAL_DATA) return;
+        if (!isLoggedIn) return;
         try {
             await fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ username: studentName, question_id: qId, is_correct: isCorrect, submitted_sql: sql }) });
         } catch (err) { console.error('上傳失敗'); }
@@ -305,14 +332,18 @@
     }
     
     function loadSandboxEnv() {
-        const q = DB_QUESTIONS.find(q=>q.id===currentQId); if(!q) { updateStatus('db', 'off'); return; }
+        const q = DB_QUESTIONS.find(q=>q.id===currentQId); 
+        if(!q) { updateStatus('db', 'off'); return; }
         const targetEnvId = parseInt(q.env_id);
         const env = DB_ENVIRONMENTS.find(e => parseInt(e.id) === targetEnvId);
         if (!env) { showToast('error', '找不到對應的資料庫環境 (env_id: ' + q.env_id + ')'); updateStatus('db', 'err'); return; }
         if (!sandbox.SQL) { updateStatus('db', 'err'); return; }
-        const success = sandbox.loadEnvironment(env.create_sql);
+        
+        // 🌟 傳入新的 table_data 而非 create_sql
+        const success = sandbox.loadEnvironment(env.table_data);
         updateStatus('db', success ? 'on' : 'err'); 
-        if (!success) showToast('error', '資料庫建置失敗，請檢查 create_sql');
+        if (!success) showToast('error', '資料庫建置失敗，請檢查 table_data 格式');
+        renderQuestionDetail(); // 環境載入後立即刷新介面顯示 Schema
     }
     
     function renderQuestionDetail() {
@@ -348,9 +379,31 @@
     hintBtn.addEventListener('click',()=>{const q=DB_QUESTIONS.find(q=>q.id===currentQId);if(!q)return;showToast('info','提示：答案開頭為 "'+q.answer_sql.substring(0,18)+'..."');});
 
     function executeSQL() {
-        if(!currentQId) { showToast('error','請先選擇題目'); return; } const sql = sqlEditor.value.trim(); if(!sql) { showToast('error','請輸入 SQL 語句'); return; } const q = DB_QUESTIONS.find(q=>q.id===currentQId); if(!q) return; runBtn.classList.add('running'); runBtn.innerHTML='<span class="loading-dots"><span></span><span></span><span></span></span>';
-        setTimeout(() => { runBtn.classList.remove('running'); runBtn.innerHTML='<i class="fas fa-play"></i> RUN'; const result = sandbox.checkAnswer(sql, q.answer_sql);
-            if (result.isCorrect) { const wasNew = !completedIds.has(q.id); completedIds.add(q.id); showResult('success', '執行成功！查詢傳回 '+result.studentData.rows.length+' 行數據。', result.studentData, q.answer_sql); updateProgress(); renderQuestionList(); updatePlant(); submitResult(q.id, true, sql); if(wasNew) { spawnPixelStars(runBtn); showToast('success','答對了！'); } } else { let errMsg = result.message || '結果與預期不符，請檢查查詢條件。'; let studentData = result.studentData; if(!result.success && result.error) { errMsg = result.error; studentData = null; } showResult('error', errMsg, studentData, q.answer_sql); submitResult(q.id, false, sql); showToast('error','結果不正確'); } }, 400);
+        if(!currentQId) { showToast('error','請先選擇題目'); return; } 
+        const sql = sqlEditor.value.trim(); if(!sql) { showToast('error','請輸入 SQL 語句'); return; } 
+        const q = DB_QUESTIONS.find(q=>q.id===currentQId); if(!q) return; 
+        
+        // 🌟 讀取 auto_order 設定 (預設 Y)
+        const autoOrder = (q.auto_order && q.auto_order.toUpperCase() === 'N') ? false : true;
+        
+        runBtn.classList.add('running'); runBtn.innerHTML='<span class="loading-dots"><span></span><span></span><span></span></span>';
+        setTimeout(() => { 
+            runBtn.classList.remove('running'); runBtn.innerHTML='<i class="fas fa-play"></i> RUN'; 
+            const result = sandbox.checkAnswer(sql, q.answer_sql, autoOrder);
+            
+            if (result.isCorrect) { 
+                const wasNew = !completedIds.has(q.id); completedIds.add(q.id); 
+                showResult('success', '執行成功！查詢傳回 '+result.studentData.rows.length+' 行數據。', result.studentData, q.answer_sql); 
+                updateProgress(); renderQuestionList(); updatePlant(); submitResult(q.id, true, sql); 
+                if(wasNew) { spawnPixelStars(runBtn); showToast('success','答對了！'); } 
+            } else { 
+                let errMsg = result.message || '結果與預期不符，請檢查查詢條件。'; 
+                let studentData = result.studentData; 
+                if(!result.success && result.error) { errMsg = result.error; studentData = null; } 
+                showResult('error', errMsg, studentData, q.answer_sql); 
+                submitResult(q.id, false, sql); showToast('error','結果不正確'); 
+            } 
+        }, 400);
     }
     function showResult(type, message, data, answer) {
         let html = `<div class="result-dialog ${type}"><span class="dialog-icon">${type==='success'?'✓':'✗'}</span>${message}</div>`;
@@ -374,8 +427,11 @@
         updateStatus('engine', engineReady ? 'on' : 'err');
         
         if(engineReady) {
+            // 🌟 啟動時直接嘗試連線，若失敗會在 loadData 內部顯示彈窗
             await loadData();
             loginInput.focus();
+        } else {
+            showToast('error', 'SQLite 引擎載入失敗，請重新整理');
         }
     }
     initApp();
