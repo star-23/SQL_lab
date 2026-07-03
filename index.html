@@ -158,8 +158,14 @@
         async init() {
             try {
                 this.SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` });
+                // 🌟 解除輸入框鎖定
+                document.getElementById('sqlEditor').disabled = false;
+                document.getElementById('sqlEditor').placeholder = '-- 在此輸入 SQL 語句...';
                 return true;
-            } catch (err) { return false; }
+            } catch (err) { 
+                console.error('SQLite 引擎載入失敗:', err);
+                return false; 
+            }
         }
         
         // 🌟 全新：解析簡易表格定義語言
