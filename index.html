@@ -43,16 +43,17 @@
         .nav-logo .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent-hover));border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;font-family:var(--pixel);font-size:0.45rem;color:#fff;box-shadow:0 2px 10px var(--accent-glow);}
         .nav-logo h1{font-family:var(--pixel);font-size:0.6rem;color:var(--text);letter-spacing:0.6px;} .nav-logo h1 span{color:var(--accent);}
         .nav-categories{display:flex;gap:4px;align-items:center;position:relative;z-index:2;}
-        .cat-tab{font-family:var(--pixel);font-size:0.42rem;padding:5px 12px;background:var(--glass-subtle);border:1px solid transparent;border-radius:50px;color:var(--text-muted);cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;white-space:nowrap;backdrop-filter:blur(8px);}
-        .cat-tab:hover{background:var(--accent-soft);border-color:rgba(249,115,22,0.2);color:var(--accent);}
-        .cat-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-hover));border-color:transparent;color:#fff;box-shadow:0 2px 12px var(--accent-glow);}
+        .view-tab{font-family:var(--pixel);font-size:0.42rem;padding:5px 12px;background:var(--glass-subtle);border:1px solid transparent;border-radius:50px;color:var(--text-muted);cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;white-space:nowrap;backdrop-filter:blur(8px);}
+        .view-tab:hover{background:var(--accent-soft);border-color:rgba(249,115,22,0.2);color:var(--accent);}
+        .view-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-hover));border-color:transparent;color:#fff;box-shadow:0 2px 12px var(--accent-glow);}
         .nav-right{display:flex;align-items:center;gap:0.75rem;position:relative;z-index:2;}
         .nav-progress{display:flex;align-items:center;gap:0.4rem;font-family:var(--pixel);font-size:0.42rem;color:var(--text-light);}
         .nav-progress .progress-bar{width:68px;height:6px;background:rgba(148,163,184,0.15);border-radius:3px;overflow:hidden;}
         .nav-progress .progress-fill{height:100%;background:linear-gradient(90deg,var(--success),#34D399);border-radius:3px;transition:width 0.6s cubic-bezier(0.34,1.56,0.64,1);}
         .nav-avatar{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),var(--accent-hover));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px var(--accent-glow);} .nav-avatar:hover{transform:scale(1.1);}
         
-        main{position:relative;z-index:10;display:grid;grid-template-columns:264px 1fr 284px;gap:10px;padding:10px;height:calc(100vh - 66px);}
+        main{position:relative;z-index:10;display:block;padding:10px;height:calc(100vh - 66px);}
+        .view-grid{width:100%;height:100%;}
         .panel-header{padding:0.6rem 0.85rem;background:rgba(255,255,255,0.35);border-bottom:1px solid var(--border-light);font-family:var(--pixel);font-size:0.45rem;color:var(--text-light);display:flex;align-items:center;gap:0.35rem;letter-spacing:0.3px;flex-shrink:0;position:relative;z-index:2;} .panel-header i{color:var(--accent);font-size:0.6rem;}
         
         .question-list{flex:0 0 auto;max-height:210px;overflow-y:auto;padding:0.35rem;border-bottom:1px solid var(--border-light);position:relative;z-index:2;} .question-list::-webkit-scrollbar{width:4px;} .question-list::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.2);border-radius:2px;}
@@ -84,6 +85,10 @@
         .status-dot.warn{background:#F59E0B;box-shadow:0 0 4px rgba(245,158,11,0.5);}
         .status-dot.err{background:#EF4444;box-shadow:0 0 4px rgba(239,68,68,0.5);}
         
+        .cat-tab{font-family:var(--pixel);font-size:0.42rem;padding:5px 12px;background:var(--glass-subtle);border:1px solid transparent;border-radius:50px;color:var(--text-muted);cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;white-space:nowrap;backdrop-filter:blur(8px);}
+        .cat-tab:hover{background:var(--accent-soft);border-color:rgba(249,115,22,0.2);color:var(--accent);}
+        .cat-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-hover));border-color:transparent;color:#fff;box-shadow:0 2px 12px var(--accent-glow);}
+
         @media(max-width:1100px){main{grid-template-columns:1fr;height:auto;}} @media(max-width:768px){.nav-categories{display:none;}}
         /* 排行榜樣式 */
         .lb-row { display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0.8rem; background:rgba(255,255,255,0.5); border:1px solid var(--border-light); border-radius:12px; transition: all 0.2s; }
@@ -101,7 +106,20 @@
         .ann-date { font-family:var(--pixel); font-size:0.35rem; color:var(--text-muted); margin-bottom:4px; letter-spacing:0.3px; }
         .ann-title { font-weight:700; font-size:0.88rem; color:var(--text); margin-bottom:6px; }
         .ann-content { font-size:0.78rem; line-height:1.6; color:var(--text-light); }
-
+        /* 字典樣式 */
+        .dict-input { font-family: var(--body); font-size: 0.8rem; padding: 5px 12px; border: 1px solid var(--border-light); border-radius: 20px; background: rgba(255,255,255,0.6); outline: none; transition: all 0.2s; }
+        .dict-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+        .dict-container { flex: 1; overflow-y: auto; padding: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; align-content: start; }
+        .dict-card { background: rgba(255,255,255,0.6); border: 1px solid var(--border-light); border-radius: 14px; padding: 1rem; transition: all 0.2s; display:flex; flex-direction:column; }
+        .dict-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); border-color: var(--accent); }
+        .dict-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .dict-keyword { font-family: var(--code); font-size: 1rem; font-weight: 700; color: var(--accent); }
+        .dict-category { font-family: var(--pixel); font-size: 0.3rem; background: var(--accent-soft); color: var(--accent-hover); padding: 4px 8px; border-radius: 10px; }
+        .dict-desc { font-size: 0.8rem; color: var(--text-light); line-height: 1.5; margin-bottom: 12px; flex: 1; }
+        .dict-example { background: rgba(15,23,42,0.05); border-left: 3px solid var(--success); padding: 8px 10px; border-radius: 0 8px 8px 0; font-family: var(--code); font-size: 0.75rem; color: var(--text); position: relative; word-break: break-all; }
+        .dict-copy { position: absolute; top: 4px; right: 4px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; opacity: 0; transition: opacity 0.2s; }
+        .dict-example:hover .dict-copy { opacity: 1; }
+        .dict-copy:hover { color: var(--accent); }
     </style>
 </head>
 <body>
@@ -110,65 +128,83 @@
     <header role="banner">
         <div class="nav-logo"><div class="logo-icon">SQL</div><h1><span>SQL</span> Quest</h1></div>
         <nav class="nav-categories" role="tablist">
-            <button class="cat-tab active" data-cat="all">ALL</button>
-            <button class="cat-tab" data-cat="basic">SELECT</button>
-            <button class="cat-tab" data-cat="where">WHERE</button>
-            <button class="cat-tab" data-cat="order">ORDER</button>
-            <button class="cat-tab" data-cat="join">JOIN</button>
-            <button class="cat-tab" data-cat="groupby">GROUP</button>
+            <button class="view-tab active" data-view="practiceView">題目操練</button>
+            <button class="view-tab" data-view="dictView">SQL 字典</button>
         </nav>
         <div class="nav-right">
             <div class="nav-progress"><span id="progressText">0/0</span><div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div></div>
-            <!-- 獎杯按鈕 -->
             <div class="nav-avatar" id="leaderboardBtn" role="button" aria-label="排行榜" tabindex="0" style="background:linear-gradient(135deg,#FBBF24,#F59E0B); box-shadow:0 2px 8px rgba(245,158,11,0.4);">
                 <i class="fas fa-trophy"></i>
             </div>
-            <!-- 鈴鐺按鈕 -->
             <div class="nav-avatar" id="bellBtn" role="button" aria-label="通知中心" tabindex="0" style="background:linear-gradient(135deg,#60A5FA,#3B82F6); box-shadow:0 2px 8px rgba(59,130,246,0.4); position:relative;">
                 <i class="fas fa-bell"></i>
                 <span id="newMsgDot" style="position:absolute;top:-2px;right:-2px;width:10px;height:10px;background:#EF4444;border-radius:50%;border:2px solid #fff;display:none;"></span>
             </div>
-            <!-- 頭像按鈕 -->
             <div class="nav-avatar" id="avatarBtn"><i class="fas fa-user"></i></div>
         </div>
     </header>
+    
     <main>
-        <aside class="glass" style="display:flex;flex-direction:column;">
-            <div class="panel-header"><i class="fas fa-book-open"></i> QUEST LOG</div>
-            <div class="question-list" id="questionList"></div>
-            <div class="question-detail" id="questionDetail"><div class="result-idle"><p>選擇題目開始操練</p></div></div>
-        </aside>
-        <section class="glass editor-panel">
-            <div class="editor-header">
-                <div class="editor-header-left"><button class="editor-tab active">QUERY.sql</button><button class="editor-tab" id="hintBtn"><i class="fas fa-lightbulb"></i> HINT</button></div>
-                <div class="editor-actions"><button class="btn-clear" id="clearBtn"><i class="fas fa-eraser"></i> CLEAR</button><button class="btn-run" id="runBtn"><i class="fas fa-play"></i> RUN</button></div>
+        <!-- 練習模式視圖 -->
+        <div id="practiceView" class="view-grid" style="display:grid; grid-template-columns: 264px 1fr 284px; gap: 10px; height: 100%;">
+            <div style="grid-column: 1 / -1; display:flex; gap:5px; justify-content:center; margin-bottom:5px;">
+                <button class="cat-tab active" data-cat="all">ALL</button>
+                <button class="cat-tab" data-cat="basic">SELECT</button>
+                <button class="cat-tab" data-cat="where">WHERE</button>
+                <button class="cat-tab" data-cat="order">ORDER</button>
+                <button class="cat-tab" data-cat="join">JOIN</button>
+                <button class="cat-tab" data-cat="groupby">GROUP</button>
             </div>
-            <div class="editor-area"><div class="line-numbers" id="lineNumbers"><div>1</div></div><textarea id="sqlEditor" spellcheck="false" autocomplete="off" placeholder="載入中..." disabled></textarea></div>
-            <div class="editor-footer"><span class="shortcut-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> 執行</span><span id="charCount">0 字元</span></div>
-        </section>
-        <aside class="glass" style="display:flex;flex-direction:column;">
-            <div class="panel-header"><i class="fas fa-terminal"></i> OUTPUT</div>
-            <div class="result-display" id="resultDisplay"><div class="result-idle"><div class="idle-icon"><i class="fas fa-database"></i></div><p>輸入 SQL 語句並按下<br><strong>RUN</strong> 來執行查詢</p></div></div>
-            <div class="plant-section">
-                <h4>MY GARDEN</h4>
-                <div class="plant-container" id="plantContainer"><div class="stem-modern" id="stemModern" style="height:0px;"></div><div class="pot-modern"></div></div>
-                <div class="plant-label" id="plantLabel">已完成 0 題</div>
+            <aside class="glass" style="display:flex;flex-direction:column;">
+                <div class="panel-header"><i class="fas fa-book-open"></i> QUEST LOG</div>
+                <div class="question-list" id="questionList"></div>
+                <div class="question-detail" id="questionDetail"><div class="result-idle"><p>選擇題目開始操練</p></div></div>
+            </aside>
+            <section class="glass editor-panel">
+                <div class="editor-header">
+                    <div class="editor-header-left"><button class="editor-tab active">QUERY.sql</button><button class="editor-tab" id="hintBtn"><i class="fas fa-lightbulb"></i> HINT</button></div>
+                    <div class="editor-actions"><button class="btn-clear" id="clearBtn"><i class="fas fa-eraser"></i> CLEAR</button><button class="btn-run" id="runBtn"><i class="fas fa-play"></i> RUN</button></div>
+                </div>
+                <div class="editor-area"><div class="line-numbers" id="lineNumbers"><div>1</div></div><textarea id="sqlEditor" spellcheck="false" autocomplete="off" placeholder="載入中..." disabled></textarea></div>
+                <div class="editor-footer"><span class="shortcut-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> 執行</span><span id="charCount">0 字元</span></div>
+            </section>
+            <aside class="glass" style="display:flex;flex-direction:column;">
+                <div class="panel-header"><i class="fas fa-terminal"></i> OUTPUT</div>
+                <div class="result-display" id="resultDisplay"><div class="result-idle"><div class="idle-icon"><i class="fas fa-database"></i></div><p>輸入 SQL 語句並按下<br><strong>RUN</strong> 來執行查詢</p></div></div>
+                <div class="plant-section">
+                    <h4>MY GARDEN</h4>
+                    <div class="plant-container" id="plantContainer"><div class="stem-modern" id="stemModern" style="height:0px;"></div><div class="pot-modern"></div></div>
+                    <div class="plant-label" id="plantLabel">已完成 0 題</div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- 字典模式視圖 -->
+        <div id="dictView" class="view-grid glass" style="display:none; grid-template-columns: 1fr; height: 100%; overflow:hidden;">
+            <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <span><i class="fas fa-book"></i> SQL DICTIONARY</span>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="text" id="dictSearch" placeholder="搜尋 SQL 語法..." class="dict-input">
+                    <select id="dictFilter" class="dict-input">
+                        <option value="all">全部分類</option>
+                    </select>
+                </div>
             </div>
-        </aside>
+            <div id="dictContainer" class="dict-container"></div>
+        </div>
     </main>
     
-    <!-- 登入彈窗 (Google OAuth) -->
+    <!-- 登入彈窗 -->
     <div class="modal-overlay" id="loginModal">
         <div class="modal-box">
             <h2>SQL Quest LOGIN</h2>
             <p style="font-size:0.8rem;color:var(--text-light);margin-bottom:1.2rem;position:relative;z-index:2;">請使用學校 Google 帳戶登入</p>
-            <!-- Google 登入按鈕將渲染在這裡 -->
             <div id="googleLoginBtn" style="position:relative;z-index:2;display:flex;justify-content:center;"></div>
             <p id="loginErrorMsg" style="font-size:0.75rem;color:var(--error);margin-top:1rem;display:none;position:relative;z-index:2;"></p>
         </div>
     </div>
 
-    <!-- 連線錯誤彈窗 (新增) -->
+    <!-- 連線錯誤彈窗 -->
     <div class="modal-overlay hidden" id="connErrorModal" style="z-index:305;">
         <div class="modal-box" style="border-color:var(--error);">
             <h2 style="color:var(--error);">CONNECTION ERROR</h2>
@@ -178,16 +214,15 @@
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
-    <!-- 🌟 排行榜彈窗 -->
+    
+    <!-- 排行榜彈窗 -->
     <div class="modal-overlay hidden" id="leaderboardModal">
         <div class="modal-box" style="max-width:420px;text-align:left;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;position:relative;z-index:2;">
                 <h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-trophy" style="color:#F59E0B;margin-right:8px;"></i>LEADERBOARD</h2>
                 <button id="closeLbBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;"><i class="fas fa-times"></i></button>
             </div>
-            <div id="leaderboardList" style="position:relative;z-index:2;max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
-                <!-- 排行榜數據將在這裡動態渲染 -->
-            </div>
+            <div id="leaderboardList" style="position:relative;z-index:2;max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
         </div>
     </div>
 
@@ -197,54 +232,38 @@
         <div class="status-item"><div class="status-dot off" id="dotDB"></div>DB</div>
     </div>
 
-    <!-- 🌟 通知中心彈窗 -->
+    <!-- 通知中心彈窗 -->
     <div class="modal-overlay hidden" id="announceModal">
         <div class="modal-box" style="max-width:450px;text-align:left;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;position:relative;z-index:2;">
                 <h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-bell" style="color:#3B82F6;margin-right:8px;"></i>NOTIFICATIONS</h2>
                 <button id="closeAnnBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;"><i class="fas fa-times"></i></button>
             </div>
-            <div id="announceList" style="position:relative;z-index:2;max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
-                <!-- 通知將在這裡動態渲染 -->
-            </div>
+            <div id="announceList" style="position:relative;z-index:2;max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;"></div>
         </div>
     </div>
 
     <script>
-    // ==========================================
     // 核心配置
-    // ==========================================
     const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxR3eHA3KBgU19KCXx0zysRJGctB2A-zJVpyDbU8UvZd_F1tXO2PnXkn9wmkwur52wKrg/exec';
-    const GOOGLE_CLIENT_ID = '947607172653-ror27p5j0l16shgm5ta712iq676deaop.apps.googleusercontent.com'; // 例如：123456789-xxxx.apps.googleusercontent.com
+    const GOOGLE_CLIENT_ID = '947607172653-ror27p5j0l16shgm5ta712iq676deaop.apps.googleusercontent.com'; 
 
-    // ==========================================
     // SQL 沙盒執行引擎
-    // ==========================================
     class SqlSandbox {
         constructor() { this.db = null; this.SQL = null; this.currentSchema = []; }
-        
         async init() {
             try {
                 this.SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}` });
                 document.getElementById('sqlEditor').disabled = false;
                 document.getElementById('sqlEditor').placeholder = '-- 在此輸入 SQL 語句...';
                 return true;
-            } catch (err) { 
-                console.error('SQLite 引擎載入失敗:', err);
-                return false; 
-            }
+            } catch (err) { console.error('SQLite 引擎載入失敗:', err); return false; }
         }
-        
         parseTableData(tableDataStr) {
-            const tables = [];
-            const sqlStatements = [];
+            const tables = []; const sqlStatements = [];
             const normalizedStr = String(tableDataStr).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
             const lines = normalizedStr.split('\n').map(l => l.trim());
-            
-            let currentTable = null;
-            let currentColumns = [];
-            let currentData = [];
-
+            let currentTable = null; let currentColumns = []; let currentData = [];
             const saveCurrentTable = () => {
                 if (currentTable && currentColumns.length > 0) {
                     tables.push({ name: currentTable, columns: currentColumns });
@@ -253,41 +272,23 @@
                     if (currentData.length > 0) {
                         const colNames = currentColumns.map(c => c.name).join(', ');
                         currentData.forEach(row => {
-                            const values = row.map(v => {
-                                if (v === null || v === '') return "''";
-                                return isNaN(v) ? `'${v.replace(/'/g, "''")}'` : v;
-                            }).join(', ');
+                            const values = row.map(v => { if (v === null || v === '') return "''"; return isNaN(v) ? `'${v.replace(/'/g, "''")}'` : v; }).join(', ');
                             sqlStatements.push(`INSERT INTO ${currentTable} (${colNames}) VALUES (${values});`);
                         });
                     }
                 }
             };
-
             for (const line of lines) {
                 if (line.length === 0) continue;
-                if (line.startsWith('[') && line.endsWith(']')) {
-                    saveCurrentTable();
-                    currentTable = line.substring(1, line.length - 1).trim();
-                    currentColumns = [];
-                    currentData = [];
-                } else if (currentTable) {
+                if (line.startsWith('[') && line.endsWith(']')) { saveCurrentTable(); currentTable = line.substring(1, line.length - 1).trim(); currentColumns = []; currentData = []; } 
+                else if (currentTable) {
                     const colMatch = line.match(/^([a-zA-Z_]\w*)\s*\((.*?)\)$/i);
-                    if (colMatch) {
-                        const colName = colMatch[1].trim();
-                        const props = colMatch[2].toUpperCase();
-                        const type = props.match(/TEXT|INTEGER|INT|REAL/)?.[0] || 'TEXT';
-                        const isPk = props.includes('PK');
-                        currentColumns.push({ name: colName, type, pk: isPk });
-                    } else {
-                        currentData.push(line.split(',').map(v => v.trim()));
-                    }
+                    if (colMatch) { const colName = colMatch[1].trim(); const props = colMatch[2].toUpperCase(); const type = props.match(/TEXT|INTEGER|INT|REAL/)?.[0] || 'TEXT'; const isPk = props.includes('PK'); currentColumns.push({ name: colName, type, pk: isPk }); } 
+                    else { currentData.push(line.split(',').map(v => v.trim())); }
                 }
             }
-            saveCurrentTable();
-            this.currentSchema = tables;
-            return sqlStatements.join('\n');
+            saveCurrentTable(); this.currentSchema = tables; return sqlStatements.join('\n');
         }
-        
         loadEnvironment(tableDataStr) { 
             this.db = new this.SQL.Database(); 
             try { 
@@ -297,12 +298,8 @@
                 const stmts = sqlStr.split(';').map(s => s.trim()).filter(s => s.length > 0);
                 for (const stmt of stmts) this.db.run(stmt);
                 return true; 
-            } catch (err) { 
-                console.error('❌ 環境建置失敗:', err.message); 
-                return false; 
-            } 
+            } catch (err) { console.error('❌ 環境建置失敗:', err.message); return false; } 
         }
-
         executeSql(sql) {
             if (!this.db) return { success: false, error: '資料庫未初始化。請點擊左側題目載入環境。' };
             try {
@@ -313,7 +310,6 @@
                 return { success: true, data: formatted };
             } catch (err) { return { success: false, error: err.message }; }
         }
-        
         normalizeResult(data, autoOrder) {
             if (!data || data.length === 0) return null;
             let res = data[0];
@@ -323,7 +319,6 @@
             if (autoOrder) processedRows.sort();
             return { columns: res.columns, sortedRows: processedRows };
         }
-
         checkAnswer(studentSql, answerSql, autoOrder) {
             const studentRes = this.executeSql(studentSql);
             const answerRes = this.executeSql(answerSql);
@@ -336,13 +331,11 @@
         }
     }
 
-    // ==========================================
     // 全局狀態與 DOM
-    // ==========================================
     const sandbox = new SqlSandbox();
     let currentCat = 'all', currentQId = null, completedIds = new Set();
     let isLoggedIn = false, studentName = '';
-    let DB_QUESTIONS = [], DB_ENVIRONMENTS = [];
+    let DB_QUESTIONS = [], DB_ENVIRONMENTS = [], DB_DICTIONARY = [];
 
     const $ = id => document.getElementById(id);
     const questionList=$('questionList'), questionDetail=$('questionDetail'),
@@ -354,7 +347,8 @@
           plantContainer=$('plantContainer'), plantLabel=$('plantLabel'),
           loginModal=$('loginModal'), loginInput=$('loginInput'),
           loginBtn=$('loginBtn'), avatarBtn=$('avatarBtn'),
-          toastContainer=$('toastContainer'), connErrorModal=$('connErrorModal');
+          toastContainer=$('toastContainer'), connErrorModal=$('connErrorModal'),
+          practiceView=$('practiceView'), dictView=$('dictView');
 
     function updateStatus(target, state) {
         const dotMap = { cloud: 'dotCloud', engine: 'dotEngine', db: 'dotDB' };
@@ -362,22 +356,14 @@
         if (dot) dot.className = 'status-dot ' + state;
     }
 
-    // ==========================================
     // API 模組
-    // ==========================================
     async function loadData() {
         updateStatus('cloud', 'off');
         try {
-            const qRes = await fetch(`${API_BASE_URL}?action=getQuestions`); 
-            if (!qRes.ok) throw new Error(`HTTP ${qRes.status}`);
-            DB_QUESTIONS = await qRes.json();
-            
-            const eRes = await fetch(`${API_BASE_URL}?action=getEnvironments`); 
-            if (!eRes.ok) throw new Error(`HTTP ${eRes.status}`);
-            DB_ENVIRONMENTS = await eRes.json();
-            
+            const qRes = await fetch(`${API_BASE_URL}?action=getQuestions`); if (!qRes.ok) throw new Error(`HTTP ${qRes.status}`); DB_QUESTIONS = await qRes.json();
+            const eRes = await fetch(`${API_BASE_URL}?action=getEnvironments`); if (!eRes.ok) throw new Error(`HTTP ${eRes.status}`); DB_ENVIRONMENTS = await eRes.json();
             updateStatus('cloud', 'on'); updateStatus('db', 'off');
-            renderQuestionList(); updateProgress();
+            renderQuestionList(); updateProgress(); checkNewAnnouncements();
         } catch (err) {
             console.error("雲端同步錯誤:", err);
             updateStatus('cloud', 'err'); 
@@ -389,81 +375,67 @@
 
     async function submitResult(qId, isCorrect, sql) {
         if (!isLoggedIn) return;
-        try {
-            await fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ username: studentName, question_id: qId, is_correct: isCorrect, submitted_sql: sql }) });
-        } catch (err) { console.error('上傳失敗'); }
+        try { await fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ username: studentName, question_id: qId, is_correct: isCorrect, submitted_sql: sql }) }); } catch (err) { console.error('上傳失敗'); }
     }
 
     async function loadUserProgress(username) {
         try {
-            const res = await fetch(`${API_BASE_URL}?action=getUserProgress&username=${username}`);
-            if (!res.ok) throw new Error('讀取進度失敗');
+            const res = await fetch(`${API_BASE_URL}?action=getUserProgress&username=${username}`); if (!res.ok) throw new Error('讀取進度失敗');
             const correctIds = await res.json();
             correctIds.forEach(id => completedIds.add(parseInt(id)));
             renderQuestionList(); updateProgress(); updatePlant();
             showToast('success', `歡迎，${username}！已恢復 ${completedIds.size} 題進度`);
-        } catch (err) {
-            console.error('讀取進度錯誤:', err);
-            showToast('error', '讀取進度失敗');
-        }
+        } catch (err) { console.error('讀取進度錯誤:', err); showToast('error', '讀取進度失敗'); }
     }
 
-    // ==========================================
     // 登入與 UI 邏輯
-    // ==========================================
-    // 🌟 Google 登入初始化
     window.onload = function() {
         if (window.google) {
-            google.accounts.id.initialize({
-                client_id: GOOGLE_CLIENT_ID,
-                callback: handleCredentialResponse
-            });
-            google.accounts.id.renderButton(
-                document.getElementById('googleLoginBtn'),
-                { theme: "outline", size: "large", text: "signin_with", shape: "pill", width: 280, locale: "zh-HK" }
-            );
+            google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
+            google.accounts.id.renderButton(document.getElementById('googleLoginBtn'), { theme: "outline", size: "large", text: "signin_with", shape: "pill", width: 280, locale: "zh-HK" });
         }
     };
 
-    // 🌟 接收 Google 返回的 Token
     function handleCredentialResponse(response) {
         const errorMsgEl = document.getElementById('loginErrorMsg');
         errorMsgEl.style.display = 'none';
-        
         showToast('info', '正在驗證學校身份...');
-        
-        // 將 Token 傳給 GAS 後端驗證
-        fetch(API_BASE_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'verifyToken', id_token: response.credential })
-        })
+        fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'verifyToken', id_token: response.credential }) })
         .then(res => res.json())
         .then(data => {
             if (data.success && data.email) {
-                studentName = data.email; // 使用真實 Email 作為學生身份
-                isLoggedIn = true;
-                loginModal.classList.add('hidden');
-                
-                // 開始讀取雲端進度
+                studentName = data.email; isLoggedIn = true; loginModal.classList.add('hidden');
                 showToast('info', '正在讀取作答紀錄...');
                 loadUserProgress(studentName);
             } else {
-                // 顯示錯誤訊息 (例如非本校帳號)
                 errorMsgEl.textContent = data.error || '登入失敗，請重試。';
                 errorMsgEl.style.display = 'block';
                 showToast('error', data.error || '登入失敗');
             }
         })
-        .catch(err => {
-            console.error('Token驗證請求失敗:', err);
-            errorMsgEl.textContent = '網路錯誤，請重試。';
-            errorMsgEl.style.display = 'block';
-        });
+        .catch(err => { console.error('Token驗證請求失敗:', err); errorMsgEl.textContent = '網路錯誤，請重試。'; errorMsgEl.style.display = 'block'; });
     }
     
-    avatarBtn.addEventListener('click',()=>{if(!isLoggedIn){loginModal.classList.remove('hidden');loginInput.focus();}else showToast('info','身份：'+studentName);});
-    document.querySelectorAll('.cat-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');currentCat=tab.dataset.cat;renderQuestionList();});});
+    avatarBtn.addEventListener('click',()=>{if(!isLoggedIn){loginModal.classList.remove('hidden');}else showToast('info','身份：'+studentName);});
+
+    // 視圖切換邏輯
+    document.querySelectorAll('.nav-categories .view-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.nav-categories .view-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const view = tab.dataset.view;
+            if (view === 'practiceView') { practiceView.style.display = 'grid'; dictView.style.display = 'none'; } 
+            else { practiceView.style.display = 'none'; dictView.style.display = 'grid'; initDictionary(); }
+        });
+    });
+
+    // 題目分類切換邏輯
+    document.querySelectorAll('.cat-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active'); currentCat = tab.dataset.cat; renderQuestionList();
+        });
+    });
 
     function renderQuestionList() {
         const filtered = currentCat==='all' ? DB_QUESTIONS : DB_QUESTIONS.filter(q=>q.category===currentCat);
@@ -478,10 +450,8 @@
         const env = DB_ENVIRONMENTS.find(e => parseInt(e.id) === targetEnvId);
         if (!env) { showToast('error', '找不到對應的資料庫環境 (env_id: ' + q.env_id + ')'); updateStatus('db', 'err'); return; }
         if (!sandbox.SQL) { updateStatus('db', 'err'); return; }
-        
         const tableData = env.table_data || env.create_sql;
         if (!tableData) { showToast('error', 'Google Sheet 中找不到資料表數據'); updateStatus('db', 'err'); return; }
-        
         const success = sandbox.loadEnvironment(tableData);
         updateStatus('db', success ? 'on' : 'err'); 
         if (!success) showToast('error', '資料庫建置失敗，請檢查 table_data 格式');
@@ -491,7 +461,6 @@
     function renderQuestionDetail() {
         const q = DB_QUESTIONS.find(q=>q.id===currentQId);
         if(!q) { questionDetail.innerHTML = '<div class="result-idle"><p>選擇題目開始</p></div>'; return; }
-        
         let schemaHtml = '';
         const tables = sandbox.currentSchema; 
         if (tables && tables.length > 0) {
@@ -503,7 +472,6 @@
             });
             schemaHtml += `</div>`;
         }
-
         questionDetail.innerHTML = `<div class="detail-title"><span style="font-family:var(--pixel);font-size:0.4rem;color:var(--accent);">[${q.category.toUpperCase()}]</span><br>${q.title}</div><div class="detail-desc">${q.description}</div><div class="dse-tip"><i class="fas fa-lightbulb"></i><span>${q.dse_tip}</span></div>${schemaHtml}`;
     }
 
@@ -515,21 +483,16 @@
     runBtn.addEventListener('click',executeSQL);
     hintBtn.addEventListener('click',()=>{const q=DB_QUESTIONS.find(q=>q.id===currentQId);if(!q)return;showToast('info','提示：答案開頭為 "'+q.answer_sql.substring(0,18)+'..."');});
 
-    // ==========================================
     // 核心執行流程
-    // ==========================================
     function executeSQL() {
         if(!currentQId) { showToast('error','請先選擇題目'); return; } 
         const sql = sqlEditor.value.trim(); if(!sql) { showToast('error','請輸入 SQL 語句'); return; } 
         const q = DB_QUESTIONS.find(q=>q.id===currentQId); if(!q) return; 
-        
         const autoOrder = (q.auto_order && q.auto_order.toUpperCase() === 'N') ? false : true;
-        
         runBtn.classList.add('running'); runBtn.innerHTML='<span class="loading-dots"><span></span><span></span><span></span></span>';
         setTimeout(() => { 
             runBtn.classList.remove('running'); runBtn.innerHTML='<i class="fas fa-play"></i> RUN'; 
             const result = sandbox.checkAnswer(sql, q.answer_sql, autoOrder);
-            
             if (result.isCorrect) { 
                 const wasNew = !completedIds.has(q.id); completedIds.add(q.id); 
                 showResult('success', '執行成功！查詢傳回 '+result.studentData.rows.length+' 行數據。', result.studentData, q.answer_sql); 
@@ -555,135 +518,112 @@
     
     function resetResult(){resultDisplay.innerHTML=`<div class="result-idle"><div class="idle-icon"><i class="fas fa-database"></i></div><p>輸入 SQL 語句並按下<br><strong>RUN</strong> 來執行查詢</p></div>`;}
     function updateProgress(){const t=DB_QUESTIONS.length,d=completedIds.size;progressText.textContent=d+'/'+t;progressFill.style.width=(d/t)*100+'%';}
-    
     function updatePlant(){ const total=DB_QUESTIONS.length,done=completedIds.size; const stemH=Math.round((done/total)*30);stemModern.style.height=stemH+'px'; plantContainer.querySelectorAll('.leaf-modern,.flower-modern').forEach(el=>el.remove()); const leafCount=Math.min(Math.floor(done*1.5),6); for(let i=0;i<leafCount;i++){const leaf=document.createElement('div');leaf.className='leaf-modern '+(i%2===0?'left':'right'); leaf.style.position='absolute';leaf.style.bottom=(stemH-(i+1)*5+32)+'px'; leaf.style.left=`calc(50% + ${(i%2===0?-1:1)*6}px)`;stemModern.appendChild(leaf); } if(done>=total){const f=document.createElement('div');f.className='flower-modern';f.style.position='absolute';f.style.top='-6px';f.style.left='-3px';stemModern.appendChild(f);} plantLabel.textContent='已完成 '+done+' 題'; }
-    
     function spawnPixelStars(anchor){ const rect=anchor.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2; for(let i=0;i<8;i++){const star=document.createElement('div');star.className='pixel-star';star.textContent=['★','✦'][Math.floor(Math.random()*2)]; const angle=(Math.PI*2/8)*i,dist=30+Math.random()*50; star.style.left=cx+'px';star.style.top=cy+'px';star.style.setProperty('--tx',Math.cos(angle)*dist+'px');star.style.setProperty('--ty',Math.sin(angle)*dist+'px'); star.style.color=['var(--accent)','#10B981','#FBBF24'][Math.floor(Math.random()*3)];star.style.fontSize=(6+Math.random()*8)+'px'; document.body.appendChild(star);setTimeout(()=>star.remove(),1100); } }
-    
     function showToast(type,msg){ const toast=document.createElement('div');toast.className='toast '+type; toast.innerHTML=`<i class="fas ${type==='success'?'fa-check-circle':'fa-times-circle'}"></i> ${msg}`;toastContainer.appendChild(toast); setTimeout(()=>{toast.style.opacity='0';toast.style.transform='translateX(24px)';toast.style.transition='all 0.3s';setTimeout(()=>toast.remove(),350);},3000); }
 
-    async function initApp() {
-        updateStatus('engine', 'off'); updateStatus('cloud', 'off'); updateStatus('db', 'off');
-        const engineReady = await sandbox.init();
-        updateStatus('engine', engineReady ? 'on' : 'err');
-        if(engineReady) { 
-            await loadData(); 
-            loginInput.focus(); 
-            checkNewAnnouncements(); // 🌟 檢查新通知
-        } else { 
-            showToast('error', 'SQLite 引擎載入失敗，請重新整理'); 
-        }
-    }    // 🌟 排行榜邏輯
+    // 排行榜邏輯
     const leaderboardModal = $('leaderboardModal');
     const leaderboardList = $('leaderboardList');
-    
     $('leaderboardBtn').addEventListener('click', openLeaderboard);
     $('closeLbBtn').addEventListener('click', () => leaderboardModal.classList.add('hidden'));
-
     async function openLeaderboard() {
         leaderboardList.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:2rem 0;"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>`;
         leaderboardModal.classList.remove('hidden');
-        
         try {
-            const res = await fetch(`${API_BASE_URL}?action=getLeaderboard`);
-            if (!res.ok) throw new Error('載入失敗');
+            const res = await fetch(`${API_BASE_URL}?action=getLeaderboard`); if (!res.ok) throw new Error('載入失敗');
             const data = await res.json();
-            
-            if (data.length === 0) {
-                leaderboardList.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:2rem 0;">尚無作答紀錄</div>`;
-                return;
-            }
-            
+            if (data.length === 0) { leaderboardList.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:2rem 0;">尚無作答紀錄</div>`; return; }
             let html = '';
             data.forEach((item, index) => {
-                const rank = index + 1;
-                let rankClass = '';
-                if (rank === 1) rankClass = 'gold';
-                else if (rank === 2) rankClass = 'silver';
-                else if (rank === 3) rankClass = 'bronze';
-                
-                // 如果是自己，加上高亮
+                const rank = index + 1; let rankClass = '';
+                if (rank === 1) rankClass = 'gold'; else if (rank === 2) rankClass = 'silver'; else if (rank === 3) rankClass = 'bronze';
                 const isMe = (item.username === studentName) ? 'me' : '';
-                
-                // 處理 Email 顯示 (隱藏網域)
                 const displayName = item.username.split('@')[0];
-                
-                html += `
-                    <div class="lb-row ${rankClass} ${isMe}">
-                        <div class="lb-rank">${rank <= 3 ? '★' : rank}</div>
-                        <div class="lb-name">${displayName}</div>
-                        <div class="lb-score">${item.score} 題</div>
-                    </div>
-                `;
+                html += `<div class="lb-row ${rankClass} ${isMe}"><div class="lb-rank">${rank <= 3 ? '★' : rank}</div><div class="lb-name">${displayName}</div><div class="lb-score">${item.score} 題</div></div>`;
             });
             leaderboardList.innerHTML = html;
-            
-        } catch (err) {
-            console.error('讀取排行榜失敗:', err);
-            leaderboardList.innerHTML = `<div style="text-align:center;color:var(--error);padding:2rem 0;">讀取失敗，請重試</div>`;
-        }
+        } catch (err) { console.error('讀取排行榜失敗:', err); leaderboardList.innerHTML = `<div style="text-align:center;color:var(--error);padding:2rem 0;">讀取失敗，請重試</div>`; }
     }
-    // 🌟 通知中心邏輯
+
+    // 通知中心邏輯
     const announceModal = $('announceModal');
     const announceList = $('announceList');
     const bellBtn = $('bellBtn');
     const newMsgDot = $('newMsgDot');
-    
     bellBtn.addEventListener('click', openAnnouncements);
     $('closeAnnBtn').addEventListener('click', () => announceModal.classList.add('hidden'));
-
     async function openAnnouncements() {
         announceList.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:2rem 0;"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>`;
-        announceModal.classList.remove('hidden');
-        newMsgDot.style.display = 'none'; // 點擊後隱藏紅點
-        
+        announceModal.classList.remove('hidden'); newMsgDot.style.display = 'none';
         try {
-            const res = await fetch(`${API_BASE_URL}?action=getAnnouncements`);
-            if (!res.ok) throw new Error('載入失敗');
+            const res = await fetch(`${API_BASE_URL}?action=getAnnouncements`); if (!res.ok) throw new Error('載入失敗');
             const data = await res.json();
-            
-            if (data.length === 0) {
-                announceList.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:2rem 0;">暫無通知</div>`;
-                return;
-            }
-            
-            // 按日期反向排序 (最新置頂)
+            if (data.length === 0) { announceList.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:2rem 0;">暫無通知</div>`; return; }
             data.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
             let html = '';
             data.forEach(item => {
-                // 簡單處理日期格式 (如果有空格只取前面)
                 const displayDate = String(item.date).split('T')[0];
-                html += `
-                    <div class="ann-card">
-                        <div class="ann-date">${displayDate}</div>
-                        <div class="ann-title">${item.title}</div>
-                        <div class="ann-content">${item.content}</div>
-                    </div>
-                `;
+                html += `<div class="ann-card"><div class="ann-date">${displayDate}</div><div class="ann-title">${item.title}</div><div class="ann-content">${item.content}</div></div>`;
             });
             announceList.innerHTML = html;
-            
-        } catch (err) {
-            console.error('讀取通知失敗:', err);
-            announceList.innerHTML = `<div style="text-align:center;color:var(--error);padding:2rem 0;">讀取失敗，請重試</div>`;
-        }
+        } catch (err) { console.error('讀取通知失敗:', err); announceList.innerHTML = `<div style="text-align:center;color:var(--error);padding:2rem 0;">讀取失敗，請重試</div>`; }
     }
-
-    // 🌟 頁面載入時檢查是否有新通知 (顯示紅點)
     async function checkNewAnnouncements() {
         try {
-            const res = await fetch(`${API_BASE_URL}?action=getAnnouncements`);
-            if (!res.ok) return;
+            const res = await fetch(`${API_BASE_URL}?action=getAnnouncements`); if (!res.ok) return;
             const data = await res.json();
-            if (data.length > 0) {
-                // 這裡可以加入更嚴謹的邏輯，例如比對 localStorage 記錄的上次查看時間
-                // 為了簡單起見，只要有通知就顯示紅點
-                newMsgDot.style.display = 'block';
-            }
+            if (data.length > 0) { newMsgDot.style.display = 'block'; }
         } catch (e) {}
     }
 
+    // 字典邏輯
+    const dictContainer = $('dictContainer');
+    const dictSearch = $('dictSearch');
+    const dictFilter = $('dictFilter');
+    dictSearch.addEventListener('input', renderDictionary);
+    dictFilter.addEventListener('change', renderDictionary);
+    async function initDictionary() {
+        if (DB_DICTIONARY.length > 0) { renderDictionary(); return; }
+        dictContainer.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:2rem 0;grid-column:1 / -1;"><i class="fas fa-spinner fa-spin"></i> 載入字典中...</div>`;
+        try {
+            const res = await fetch(`${API_BASE_URL}?action=getDictionary`); if (!res.ok) throw new Error('載入失敗');
+            DB_DICTIONARY = await res.json();
+            const categories = [...new Set(DB_DICTIONARY.map(item => item.category))];
+            dictFilter.innerHTML = '<option value="all">全部分類</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            renderDictionary();
+        } catch (err) { dictContainer.innerHTML = `<div style="text-align:center;color:var(--error);padding:2rem 0;grid-column:1 / -1;">字典載入失敗</div>`; }
+    }
+    function renderDictionary() {
+        const searchTerm = dictSearch.value.toLowerCase(); const cat = dictFilter.value;
+        const filtered = DB_DICTIONARY.filter(item => {
+            const matchCat = (cat === 'all' || item.category === cat);
+            const matchSearch = (item.keyword.toLowerCase().includes(searchTerm) || item.description.toLowerCase().includes(searchTerm));
+            return matchCat && matchSearch;
+        });
+        if (filtered.length === 0) { dictContainer.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:2rem 0;grid-column:1 / -1;">找不到符合的 SQL 語法</div>`; return; }
+        dictContainer.innerHTML = filtered.map(item => `
+            <div class="dict-card">
+                <div class="dict-card-head"><div class="dict-keyword">${item.keyword}</div><div class="dict-category">${item.category}</div></div>
+                <div class="dict-desc">${item.description}</div>
+                <div class="dict-example">${item.example}<button class="dict-copy" onclick="copySqlExample(this, '${item.example.replace(/'/g, "\\'")}')"><i class="fas fa-copy"></i></button></div>
+            </div>
+        `).join('');
+    }
+    window.copySqlExample = function(btn, text) {
+        navigator.clipboard.writeText(text).then(() => {
+            btn.innerHTML = '<i class="fas fa-check"></i>'; showToast('success', '已複製到剪貼簿'); setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i>', 1500);
+        });
+    };
+
+    // 初始化
+    async function initApp() {
+        updateStatus('engine', 'off'); updateStatus('cloud', 'off'); updateStatus('db', 'off');
+        const engineReady = await sandbox.init();
+        updateStatus('engine', engineReady ? 'on' : 'err');
+        if(engineReady) { await loadData(); } 
+        else { showToast('error', 'SQLite 引擎載入失敗，請重新整理'); }
+    }
     initApp();
     </script>
 </body>
