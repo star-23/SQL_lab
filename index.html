@@ -95,6 +95,12 @@
         .lb-name { flex:1; font-size:0.82rem; color:var(--text); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .lb-score { font-family:var(--pixel); font-size:0.55rem; color:var(--success); background:var(--success-soft); padding:4px 8px; border-radius:20px; flex-shrink:0; }
         .lb-row.me { border-color:var(--accent); background:rgba(249,115,22,0.1); box-shadow:0 2px 12px var(--accent-glow); }
+        /* 通知中心樣式 */
+        .ann-card { background:rgba(255,255,255,0.6); border:1px solid var(--border-light); border-left:4px solid #3B82F6; border-radius:12px; padding:0.8rem 1rem; transition: all 0.2s; }
+        .ann-card:hover { background:rgba(255,255,255,0.9); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .ann-date { font-family:var(--pixel); font-size:0.35rem; color:var(--text-muted); margin-bottom:4px; letter-spacing:0.3px; }
+        .ann-title { font-weight:700; font-size:0.88rem; color:var(--text); margin-bottom:6px; }
+        .ann-content { font-size:0.78rem; line-height:1.6; color:var(--text-light); }
 
     </style>
 </head>
@@ -112,6 +118,18 @@
             <button class="cat-tab" data-cat="groupby">GROUP</button>
         </nav>
         <div class="nav-right">
+            <div class="nav-progress"><span id="progressText">0/0</span><div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div></div>
+            <!-- 獎杯按鈕 -->
+            <div class="nav-avatar" id="leaderboardBtn" role="button" aria-label="排行榜" tabindex="0" style="background:linear-gradient(135deg,#FBBF24,#F59E0B); box-shadow:0 2px 8px rgba(245,158,11,0.4);">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <!-- 🌟 新增鈴鐺按鈕 -->
+            <div class="nav-avatar" id="bellBtn" role="button" aria-label="通知中心" tabindex="0" style="background:linear-gradient(135deg,#60A5FA,#3B82F6); box-shadow:0 2px 8px rgba(59,130,246,0.4); position:relative;">
+                <i class="fas fa-bell"></i>
+                <span id="newMsgDot" style="position:absolute;top:-2px;right:-2px;width:10px;height:10px;background:#EF4444;border-radius:50%;border:2px solid #fff;display:none;"></span>
+            </div>
+            <div class="nav-avatar" id="avatarBtn"><i class="fas fa-user"></i></div>
+        </div>
             <div class="nav-progress"><span id="progressText">0/0</span><div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div></div>
             <!-- 🌟 新增排行榜按鈕 -->
             <div class="nav-avatar" id="leaderboardBtn" role="button" aria-label="排行榜" tabindex="0" style="background:linear-gradient(135deg,#FBBF24,#F59E0B); box-shadow:0 2px 8px rgba(245,158,11,0.4);">
@@ -183,6 +201,19 @@
         <div class="status-item"><div class="status-dot off" id="dotCloud"></div>CLOUD</div>
         <div class="status-item"><div class="status-dot off" id="dotEngine"></div>ENGINE</div>
         <div class="status-item"><div class="status-dot off" id="dotDB"></div>DB</div>
+    </div>
+
+    <!-- 🌟 通知中心彈窗 -->
+    <div class="modal-overlay hidden" id="announceModal">
+        <div class="modal-box" style="max-width:450px;text-align:left;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;position:relative;z-index:2;">
+                <h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-bell" style="color:#3B82F6;margin-right:8px;"></i>NOTIFICATIONS</h2>
+                <button id="closeAnnBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="announceList" style="position:relative;z-index:2;max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
+                <!-- 通知將在這裡動態渲染 -->
+            </div>
+        </div>
     </div>
 
     <script>
@@ -541,10 +572,14 @@
         updateStatus('engine', 'off'); updateStatus('cloud', 'off'); updateStatus('db', 'off');
         const engineReady = await sandbox.init();
         updateStatus('engine', engineReady ? 'on' : 'err');
-        if(engineReady) { await loadData(); loginInput.focus(); } 
-        else { showToast('error', 'SQLite 引擎載入失敗，請重新整理'); }
-    }
-    // 🌟 排行榜邏輯
+        if(engineReady) { 
+            await loadData(); 
+            loginInput.focus(); 
+            checkNewAnnouncements(); // 🌟 檢查新通知
+        } else { 
+            showToast('error', 'SQLite 引擎載入失敗，請重新整理'); 
+        }
+    }    // 🌟 排行榜邏輯
     const leaderboardModal = $('leaderboardModal');
     const leaderboardList = $('leaderboardList');
     
@@ -594,6 +629,67 @@
             leaderboardList.innerHTML = `<div style="text-align:center;color:var(--error);padding:2rem 0;">讀取失敗，請重試</div>`;
         }
     }
+    // 🌟 通知中心邏輯
+    const announceModal = $('announceModal');
+    const announceList = $('announceList');
+    const bellBtn = $('bellBtn');
+    const newMsgDot = $('newMsgDot');
+    
+    bellBtn.addEventListener('click', openAnnouncements);
+    $('closeAnnBtn').addEventListener('click', () => announceModal.classList.add('hidden'));
+
+    async function openAnnouncements() {
+        announceList.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:2rem 0;"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>`;
+        announceModal.classList.remove('hidden');
+        newMsgDot.style.display = 'none'; // 點擊後隱藏紅點
+        
+        try {
+            const res = await fetch(`${API_BASE_URL}?action=getAnnouncements`);
+            if (!res.ok) throw new Error('載入失敗');
+            const data = await res.json();
+            
+            if (data.length === 0) {
+                announceList.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:2rem 0;">暫無通知</div>`;
+                return;
+            }
+            
+            // 按日期反向排序 (最新置頂)
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            let html = '';
+            data.forEach(item => {
+                // 簡單處理日期格式 (如果有空格只取前面)
+                const displayDate = String(item.date).split('T')[0];
+                html += `
+                    <div class="ann-card">
+                        <div class="ann-date">${displayDate}</div>
+                        <div class="ann-title">${item.title}</div>
+                        <div class="ann-content">${item.content}</div>
+                    </div>
+                `;
+            });
+            announceList.innerHTML = html;
+            
+        } catch (err) {
+            console.error('讀取通知失敗:', err);
+            announceList.innerHTML = `<div style="text-align:center;color:var(--error);padding:2rem 0;">讀取失敗，請重試</div>`;
+        }
+    }
+
+    // 🌟 頁面載入時檢查是否有新通知 (顯示紅點)
+    async function checkNewAnnouncements() {
+        try {
+            const res = await fetch(`${API_BASE_URL}?action=getAnnouncements`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.length > 0) {
+                // 這裡可以加入更嚴謹的邏輯，例如比對 localStorage 記錄的上次查看時間
+                // 為了簡單起見，只要有通知就顯示紅點
+                newMsgDot.style.display = 'block';
+            }
+        } catch (e) {}
+    }
+
     initApp();
     </script>
 </body>
