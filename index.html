@@ -61,7 +61,7 @@
         .editor-panel{display:flex;flex-direction:column;} .editor-header{padding:0.5rem 0.75rem;background:rgba(255,255,255,0.3);border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;z-index:2;} .editor-header-left{display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;} .editor-tab{font-family:var(--pixel);font-size:0.42rem;color:var(--text-muted);padding:3px 9px;border:1px solid transparent;border-radius:50px;background:transparent;cursor:pointer;transition:all 0.15s;} .editor-tab.active{background:rgba(255,255,255,0.55);border-color:var(--border-light);color:var(--text);}
         .editor-actions{display:flex;gap:5px;} .btn-run{font-family:var(--pixel);font-size:0.42rem;padding:6px 16px;background:linear-gradient(135deg,var(--accent),var(--accent-hover));border:none;border-radius:50px;color:#fff;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:5px;letter-spacing:0.3px;box-shadow:0 2px 12px var(--accent-glow);} .btn-run:hover{transform:translateY(-1px);box-shadow:0 4px 18px var(--accent-glow);} .btn-run:active{transform:translateY(1px);} .btn-run.running{animation:pulse 0.6s infinite;} @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.6;}} .btn-clear{font-family:var(--pixel);font-size:0.38rem;padding:6px 10px;background:rgba(255,255,255,0.35);border:1px solid var(--border-light);border-radius:50px;color:var(--text-muted);cursor:pointer;transition:all 0.15s;} .btn-clear:hover{background:var(--error-soft);border-color:rgba(239,68,68,0.3);color:var(--error);}
         .editor-area{flex:1;display:flex;position:relative;overflow:hidden;background:rgba(255,255,255,0.2);position:relative;z-index:2;} .line-numbers{width:34px;background:rgba(148,163,184,0.04);border-right:1px solid var(--border-light);padding:0.6rem 0;text-align:center;font-family:var(--code);font-size:0.7rem;color:var(--text-muted);line-height:1.65;user-select:none;overflow:hidden;flex-shrink:0;} .line-numbers div{padding:0 2px;} #sqlEditor{flex:1;background:transparent;border:none;outline:none;resize:none;padding:0.6rem 0.75rem;font-family:var(--code);font-size:0.8rem;line-height:1.65;color:var(--text);tab-size:2;} #sqlEditor::placeholder{color:var(--text-muted);font-style:italic;} #sqlEditor:focus{background:rgba(255,255,255,0.1);} .editor-footer{padding:0.25rem 0.75rem;background:rgba(255,255,255,0.2);border-top:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;font-size:0.62rem;color:var(--text-muted);flex-shrink:0;position:relative;z-index:2;} .shortcut-hint kbd{display:inline-block;padding:0 4px;background:rgba(255,255,255,0.4);border:1px solid var(--border-light);border-radius:4px;font-family:var(--code);font-size:0.58rem;}
-        .result-display{flex:1;overflow-y:auto;padding:0.7rem;position:relative;z-index:2;} .result-display::-webkit-scrollbar{width:4px;} .result-display::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.2);border-radius:2px;} .result-idle{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:0.7rem;color:var(--text-muted);} .result-idle .idle-icon{width:48px;height:48px;background:var(--accent-soft);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--accent);animation:idle 3s ease-in-out infinite;} @keyframes idle{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}} .result-dialog{padding:0.5rem 0.7rem;margin-bottom:0.5rem;font-size:0.76rem;line-height:1.6;border-radius:var(--radius-sm);border:1px solid;} .result-dialog.success{background:var(--success-soft);border-color:rgba(16,185,129,0.25);color:#065F46;} .result-dialog.error{background:var(--error-soft);border-color:rgba(239,68,68,0.25);color:#991B1B;} .result-table-wrap{overflow-x:auto;margin-bottom:0.5rem;} .result-table-label { font-family:var(--pixel); font-size:0.45rem; color:var(--text-muted); margin-bottom:6px; letter-spacing:0.5px; } .result-table{width:100%;font-size:0.66rem;border-collapse:separate;border-spacing:0;background:rgba(255,255,255,0.5);border:1px solid var(--border-light);border-radius:var(--radius-sm);overflow:hidden;} .result-table th{background:rgba(15,23,42,0.85);color:#fff;padding:4px 6px;font-weight:500;text-align:left;font-size:0.62rem;font-family:var(--code);white-space:nowrap;} .result-table td{padding:3px 6px;border-bottom:1px solid var(--border-light);font-family:var(--code);font-size:0.62rem;color:var(--text-light);white-space:nowrap;} .result-table tr:nth-child(even) td{background:rgba(148,163,184,0.04);} .result-table tr:last-child td{border-bottom:none;} .answer-compare{padding:0.5rem;border:1px dashed var(--border-light);border-radius:var(--radius-sm);background:rgba(255,255,255,0.35);margin-bottom:0.5rem;} .answer-compare h5{font-family:var(--pixel);font-size:0.38rem;color:var(--text-light);margin-bottom:0.35rem;letter-spacing:0.3px;} .answer-compare pre{font-family:var(--code);font-size:0.68rem;color:var(--accent-hover);line-height:1.6;} .btn-next{width:100%;font-family:var(--pixel);font-size:0.42rem;padding:8px;background:linear-gradient(135deg,var(--accent),var(--accent-hover));border:none;border-radius:50px;color:#fff;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 2px 12px var(--accent-glow);} .btn-next:hover{transform:translateY(-1px);}
+        .result-display{flex:1;overflow-y:auto;padding:0.7rem;position:relative;z-index:2;} .result-display::-webkit-scrollbar{width:4px;} .result-display::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.2);border-radius:2px;} .result-idle{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:0.7rem;color:var(--text-muted);} .result-idle .idle-icon{width:48px;height:48px;background:var(--accent-soft);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--accent);animation:idle 3s ease-in-out infinite;} @keyframes idle{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}} .result-dialog{padding:0.5rem 0.7rem;margin-bottom:0.5rem;font-size:0.76rem;line-height:1.6;border-radius:var(--radius-sm);border:1px solid;} .result-dialog.success{background:var(--success-soft);border-color:rgba(16,185,129,0.25);color:#065F46;} .result-dialog.error{background:var(--error-soft);border-color:rgba(239,68,68,0.25);color:#991B1B;} .result-table-wrap{overflow-x:auto;margin-bottom:0.5rem;} .result-table-label{font-family:var(--pixel);font-size:0.45rem;color:var(--text-muted);margin-bottom:6px;letter-spacing:0.5px;} .result-table{width:100%;font-size:0.66rem;border-collapse:separate;border-spacing:0;background:rgba(255,255,255,0.5);border:1px solid var(--border-light);border-radius:var(--radius-sm);overflow:hidden;} .result-table th{background:rgba(15,23,42,0.85);color:#fff;padding:4px 6px;font-weight:500;text-align:left;font-size:0.62rem;font-family:var(--code);white-space:nowrap;} .result-table td{padding:3px 6px;border-bottom:1px solid var(--border-light);font-family:var(--code);font-size:0.62rem;color:var(--text-light);white-space:nowrap;} .result-table tr:nth-child(even) td{background:rgba(148,163,184,0.04);} .result-table tr:last-child td{border-bottom:none;} .answer-compare{padding:0.5rem;border:1px dashed var(--border-light);border-radius:var(--radius-sm);background:rgba(255,255,255,0.35);margin-bottom:0.5rem;} .answer-compare h5{font-family:var(--pixel);font-size:0.38rem;color:var(--text-light);margin-bottom:0.35rem;letter-spacing:0.3px;} .answer-compare pre{font-family:var(--code);font-size:0.68rem;color:var(--accent-hover);line-height:1.6;} .btn-next{width:100%;font-family:var(--pixel);font-size:0.42rem;padding:8px;background:linear-gradient(135deg,var(--accent),var(--accent-hover));border:none;border-radius:50px;color:#fff;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 2px 12px var(--accent-glow);} .btn-next:hover{transform:translateY(-1px);}
         .plant-section{flex:0 0 auto;padding:0.5rem 0.7rem 0.45rem;background:rgba(255,255,255,0.25);border-top:1px solid var(--border-light);text-align:center;position:relative;z-index:2;} .plant-section h4{font-family:var(--pixel);font-size:0.38rem;color:var(--text-muted);margin-bottom:0.35rem;letter-spacing:0.3px;} .plant-container{position:relative;width:120px;height:85px;margin:0 auto 0.25rem;} .pot-modern{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:42px;height:28px;background:linear-gradient(180deg,var(--accent),var(--accent-hover));border-radius:4px 4px 10px 10px;box-shadow:0 3px 10px var(--accent-glow);} .pot-modern::before{content:'';position:absolute;top:-5px;left:-3px;width:48px;height:7px;background:var(--accent);border-radius:4px;} .stem-modern{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);width:3px;background:linear-gradient(180deg,#34D399,#10B981);border-radius:2px;transition:height 0.8s cubic-bezier(0.34,1.56,0.64,1);} .leaf-modern{position:absolute;width:10px;height:6px;background:#34D399;border-radius:0 70% 70% 0;} .leaf-modern.left{transform:scaleX(-1);border-radius:70% 0 0 70%;} .flower-modern{position:absolute;width:8px;height:8px;background:linear-gradient(135deg,#FBBF24,#F59E0B);border-radius:50%;box-shadow:0 0 6px rgba(251,191,36,0.4);} .plant-label{font-family:var(--pixel);font-size:0.36rem;color:var(--text-muted);}
         .pixel-star{position:fixed;pointer-events:none;z-index:999;font-family:var(--pixel);color:var(--accent);font-size:0.85rem;animation:star-fly 1s ease-out forwards;} @keyframes star-fly{0%{opacity:1;transform:translate(0,0) scale(1);}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0.3);}} .toast-container{position:fixed;top:70px;right:14px;z-index:200;display:flex;flex-direction:column;gap:6px;} .toast{padding:0.45rem 0.75rem;border:1px solid var(--glass-border);border-radius:var(--radius-md);font-size:0.72rem;animation:toast-in 0.3s ease-out;display:flex;align-items:center;gap:0.35rem;background:var(--glass-strong);backdrop-filter:blur(16px);box-shadow:var(--shadow-md);} .toast.success{background:rgba(236,253,245,0.92);border-color:rgba(16,185,129,0.3);color:#065F46;} .toast.error{background:rgba(254,242,242,0.92);border-color:rgba(239,68,68,0.3);color:#991B1B;} .toast.info{color:var(--text);} @keyframes toast-in{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:translateX(0);}}
         .modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(15,23,42,0.2);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);} .modal-overlay.hidden{display:none;} .modal-box{background:var(--glass-strong);backdrop-filter:blur(28px) saturate(200%);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:1.8rem;max-width:360px;width:90%;text-align:center;position:relative;overflow:hidden;} .modal-box::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0.35),transparent 60%);pointer-events:none;border-radius:inherit;} .modal-box h2{font-family:var(--pixel);font-size:0.55rem;color:var(--text);margin-bottom:1rem;letter-spacing:0.6px;position:relative;z-index:2;} .modal-input{width:100%;padding:0.55rem 0.75rem;font-family:var(--code);font-size:0.82rem;border:1px solid var(--border-light);border-radius:var(--radius-sm);background:rgba(255,255,255,0.5);color:var(--text);outline:none;margin-bottom:0.7rem;position:relative;z-index:2;} .modal-input:focus{border-color:var(--accent);} .modal-btn{font-family:var(--pixel);font-size:0.42rem;padding:8px 22px;background:linear-gradient(135deg,var(--accent),var(--accent-hover));border:none;border-radius:50px;color:#fff;cursor:pointer;letter-spacing:0.3px;box-shadow:0 2px 12px var(--accent-glow);position:relative;z-index:2;} .modal-btn:hover{box-shadow:0 4px 18px var(--accent-glow);transform:translateY(-1px);} .loading-dots span{display:inline-block;width:4px;height:4px;background:#fff;margin:0 2px;border-radius:50%;animation:dot 0.6s infinite;} .loading-dots span:nth-child(2){animation-delay:0.15s;} .loading-dots span:nth-child(3){animation-delay:0.3s;} @keyframes dot{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
@@ -141,26 +141,24 @@
                 <div class="question-detail" id="questionDetail"><div class="result-idle"><p>選擇題目開始操練</p></div></div>
             </aside>
             <section class="glass editor-panel">
-                <div class="editor-header-left" style="gap: 6px; flex-wrap: wrap;">
-                    <button class="editor-tab active">QUERY.sql</button>
-                    <button class="editor-tab" id="hintBtn"><i class="fas fa-lightbulb"></i> HINT</button>
-    
-                    <!-- 🌟 新增模式切換 -->
-                    <div style="display:flex; background:var(--glass-subtle); border-radius:20px; padding:2px; margin:0 4px;">
-                        <button id="simpleModeBtn" class="cat-tab active" style="font-size:0.45rem; padding:4px 12px; border:none;">簡單模式</button>
-                        <button id="dseModeBtn" class="cat-tab" style="font-size:0.45rem; padding:4px 12px; border:none; background:transparent; box-shadow:none; color:var(--text-muted);">擬真模式</button>
+                <div class="editor-header">
+                    <div class="editor-header-left" style="gap: 6px; flex-wrap: wrap;">
+                        <button class="editor-tab active">QUERY.sql</button>
+                        <button class="editor-tab" id="hintBtn"><i class="fas fa-lightbulb"></i> HINT</button>
+                        <div style="display:flex; background:var(--glass-subtle); border-radius:20px; padding:2px; margin:0 4px;">
+                            <button id="simpleModeBtn" class="cat-tab active" style="font-size:0.45rem; padding:4px 12px; border:none;">簡單模式</button>
+                            <button id="dseModeBtn" class="cat-tab" style="font-size:0.45rem; padding:4px 12px; border:none; background:transparent; box-shadow:none; color:var(--text-muted);">擬真模式</button>
+                        </div>
+                        <span style="width:1px;height:20px;background:var(--border-light);margin:0 4px;"></span>
+                        <button class="cat-tab active" data-cat="all">ALL</button>
+                        <button class="cat-tab" data-cat="basic">SELECT</button>
+                        <button class="cat-tab" data-cat="where">WHERE</button>
+                        <button class="cat-tab" data-cat="order">ORDER</button>
+                        <button class="cat-tab" data-cat="join">JOIN</button>
+                        <button class="cat-tab" data-cat="groupby">GROUP</button>
                     </div>
-
-                    <span style="width:1px;height:20px;background:var(--border-light);margin:0 4px;"></span>
-                    <button class="cat-tab active" data-cat="all">ALL</button>
-                    <button class="cat-tab" data-cat="basic">SELECT</button>
-                    <button class="cat-tab" data-cat="where">WHERE</button>
-                    <button class="cat-tab" data-cat="order">ORDER</button>
-                    <button class="cat-tab" data-cat="join">JOIN</button>
-                    <button class="cat-tab" data-cat="groupby">GROUP</button>
-            </div>
-                <div class="editor-actions"><button class="btn-clear" id="clearBtn"><i class="fas fa-eraser"></i> CLEAR</button><button class="btn-run" id="runBtn"><i class="fas fa-play"></i> RUN</button></div>
-            </div>
+                    <div class="editor-actions"><button class="btn-clear" id="clearBtn"><i class="fas fa-eraser"></i> CLEAR</button><button class="btn-run" id="runBtn"><i class="fas fa-play"></i> RUN</button></div>
+                </div>
                 <div class="editor-area"><div class="line-numbers" id="lineNumbers"><div>1</div></div><textarea id="sqlEditor" spellcheck="false" autocomplete="off" placeholder="載入中..." disabled></textarea></div>
                 <div class="editor-footer"><span class="shortcut-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> 執行</span><span id="charCount">0 字元</span></div>
             </section>
@@ -176,10 +174,10 @@
         </div>
         <div id="dictView" class="view-grid glass" style="display:none; grid-template-columns: 1fr; height: 100%; overflow:hidden;">
             <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:nowrap; gap:15px; padding: 0.7rem 1.2rem;">
-                 <span style="white-space:nowrap;"><i class="fas fa-book"></i> SQL DICTIONARY</span>
-                 <div style="display:flex; gap:12px; align-items:center;">
-                     <input type="text" id="dictSearch" placeholder="搜尋 SQL 語法..." class="dict-input">
-                     <select id="dictFilter" class="dict-input"><option value="all">全部分類</option></select>
+                <span style="white-space:nowrap;"><i class="fas fa-book"></i> SQL DICTIONARY</span>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <input type="text" id="dictSearch" placeholder="搜尋 SQL 語法..." class="dict-input">
+                    <select id="dictFilter" class="dict-input"><option value="all">全部分類</option></select>
                 </div>
             </div>
             <div id="dictContainer" class="dict-container"></div>
@@ -308,7 +306,7 @@
             const qRes = await fetch(`${API_BASE_URL}?action=getQuestions`); if (!qRes.ok) throw new Error(`HTTP ${qRes.status}`); DB_QUESTIONS = await qRes.json();
             const eRes = await fetch(`${API_BASE_URL}?action=getEnvironments`); if (!eRes.ok) throw new Error(`HTTP ${eRes.status}`); DB_ENVIRONMENTS = await eRes.json();
             updateStatus('cloud', 'on'); updateStatus('db', 'off');
-            renderQuestionList(); updateProgress();
+            renderQuestionList(); updateProgress(); checkNewAnnouncements();
         } catch (err) {
             console.error("雲端同步錯誤:", err);
             updateStatus('cloud', 'err'); 
@@ -372,9 +370,9 @@
         });
     });
 
-    document.querySelectorAll('.cat-tab').forEach(tab => {
+    document.querySelectorAll('.cat-tab[data-cat]').forEach(tab => {
         tab.addEventListener('click', () => {
-            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.cat-tab[data-cat]').forEach(t => t.classList.remove('active'));
             tab.classList.add('active'); currentCat = tab.dataset.cat; renderQuestionList();
         });
     });
@@ -426,7 +424,7 @@
     hintBtn.addEventListener('click',()=>{const q=DB_QUESTIONS.find(q=>q.id===currentQId);if(!q)return;showToast('info','提示：答案開頭為 "'+q.answer_sql.substring(0,18)+'..."');});
 
     // 🌟 模式狀態
-    let currentMode = 'simple'; // 'simple' 或 'dse'
+    let currentMode = 'simple'; 
     const simpleModeBtn = $('simpleModeBtn');
     const dseModeBtn = $('dseModeBtn');
 
@@ -451,9 +449,6 @@
         showToast('info', '已切換至 DSE 擬真評分模式');
     });
 
-    // ==========================================
-    // 核心執行流程
-    // ==========================================
     function executeSQL() {
         if(!currentQId) { showToast('error','請先選擇題目'); return; } 
         const sql = sqlEditor.value.trim(); if(!sql) { showToast('error','請輸入 SQL 語句'); return; } 
@@ -465,12 +460,10 @@
             runBtn.classList.remove('running'); runBtn.innerHTML='<i class="fas fa-play"></i> RUN'; 
             
             if (currentMode === 'dse') {
-                // 🌟 擬真模式評分
                 const dseResult = checkDseAnswer(sql, q);
                 showDseResult(dseResult, q, sql);
-                submitResult(q.id, dseResult.gotMarks === dseResult.totalMarks, sql); // 全對才記錄為 true
+                submitResult(q.id, dseResult.gotMarks === dseResult.totalMarks, sql);
             } else {
-                // 簡單模式評分
                 const autoOrder = (q.auto_order && q.auto_order.toUpperCase() === 'N') ? false : true;
                 const result = sandbox.checkAnswer(sql, q.answer_sql, autoOrder);
                 if (result.isCorrect) { 
@@ -489,31 +482,27 @@
         }, 400);
     }
 
-    // 🌟 DSE 擬真模式：解析與評分邏輯
     // 🌟 DSE 擬真模式：解析簡易評分格式與評分邏輯
     function checkDseAnswer(studentSql, q) {
         let totalMarks = 0;
         let gotMarks = 0;
         const criteriaResults = [];
         
-        // 檢查是否有 marking_scheme 欄位
         if (!q.marking_scheme || q.marking_scheme.trim() === '') {
             return { error: "此題未設定 DSE 評分標準" };
         }
         
         try {
-            // 統一換行符並逐行分割
             const lines = String(q.marking_scheme).replace(/\r\n/g, '\n').split('\n').map(l => l.trim()).filter(l => l.length > 0);
             const normalizedSql = studentSql.replace(/\s+/g, ' ').trim().toUpperCase();
             
             lines.forEach(line => {
-                // 用 | 分割成三部分：分數、描述、正則表達式
                 const parts = line.split('|').map(p => p.trim());
-                if (parts.length < 3) return; // 跳過格式錯誤的行
+                if (parts.length < 3) return; 
                 
                 const marks = parseInt(parts[0]);
                 const desc = parts[1];
-                const regexStr = parts.slice(2).join('|'); // 避免正則表達式本身含有 | 被錯誤分割
+                const regexStr = parts.slice(2).join('|'); 
                 
                 totalMarks += marks;
                 
@@ -540,7 +529,6 @@
         return { totalMarks, gotMarks, criteriaResults };
     }
 
-    // 🌟 DSE 擬真模式：結果渲染
     function showDseResult(dseResult, q, sql) {
         let html = '';
         
@@ -550,13 +538,11 @@
             return;
         }
 
-        // 1. 分數標頭
         html += `<div class="dse-score-header">
             <div class="dse-score-title"><i class="fas fa-clipboard-check"></i> DSE MARKING SCHEME</div>
             <div class="dse-score-total">得分：${dseResult.gotMarks} / ${dseResult.totalMarks}</div>
         </div>`;
 
-        // 2. 逐步評分細節
         dseResult.criteriaResults.forEach(c => {
             html += `<div class="dse-criteria-item ${c.isCorrect ? 'correct' : 'wrong'}">
                 <div class="dse-icon ${c.isCorrect ? 'correct' : 'wrong'}">
@@ -567,10 +553,8 @@
             </div>`;
         });
 
-        // 3. 參考答案
         html += `<div class="answer-compare" style="margin-top:1rem;"><h5>標準答案參考</h5><pre>${q.answer_sql}</pre></div>`;
 
-        // 4. 滿足條件時觸發通關
         if (dseResult.gotMarks === dseResult.totalMarks) {
             const wasNew = !completedIds.has(q.id); completedIds.add(q.id);
             updateProgress(); renderQuestionList(); updatePlant();
@@ -699,12 +683,8 @@
         updateStatus('engine', 'off'); updateStatus('cloud', 'off'); updateStatus('db', 'off');
         const engineReady = await sandbox.init();
         updateStatus('engine', engineReady ? 'on' : 'err');
-        if(engineReady) { 
-            await loadData(); 
-            checkNewAnnouncements();
-        } else { 
-            showToast('error', 'SQLite 引擎載入失敗，請重新整理'); 
-        }
+        if(engineReady) { await loadData(); } 
+        else { showToast('error', 'SQLite 引擎載入失敗，請重新整理'); }
     }
     initApp();
     </script>
