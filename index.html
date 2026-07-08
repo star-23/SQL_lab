@@ -103,6 +103,19 @@
         .dict-copy { position: absolute; top: 6px; right: 6px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; opacity: 0; transition: opacity 0.2s; }
         .dict-example:hover .dict-copy { opacity: 1; }
         .dict-copy:hover { color: var(--accent); }
+        /* DSE 擬真模式評分樣式 */
+        .dse-score-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; padding-bottom:0.5rem; border-bottom:2px solid var(--accent); }
+        .dse-score-title { font-family:var(--pixel); font-size:0.7rem; color:var(--accent); }
+        .dse-score-total { font-family:var(--pixel); font-size:1rem; color:var(--text); background:var(--accent-soft); padding:4px 12px; border-radius:20px; }
+        .dse-criteria-item { display:flex; align-items:flex-start; gap:0.8rem; padding:0.6rem 0.8rem; background:rgba(255,255,255,0.5); border:1px solid var(--border-light); border-radius:8px; margin-bottom:6px; }
+        .dse-criteria-item.correct { border-left:4px solid var(--success); }
+        .dse-criteria-item.wrong { border-left:4px solid var(--error); }
+        .dse-icon { font-size:1rem; margin-top:2px; }
+        .dse-icon.correct { color:var(--success); }
+        .dse-icon.wrong { color:var(--error); }
+        .dse-desc { flex:1; font-size:0.82rem; color:var(--text); line-height:1.5; }
+        .dse-marks { font-family:var(--pixel); font-size:0.65rem; color:var(--text-muted); flex-shrink:0; }
+        .dse-marks.got { color:var(--success); }
     </style>
 </head>
 <body>
@@ -128,10 +141,16 @@
                 <div class="question-detail" id="questionDetail"><div class="result-idle"><p>選擇題目開始操練</p></div></div>
             </aside>
             <section class="glass editor-panel">
-                <div class="editor-header">
-                    <div class="editor-header-left" style="gap: 6px; flex-wrap: wrap;">
+                <div class="editor-header-left" style="gap: 6px; flex-wrap: wrap;">
                     <button class="editor-tab active">QUERY.sql</button>
                     <button class="editor-tab" id="hintBtn"><i class="fas fa-lightbulb"></i> HINT</button>
+    
+                    <!-- 🌟 新增模式切換 -->
+                    <div style="display:flex; background:var(--glass-subtle); border-radius:20px; padding:2px; margin:0 4px;">
+                        <button id="simpleModeBtn" class="cat-tab active" style="font-size:0.45rem; padding:4px 12px; border:none;">簡單模式</button>
+                        <button id="dseModeBtn" class="cat-tab" style="font-size:0.45rem; padding:4px 12px; border:none; background:transparent; box-shadow:none; color:var(--text-muted);">擬真模式</button>
+                    </div>
+
                     <span style="width:1px;height:20px;background:var(--border-light);margin:0 4px;"></span>
                     <button class="cat-tab active" data-cat="all">ALL</button>
                     <button class="cat-tab" data-cat="basic">SELECT</button>
@@ -139,7 +158,7 @@
                     <button class="cat-tab" data-cat="order">ORDER</button>
                     <button class="cat-tab" data-cat="join">JOIN</button>
                     <button class="cat-tab" data-cat="groupby">GROUP</button>
-                </div>
+            </div>
                 <div class="editor-actions"><button class="btn-clear" id="clearBtn"><i class="fas fa-eraser"></i> CLEAR</button><button class="btn-run" id="runBtn"><i class="fas fa-play"></i> RUN</button></div>
             </div>
                 <div class="editor-area"><div class="line-numbers" id="lineNumbers"><div>1</div></div><textarea id="sqlEditor" spellcheck="false" autocomplete="off" placeholder="載入中..." disabled></textarea></div>
@@ -406,30 +425,171 @@
     runBtn.addEventListener('click',executeSQL);
     hintBtn.addEventListener('click',()=>{const q=DB_QUESTIONS.find(q=>q.id===currentQId);if(!q)return;showToast('info','提示：答案開頭為 "'+q.answer_sql.substring(0,18)+'..."');});
 
+    // 🌟 模式狀態
+    let currentMode = 'simple'; // 'simple' 或 'dse'
+    const simpleModeBtn = $('simpleModeBtn');
+    const dseModeBtn = $('dseModeBtn');
+
+    simpleModeBtn.addEventListener('click', () => {
+        currentMode = 'simple';
+        simpleModeBtn.classList.add('active');
+        simpleModeBtn.style.background = 'linear-gradient(135deg,var(--accent),var(--accent-hover))';
+        simpleModeBtn.style.color = '#fff';
+        dseModeBtn.classList.remove('active');
+        dseModeBtn.style.background = 'transparent';
+        dseModeBtn.style.color = 'var(--text-muted)';
+    });
+
+    dseModeBtn.addEventListener('click', () => {
+        currentMode = 'dse';
+        dseModeBtn.classList.add('active');
+        dseModeBtn.style.background = 'linear-gradient(135deg,var(--accent),var(--accent-hover))';
+        dseModeBtn.style.color = '#fff';
+        simpleModeBtn.classList.remove('active');
+        simpleModeBtn.style.background = 'transparent';
+        simpleModeBtn.style.color = 'var(--text-muted)';
+        showToast('info', '已切換至 DSE 擬真評分模式');
+    });
+
+    // ==========================================
+    // 核心執行流程
+    // ==========================================
     function executeSQL() {
         if(!currentQId) { showToast('error','請先選擇題目'); return; } 
         const sql = sqlEditor.value.trim(); if(!sql) { showToast('error','請輸入 SQL 語句'); return; } 
         const q = DB_QUESTIONS.find(q=>q.id===currentQId); if(!q) return; 
-        const autoOrder = (q.auto_order && q.auto_order.toUpperCase() === 'N') ? false : true;
+        
         runBtn.classList.add('running'); runBtn.innerHTML='<span class="loading-dots"><span></span><span></span><span></span></span>';
+        
         setTimeout(() => { 
             runBtn.classList.remove('running'); runBtn.innerHTML='<i class="fas fa-play"></i> RUN'; 
-            const result = sandbox.checkAnswer(sql, q.answer_sql, autoOrder);
-            if (result.isCorrect) { 
-                const wasNew = !completedIds.has(q.id); completedIds.add(q.id); 
-                showResult('success', '執行成功！查詢傳回 '+result.studentData.rows.length+' 行數據。', result.studentData, q.answer_sql); 
-                updateProgress(); renderQuestionList(); updatePlant(); submitResult(q.id, true, sql); 
-                if(wasNew) { spawnPixelStars(runBtn); showToast('success','答對了！'); } 
-            } else { 
-                let errMsg = result.message || '結果與預期不符，請檢查查詢條件。'; 
-                let studentData = result.studentData; 
-                if(!result.success && result.error) { errMsg = result.error; studentData = null; } 
-                showResult('error', errMsg, studentData, q.answer_sql); 
-                submitResult(q.id, false, sql); showToast('error','結果不正確'); 
-            } 
+            
+            if (currentMode === 'dse') {
+                // 🌟 擬真模式評分
+                const dseResult = checkDseAnswer(sql, q);
+                showDseResult(dseResult, q, sql);
+                submitResult(q.id, dseResult.gotMarks === dseResult.totalMarks, sql); // 全對才記錄為 true
+            } else {
+                // 簡單模式評分
+                const autoOrder = (q.auto_order && q.auto_order.toUpperCase() === 'N') ? false : true;
+                const result = sandbox.checkAnswer(sql, q.answer_sql, autoOrder);
+                if (result.isCorrect) { 
+                    const wasNew = !completedIds.has(q.id); completedIds.add(q.id); 
+                    showResult('success', '執行成功！查詢傳回 '+result.studentData.rows.length+' 行數據。', result.studentData, q.answer_sql); 
+                    updateProgress(); renderQuestionList(); updatePlant(); submitResult(q.id, true, sql); 
+                    if(wasNew) { spawnPixelStars(runBtn); showToast('success','答對了！'); } 
+                } else { 
+                    let errMsg = result.message || '結果與預期不符，請檢查查詢條件。'; 
+                    let studentData = result.studentData; 
+                    if(!result.success && result.error) { errMsg = result.error; studentData = null; } 
+                    showResult('error', errMsg, studentData, q.answer_sql); 
+                    submitResult(q.id, false, sql); showToast('error','結果不正確'); 
+                }
+            }
         }, 400);
     }
-    
+
+    // 🌟 DSE 擬真模式：解析與評分邏輯
+    // 🌟 DSE 擬真模式：解析簡易評分格式與評分邏輯
+    function checkDseAnswer(studentSql, q) {
+        let totalMarks = 0;
+        let gotMarks = 0;
+        const criteriaResults = [];
+        
+        // 檢查是否有 marking_scheme 欄位
+        if (!q.marking_scheme || q.marking_scheme.trim() === '') {
+            return { error: "此題未設定 DSE 評分標準" };
+        }
+        
+        try {
+            // 統一換行符並逐行分割
+            const lines = String(q.marking_scheme).replace(/\r\n/g, '\n').split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const normalizedSql = studentSql.replace(/\s+/g, ' ').trim().toUpperCase();
+            
+            lines.forEach(line => {
+                // 用 | 分割成三部分：分數、描述、正則表達式
+                const parts = line.split('|').map(p => p.trim());
+                if (parts.length < 3) return; // 跳過格式錯誤的行
+                
+                const marks = parseInt(parts[0]);
+                const desc = parts[1];
+                const regexStr = parts.slice(2).join('|'); // 避免正則表達式本身含有 | 被錯誤分割
+                
+                totalMarks += marks;
+                
+                try {
+                    const regex = new RegExp(regexStr, 'i');
+                    const isCorrect = regex.test(normalizedSql);
+                    if (isCorrect) gotMarks += marks;
+                    
+                    criteriaResults.push({
+                        desc: desc,
+                        marks: marks,
+                        got: isCorrect ? marks : 0,
+                        isCorrect: isCorrect
+                    });
+                } catch (e) {
+                    console.error("正則表達式錯誤:", regexStr, e);
+                }
+            });
+        } catch (e) {
+            console.error("Marking Scheme 解析失敗", e);
+            return { error: "評分標準格式錯誤，請檢查 Google Sheet" };
+        }
+        
+        return { totalMarks, gotMarks, criteriaResults };
+    }
+
+    // 🌟 DSE 擬真模式：結果渲染
+    function showDseResult(dseResult, q, sql) {
+        let html = '';
+        
+        if (dseResult.error) {
+            html = `<div class="result-dialog error"><span class="dialog-icon">!</span>${dseResult.error}</div>`;
+            resultDisplay.innerHTML = html;
+            return;
+        }
+
+        // 1. 分數標頭
+        html += `<div class="dse-score-header">
+            <div class="dse-score-title"><i class="fas fa-clipboard-check"></i> DSE MARKING SCHEME</div>
+            <div class="dse-score-total">得分：${dseResult.gotMarks} / ${dseResult.totalMarks}</div>
+        </div>`;
+
+        // 2. 逐步評分細節
+        dseResult.criteriaResults.forEach(c => {
+            html += `<div class="dse-criteria-item ${c.isCorrect ? 'correct' : 'wrong'}">
+                <div class="dse-icon ${c.isCorrect ? 'correct' : 'wrong'}">
+                    <i class="fas ${c.isCorrect ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                </div>
+                <div class="dse-desc">${c.desc}</div>
+                <div class="dse-marks ${c.got > 0 ? 'got' : ''}">${c.got}/${c.marks} 分</div>
+            </div>`;
+        });
+
+        // 3. 參考答案
+        html += `<div class="answer-compare" style="margin-top:1rem;"><h5>標準答案參考</h5><pre>${q.answer_sql}</pre></div>`;
+
+        // 4. 滿足條件時觸發通關
+        if (dseResult.gotMarks === dseResult.totalMarks) {
+            const wasNew = !completedIds.has(q.id); completedIds.add(q.id);
+            updateProgress(); renderQuestionList(); updatePlant();
+            if(wasNew) { spawnPixelStars(runBtn); }
+            html += `<button class="btn-next" id="nextBtn">NEXT QUEST <i class="fas fa-arrow-right"></i></button>`;
+        } else {
+             html += `<div class="result-dialog error" style="margin-top:1rem;"><span class="dialog-icon">!</span>部分得分，請根據上方評分參考修改你的 SQL 語法。</div>`;
+        }
+
+        resultDisplay.innerHTML = html;
+        const nextBtn = document.getElementById('nextBtn'); 
+        if(nextBtn) nextBtn.addEventListener('click', () => {
+            const n = DB_QUESTIONS.find(q => q.id > currentQId); if(n) {
+                currentQId = n.id; renderQuestionList(); renderQuestionDetail(); resetResult(); loadSandboxEnv(); 
+                sqlEditor.value = ''; sqlEditor.dispatchEvent(new Event('input'));
+            }
+        });
+    }
+
     function showResult(type, message, data, answer) {
         let html = `<div class="result-dialog ${type}"><span class="dialog-icon">${type==='success'?'✓':'✗'}</span>${message}</div>`;
         if(data && data.columns && data.rows) { html += `<div class="result-table-wrap"><div class="result-table-label">COLUMNS: ${data.columns.join(', ')}</div><table class="result-table"><thead><tr>${data.columns.map(c=>'<th>'+c+'</th>').join('')}</tr></thead><tbody>${data.rows.map(r=>'<tr>'+r.map(v=>'<td>'+(v===null?'NULL':v)+'</td>').join('')+'</tr>').join('')}</tbody></table></div>`; }
