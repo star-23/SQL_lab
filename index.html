@@ -116,6 +116,32 @@
         .dse-desc { flex:1; font-size:0.82rem; color:var(--text); line-height:1.5; }
         .dse-marks { font-family:var(--pixel); font-size:0.65rem; color:var(--text-muted); flex-shrink:0; }
         .dse-marks.got { color:var(--success); }
+        /* 🌟 深色模式變數覆蓋 */
+        body.dark-mode {
+            --bg: #0F172A;
+            --glass: rgba(30, 41, 59, 0.6);
+            --glass-strong: rgba(30, 41, 59, 0.8);
+            --glass-subtle: rgba(30, 41, 59, 0.4);
+            --glass-border: rgba(148, 163, 184, 0.25);
+            --glass-highlight: rgba(255, 255, 255, 0.1);
+            --text: #F1F5F9;
+            --text-light: #CBD5E1;
+            --text-muted: #64748B;
+            --border-light: rgba(148, 163, 184, 0.2);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.3); 
+            --shadow-md: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        /* 深色模式下的背景光斑微調 */
+        body.dark-mode .blob-1 { background: radial-gradient(circle, rgba(249,115,22,0.22), transparent 70%); }
+        body.dark-mode .blob-2 { background: radial-gradient(circle, rgba(16,185,129,0.18), transparent 70%); }
+        body.dark-mode .blob-3 { background: radial-gradient(circle, rgba(56,189,248,0.15), transparent 70%); }
+        /* 深色模式下的玻璃高光微調 */
+        body.dark-mode .glass::before { background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.02) 40%, rgba(255,255,255,0.05)); }
+        body.dark-mode .glass::after { background: linear-gradient(180deg, rgba(255,255,255,0.1), transparent); }
+        body.dark-mode .schema-table th { background: rgba(148, 163, 184, 0.2); color: var(--text); }
+        body.dark-mode .result-table th { background: rgba(148, 163, 184, 0.2); color: var(--text); }
+        body.dark-mode .editor-tab.active { background: rgba(148, 163, 184, 0.2); }
+
     </style>
 </head>
 <body>
@@ -130,6 +156,10 @@
             <div class="nav-progress"><span id="progressText">0/0</span><div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div></div>
             <div class="nav-avatar" id="leaderboardBtn" role="button" aria-label="排行榜" tabindex="0" style="background:linear-gradient(135deg,#FBBF24,#F59E0B); box-shadow:0 2px 8px rgba(245,158,11,0.4);"><i class="fas fa-trophy"></i></div>
             <div class="nav-avatar" id="bellBtn" role="button" aria-label="通知中心" tabindex="0" style="background:linear-gradient(135deg,#60A5FA,#3B82F6); box-shadow:0 2px 8px rgba(59,130,246,0.4); position:relative;"><i class="fas fa-bell"></i><span id="newMsgDot" style="position:absolute;top:-2px;right:-2px;width:10px;height:10px;background:#EF4444;border-radius:50%;border:2px solid #fff;display:none;"></span></div>
+            <!-- 🌟 日夜模式切換按鈕 -->
+            <div class="nav-avatar" id="themeToggleBtn" role="button" aria-label="切換日夜模式" tabindex="0" style="background:linear-gradient(135deg, #6B7280, #4B5563); box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </div>
             <div class="nav-avatar" id="avatarBtn"><i class="fas fa-user"></i></div>
         </div>
     </header>
@@ -193,6 +223,34 @@
     <script>
     const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxR3eHA3KBgU19KCXx0zysRJGctB2A-zJVpyDbU8UvZd_F1tXO2PnXkn9wmkwur52wKrg/exec';
     const GOOGLE_CLIENT_ID = '947607172653-ror27p5j0l16shgm5ta712iq676deaop.apps.googleusercontent.com'; 
+    // 🌟 日夜模式切換邏輯
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeIcon.className = 'fas fa-sun'; // 深色模式顯示太陽 (點擊可切回亮)
+            themeToggleBtn.style.background = 'linear-gradient(135deg, #FBBF24, #F59E0B)';
+        } else {
+            document.body.classList.remove('dark-mode');
+            themeIcon.className = 'fas fa-moon'; // 亮色模式顯示月亮 (點擊可切到暗)
+            themeToggleBtn.style.background = 'linear-gradient(135deg, #6B7280, #4B5563)';
+        }
+    }
+
+    // 點擊按鈕切換
+    themeToggleBtn.addEventListener('click', () => {
+        const isDark = document.body.classList.contains('dark-mode');
+        const newTheme = isDark ? 'light' : 'dark';
+        applyTheme(newTheme);
+        localStorage.setItem('sql-quest-theme', newTheme); // 記住用戶選擇
+    });
+
+    // 頁面載入時讀取用戶偏好 (或跟隨系統設定)
+    const savedTheme = localStorage.getItem('sql-quest-theme') || 
+                       (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    applyTheme(savedTheme);
 
     class SqlSandbox {
         constructor() { this.db = null; this.SQL = null; this.currentSchema = []; }
