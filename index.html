@@ -247,9 +247,8 @@
         localStorage.setItem('sql-quest-theme', newTheme); // 記住用戶選擇
     });
 
-    // 頁面載入時讀取用戶偏好 (或跟隨系統設定)
-    const savedTheme = localStorage.getItem('sql-quest-theme') || 
-                       (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    // 頁面載入時讀取用戶偏好 (預設強制為淺色模式)
+    const savedTheme = localStorage.getItem('sql-quest-theme') || 'light';
     applyTheme(savedTheme);
 
     class SqlSandbox {
