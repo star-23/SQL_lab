@@ -8,7 +8,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        /* 沿用學生端的液態玻璃樣式 (濃縮版) */
         :root {
             --bg: #F0F2F5; --glass: rgba(255, 255, 255, 0.35); --glass-strong: rgba(255, 255, 255, 0.5);
             --glass-border: rgba(255, 255, 255, 0.6); --accent: #F97316; --accent-hover: #EA580C;
@@ -18,35 +17,54 @@
         }
         *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
         body{font-family:var(--body);background:linear-gradient(135deg,#F8FAFC 0%,#EFF6FF 30%,#F0FDF4 60%,#FFF7ED 100%);color:var(--text);min-height:100vh;position:relative;overflow-x:hidden;}
-        .blob{position:absolute;border-radius:50%;filter:blur(90px);z-index:0;}
+        .blob{position:fixed;border-radius:50%;filter:blur(90px);z-index:0;}
         .blob-1{width:600px;height:600px;background:radial-gradient(circle,rgba(249,115,22,0.18),transparent 70%);top:-10%;left:-5%;}
         .blob-2{width:500px;height:500px;background:radial-gradient(circle,rgba(16,185,129,0.14),transparent 70%);bottom:-8%;right:-3%;}
-        .glass{background:var(--glass);backdrop-filter:blur(32px) saturate(180%);-webkit-backdrop-filter:blur(32px) saturate(180%);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md),inset 0 1px 0 rgba(255,255,255,1);position:relative;overflow:hidden;}
-        .container{position:relative;z-index:10;max-width:1200px;margin:2rem auto;padding:0 1rem;}
-        header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;}
-        h1{font-family:var(--pixel);font-size:1rem;color:var(--accent);}
-        .panel{padding:2rem;margin-bottom:2rem;}
-        .form-group{margin-bottom:1.5rem;}
-        label{display:block;font-family:var(--pixel);font-size:0.6rem;margin-bottom:0.5rem;color:var(--text-muted);}
-        input, textarea, select{width:100%;padding:0.8rem 1rem;border:1px solid var(--border-light);border-radius:12px;background:rgba(255,255,255,0.6);font-family:var(--body);font-size:0.9rem;outline:none;transition:all 0.2s;}
-        input:focus, textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(249,115,22,0.1);}
+        
+        /* 🌟 液態玻璃核心樣式 */
+        .glass{background:var(--glass);backdrop-filter:blur(32px) saturate(180%);-webkit-backdrop-filter:blur(32px) saturate(180%);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md),inset 0 1px 0 rgba(255,255,255,1),inset 0 -1px 1px rgba(255,255,255,0.2);position:relative;overflow:hidden;}
+        .glass::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.1) 30%,rgba(255,255,255,0.05) 70%,rgba(255,255,255,0.4));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:1;}
+        .glass::after{content:'';position:absolute;top:0;left:0;right:0;height:60%;background:linear-gradient(180deg,rgba(255,255,255,0.35),transparent);border-radius:var(--radius-xl) var(--radius-xl) 0 0;pointer-events:none;z-index:1;}
+
+        .container{position:relative;z-index:10;max-width:1000px;margin:2rem auto;padding:0 1rem;}
+        header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;}
+        h1{font-family:var(--pixel);font-size:0.9rem;color:var(--accent);}
+        .panel{padding:2rem;margin-bottom:2rem;position:relative;z-index:2;}
+        .form-group{margin-bottom:1.5rem;position:relative;z-index:2;}
+        label{display:block;font-family:var(--pixel);font-size:0.55rem;margin-bottom:0.5rem;color:var(--text-muted);}
+        input, textarea, select{width:100%;padding:0.8rem 1rem;border:1px solid var(--border-light);border-radius:12px;background:rgba(255,255,255,0.5);font-family:var(--body);font-size:0.9rem;outline:none;transition:all 0.2s;color:var(--text);}
+        input:focus, textarea:focus, select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(249,115,22,0.1);background:rgba(255,255,255,0.8);}
         textarea{min-height:100px;font-family:'Fira Code', monospace;resize:vertical;}
-        .btn{padding:0.8rem 2rem;background:linear-gradient(135deg,var(--accent),var(--accent-hover));color:#fff;border:none;border-radius:50px;font-family:var(--pixel);font-size:0.5rem;cursor:pointer;box-shadow:0 4px 12px rgba(249,115,22,0.3);transition:all 0.2s;}
+        .btn{padding:0.8rem 1.5rem;background:linear-gradient(135deg,var(--accent),var(--accent-hover));color:#fff;border:none;border-radius:50px;font-family:var(--pixel);font-size:0.5rem;cursor:pointer;box-shadow:0 4px 12px rgba(249,115,22,0.3);transition:all 0.2s;position:relative;z-index:2;}
         .btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(249,115,22,0.4);}
         .btn-secondary{background:linear-gradient(135deg,#6B7280,#4B5563);box-shadow:0 4px 12px rgba(0,0,0,0.2);}
-        .list-item{background:rgba(255,255,255,0.5);border:1px solid var(--border-light);border-radius:12px;padding:1rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;}
+        .btn-small{padding:0.5rem 1rem;font-size:0.4rem;}
+        
+        .menu-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;}
+        .list-item{background:rgba(255,255,255,0.4);border:1px solid var(--border-light);border-radius:12px;padding:1rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2;transition:all 0.2s;}
+        .list-item:hover{background:rgba(255,255,255,0.6);transform:translateX(4px);}
         .list-item-info{flex:1;}
-        .list-item-title{font-weight:700;font-size:1rem;margin-bottom:0.5rem;}
-        .list-item-desc{font-size:0.8rem;color:var(--text-muted);}
-        .actions{display:flex;gap:0.5rem;}
+        .list-item-title{font-weight:700;font-size:1rem;margin-bottom:0.5rem;color:var(--text);}
+        .list-item-desc{font-size:0.8rem;color:var(--text-muted);word-break:break-all;}
+        .actions{display:flex;gap:0.5rem;flex-shrink:0;}
         .icon-btn{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;transition:all 0.2s;}
-        .edit-btn{background:#3B82F6;} .delete-btn{background:#EF4444;}
+        .edit-btn{background:linear-gradient(135deg,#3B82F6,#2563EB);} 
+        .delete-btn{background:linear-gradient(135deg,#EF4444,#DC2626);}
         .icon-btn:hover{transform:scale(1.1);}
-        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(8px);}
-        .modal-content{background:var(--glass-strong);border-radius:var(--radius-xl);padding:2rem;width:90%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-md);}
+        
+        .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.2);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(8px);}
+        .modal-content{background:var(--glass-strong);backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:0 12px 40px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,1);padding:2rem;width:90%;max-width:600px;max-height:90vh;overflow-y:auto;position:relative;}
+        .modal-content::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.1) 30%,rgba(255,255,255,0.05) 70%,rgba(255,255,255,0.4));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
         .hidden{display:none;}
-        .toast{position:fixed;top:20px;right:20px;background:#10B981;color:#fff;padding:1rem 2rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:200;animation:slideIn 0.3s ease-out;}
-        @keyframes slideIn{from{transform:translateX(100%);}to{transform:translateX(0);}}
+        
+        .toast{position:fixed;top:20px;right:20px;background:rgba(16,185,129,0.9);backdrop-filter:blur(12px);color:#fff;padding:1rem 2rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:200;animation:slideIn 0.3s ease-out;border:1px solid rgba(255,255,255,0.2);}
+        @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+        
+        .marking-row{display:flex;gap:5px;margin-bottom:5px;align-items:center;}
+        .marking-row input{padding:0.5rem;font-size:0.8rem;}
+        .table-builder-row{display:flex;gap:5px;margin-bottom:5px;align-items:center;background:rgba(255,255,255,0.3);padding:5px;border-radius:8px;}
+        .table-builder-row input{padding:0.5rem;font-size:0.8rem;}
+        .remove-row-btn{background:#EF4444;color:#fff;border:none;border-radius:6px;cursor:pointer;padding:0.5rem;flex-shrink:0;}
     </style>
 </head>
 <body>
@@ -55,53 +73,54 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-cog"></i> SQL Quest 管理後台</h1>
-            <div id="adminInfo" class="hidden">
-                <span id="adminEmail" style="font-size:0.8rem; margin-right:1rem;"></span>
-                <button class="btn btn-secondary" onclick="location.href='admin.html'">登出</button>
+            <div id="adminInfo" class="hidden" style="display:flex; align-items:center; gap:1rem; background:rgba(255,255,255,0.4); padding:0.5rem 1rem; border-radius:50px; border:1px solid var(--border-light);">
+                <span id="adminEmail" style="font-size:0.8rem; font-weight:500;"></span>
+                <button class="btn btn-secondary btn-small" onclick="location.reload()">登出</button>
             </div>
         </header>
 
-        <!-- 登入區塊 -->
         <div id="loginSection" class="glass panel">
-            <h2 style="font-family:var(--pixel); font-size:0.8rem; margin-bottom:1.5rem; text-align:center;">管理員登入</h2>
-            <div id="googleLoginBtn" style="display:flex;justify-content:center;"></div>
-            <p id="loginError" style="color:#EF4444; text-align:center; margin-top:1rem; display:none;">非授權管理員帳號，無法登入。</p>
+            <h2 style="font-family:var(--pixel); font-size:0.7rem; margin-bottom:1.5rem; text-align:center; color:var(--text);">管理員登入</h2>
+            <div id="googleLoginBtn" style="display:flex;justify-content:center;position:relative;z-index:2;"></div>
+            <p id="loginError" style="color:#EF4444; text-align:center; margin-top:1rem; display:none; font-size:0.8rem;"></p>
         </div>
 
-        <!-- 主控制台 (登入後顯示) -->
         <div id="dashboard" class="hidden">
-            <!-- 待開發功能區 -->
             <div class="glass panel">
-                <h2 style="font-family:var(--pixel); font-size:0.7rem; margin-bottom:1rem;">功能選單</h2>
-                <button class="btn" onclick="loadView('questions')"><i class="fas fa-question-circle"></i> 題目管理</button>
-                <button class="btn" style="margin-left:1rem;" onclick="loadView('dictionary')"><i class="fas fa-book"></i> 字典管理</button>
+                <h2 style="font-family:var(--pixel); font-size:0.6rem; margin-bottom:1rem; color:var(--text);">功能選單</h2>
+                <div class="menu-grid">
+                    <button class="btn" onclick="loadView('questions')"><i class="fas fa-question-circle"></i> 題目管理</button>
+                    <button class="btn" onclick="loadView('dictionary')"><i class="fas fa-book"></i> 字典管理</button>
+                    <button class="btn" onclick="loadView('environments')"><i class="fas fa-database"></i> 資料表管理</button>
+                    <button class="btn btn-secondary" onclick="openCategoryModal()"><i class="fas fa-tags"></i> 分類管理</button>
+                </div>
             </div>
 
-            <!-- 動態內容區 -->
             <div id="contentArea" class="glass panel">
-                <p style="text-align:center; color:var(--text-muted);">請選擇上方功能進行管理</p>
+                <p style="text-align:center; color:var(--text-muted); position:relative;z-index:2;">請選擇上方功能進行管理</p>
             </div>
         </div>
     </div>
 
-    <!-- 編輯彈窗 -->
     <div class="modal-overlay" id="editModal">
         <div class="modal-content">
-            <h2 id="modalTitle" style="font-family:var(--pixel); font-size:0.7rem; margin-bottom:1.5rem;"></h2>
-            <div id="modalBody"></div>
-            <div style="text-align:right; margin-top:2rem;">
-                <button class="btn btn-secondary" onclick="closeModal()" style="margin-right:1rem;">取消</button>
-                <button class="btn" onclick="saveData()">儲存</button>
+            <h2 id="modalTitle" style="font-family:var(--pixel); font-size:0.6rem; margin-bottom:1.5rem; color:var(--text);"></h2>
+            <div id="modalBody" style="position:relative;z-index:2;"></div>
+            <div style="text-align:right; margin-top:2rem; position:relative;z-index:2;">
+                <button class="btn btn-secondary btn-small" onclick="closeModal()" style="margin-right:0.5rem;">取消</button>
+                <button class="btn btn-small" onclick="saveData()">儲存</button>
             </div>
         </div>
     </div>
 
     <script>
-    // 替換為你的 GAS URL 和 Client ID
     const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxR3eHA3KBgU19KCXx0zysRJGctB2A-zJVpyDbU8UvZd_F1tXO2PnXkn9wmkwur52wKrg/exec';
     const GOOGLE_CLIENT_ID = '947607172653-ror27p5j0l16shgm5ta712iq676deaop.apps.googleusercontent.com';
     let currentView = '';
-    let currentEditData = null;
+    let currentEditId = null;
+    let DB_DATA = [];
+    let DB_ENVIRONMENTS = [];
+    let DB_CATEGORIES = [];
 
     window.onload = function() {
         google.accounts.id.initialize({
@@ -115,19 +134,18 @@
     };
 
     async function handleLogin(response) {
+        window.currentToken = response.credential;
         try {
             const res = await fetch(API_BASE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                // 🌟 帶上 isAdmin: true 標記
                 body: JSON.stringify({ action: 'verifyToken', id_token: response.credential, isAdmin: true })
             });
             const data = await res.json();
-            
             if (data.success && data.email) {
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
-                document.getElementById('adminInfo').classList.remove('hidden');
+                document.getElementById('adminInfo').style.display = 'flex';
                 document.getElementById('adminEmail').textContent = data.email;
                 showToast('管理員登入成功！');
             } else {
@@ -135,35 +153,38 @@
                 document.getElementById('loginError').style.display = 'block';
             }
         } catch (err) {
-            console.error(err);
             document.getElementById('loginError').textContent = '網路錯誤';
             document.getElementById('loginError').style.display = 'block';
         }
     }
 
-    let DB_ENVIRONMENTS = [];
-    let currentEditId = null;
-
     async function loadView(view) {
         currentView = view;
         const contentArea = document.getElementById('contentArea');
-        contentArea.innerHTML = '<p style="text-align:center;">載入中...</p>';
+        contentArea.innerHTML = '<p style="text-align:center; position:relative;z-index:2;">載入中...</p>';
 
-        if (view === 'questions' && DB_ENVIRONMENTS.length === 0) {
-            const envRes = await fetch(`${API_BASE_URL}?action=getEnvironments`);
+        const actionMap = {
+            questions: 'getQuestions',
+            dictionary: 'getDictionary',
+            environments: 'getEnvironmentsForAdmin'
+        };
+        const res = await fetch(`${API_BASE_URL}?action=${actionMap[view]}`);
+        DB_DATA = await res.json();
+
+        if (view === 'questions') {
+            const catRes = await fetch(`${API_BASE_URL}?action=getCategories`);
+            DB_CATEGORIES = await catRes.json();
+            const envRes = await fetch(`${API_BASE_URL}?action=getEnvironmentsForAdmin`);
             DB_ENVIRONMENTS = await envRes.json();
         }
 
-        const action = view === 'questions' ? 'getQuestions' : 'getDictionary';
-        const res = await fetch(`${API_BASE_URL}?action=${action}`);
-        const data = await res.json();
-
-        let html = `<button class="btn" onclick="openAddModal()" style="margin-bottom:1.5rem;"><i class="fas fa-plus"></i> 新增${view === 'questions' ? '題目' : '字典'}</button>`;
+        let html = `<button class="btn btn-small" onclick="openAddModal()" style="margin-bottom:1.5rem;"><i class="fas fa-plus"></i> 新增${view === 'questions' ? '題目' : view === 'dictionary' ? '字典' : '資料表'}</button>`;
         
-        data.forEach(item => {
-            const title = view === 'questions' ? `Q${item.id}: ${item.title}` : item.keyword;
-            const desc = view === 'questions' ? item.description : item.description;
-            const idKey = view === 'questions' ? 'id' : 'keyword';
+        DB_DATA.forEach(item => {
+            let title, desc, idKey;
+            if (view === 'questions') { idKey = 'id'; title = `Q${item.id}: ${item.title}`; desc = item.description; }
+            else if (view === 'dictionary') { idKey = 'keyword'; title = item.keyword; desc = item.description; }
+            else { idKey = 'id'; title = `Env ${item.id}: ${item.name}`; desc = item.table_data ? item.table_data.substring(0, 50) + '...' : ''; }
             
             html += `
                 <div class="list-item">
@@ -186,12 +207,8 @@
         renderForm({});
     }
 
-    async function openEditModal(id) {
-        const action = currentView === 'questions' ? 'getQuestions' : 'getDictionary';
-        const res = await fetch(`${API_BASE_URL}?action=${action}`);
-        const data = await res.json();
-        const item = data.find(d => String(d[currentView === 'questions' ? 'id' : 'keyword']) === String(id));
-        
+    function openEditModal(id) {
+        const item = DB_DATA.find(d => String(d[currentView === 'questions' ? 'id' : currentView === 'dictionary' ? 'keyword' : 'id']) === String(id));
         currentEditId = id;
         renderForm(item);
     }
@@ -202,14 +219,12 @@
         
         if (currentView === 'questions') {
             modalTitle.textContent = currentEditId ? '編輯題目' : '新增題目';
-            
-            // 處理 marking_scheme 格式化，方便編輯
             let markingRows = '';
             if (data.marking_scheme) {
                 data.marking_scheme.split('\n').forEach(line => {
                     const parts = line.split('|');
                     if (parts.length >= 3) {
-                        markingRows += `<div style="display:flex; gap:5px; margin-bottom:5px;">
+                        markingRows += `<div class="marking-row">
                             <input type="number" value="${parts[0].trim()}" placeholder="分數" style="width: 60px; flex:none;">
                             <input type="text" value="${parts[1].trim()}" placeholder="評分描述" style="flex:1;">
                             <input type="text" value="${parts.slice(2).join('|').trim()}" placeholder="正則表達式" style="flex:1;">
@@ -217,49 +232,45 @@
                     }
                 });
             }
-            
             modalBody.innerHTML = `
-                <div class="form-group"><label>題號 (ID)</label><input type="number" id="f_id" value="${data.id || ''}" ${currentEditId ? 'readonly' : ''} placeholder="自動編號或指定數字"></div>
+                <div class="form-group"><label>題號 (ID)</label><input type="number" id="f_id" value="${data.id || ''}" ${currentEditId ? 'readonly' : ''}></div>
                 <div class="form-group"><label>場景 (Env ID)</label>
-                    <select id="f_env_id">
-                        ${DB_ENVIRONMENTS.map(e => `<option value="${e.id}" ${data.env_id == e.id ? 'selected' : ''}>${e.id} - ${e.name}</option>`).join('')}
-                    </select>
+                    <select id="f_env_id">${DB_ENVIRONMENTS.map(e => `<option value="${e.id}" ${data.env_id == e.id ? 'selected' : ''}>${e.id} - ${e.name}</option>`).join('')}</select>
                 </div>
                 <div class="form-group"><label>分類</label>
-                    <select id="f_category">
-                        ${['basic', 'where', 'order', 'join', 'groupby'].map(c => `<option value="${c}" ${data.category === c ? 'selected' : ''}>${c}</option>`).join('')}
-                    </select>
+                    <select id="f_category">${DB_CATEGORIES.map(c => `<option value="${c.name}" ${data.category === c.name ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
                 </div>
                 <div class="form-group"><label>標題</label><input type="text" id="f_title" value="${data.title || ''}"></div>
                 <div class="form-group"><label>題目描述</label><textarea id="f_description">${data.description || ''}</textarea></div>
                 <div class="form-group"><label>DSE 提示</label><textarea id="f_dse_tip">${data.dse_tip || ''}</textarea></div>
-                <div class="form-group"><label>標準答案</label><textarea id="f_answer_sql" placeholder="SELECT * FROM STUDENT ORDER BY Stdno;">${data.answer_sql || ''}</textarea></div>
+                <div class="form-group"><label>標準答案</label><textarea id="f_answer_sql">${data.answer_sql || ''}</textarea></div>
                 <div style="display:flex; gap:10px;">
                     <div class="form-group" style="flex:1;"><label>自動排序</label>
-                        <select id="f_auto_order">
-                            <option value="Y" ${data.auto_order !== 'N' ? 'selected' : ''}>Y (忽略順序)</option>
-                            <option value="N" ${data.auto_order === 'N' ? 'selected' : ''}>N (嚴格比對)</option>
-                        </select>
+                        <select id="f_auto_order"><option value="Y" ${data.auto_order !== 'N' ? 'selected' : ''}>Y (忽略順序)</option><option value="N" ${data.auto_order === 'N' ? 'selected' : ''}>N (嚴格比對)</option></select>
                     </div>
                     <div class="form-group" style="flex:1;"><label>難度</label>
-                        <select id="f_difficulty">
-                            ${[1,2,3].map(d => `<option value="${d}" ${data.difficulty == d ? 'selected' : ''}>${d}</option>`).join('')}
-                        </select>
+                        <select id="f_difficulty">${[1,2,3].map(d => `<option value="${d}" ${data.difficulty == d ? 'selected' : ''}>${d}</option>`).join('')}</select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>DSE 評分標格</label>
+                <div class="form-group"><label>DSE 評分標格</label>
                     <div id="markingSchemeContainer">${markingRows}</div>
-                    <button class="btn btn-secondary" onclick="addMarkingRow()" style="margin-top:5px; font-size: 0.4rem; padding: 0.5rem 1rem;"><i class="fas fa-plus"></i> 新增評分點</button>
+                    <button class="btn btn-secondary btn-small" onclick="addMarkingRow()" style="margin-top:5px;"><i class="fas fa-plus"></i> 新增評分點</button>
                 </div>
             `;
-        } else {
+        } else if (currentView === 'dictionary') {
             modalTitle.textContent = currentEditId ? '編輯字典' : '新增字典';
             modalBody.innerHTML = `
                 <div class="form-group"><label>關鍵字</label><input type="text" id="f_keyword" value="${data.keyword || ''}" ${currentEditId ? 'readonly' : ''}></div>
                 <div class="form-group"><label>分類</label><input type="text" id="f_category" value="${data.category || ''}"></div>
                 <div class="form-group"><label>描述</label><textarea id="f_description">${data.description || ''}</textarea></div>
                 <div class="form-group"><label>範例</label><textarea id="f_example">${data.example || ''}</textarea></div>
+            `;
+        } else {
+            modalTitle.textContent = currentEditId ? '編輯資料表' : '新增資料表';
+            modalBody.innerHTML = `
+                <div class="form-group"><label>環境 ID</label><input type="number" id="f_id" value="${data.id || ''}" ${currentEditId ? 'readonly' : ''}></div>
+                <div class="form-group"><label>環境名稱</label><input type="text" id="f_name" value="${data.name || ''}"></div>
+                <div class="form-group"><label>資料表結構與數據</label><textarea id="f_table_data" style="min-height:200px;" placeholder="[STUDENT]&#10;Stdno (TEXT, PK)&#10;SName (TEXT)&#10;S01, Chan Tai Man">${data.table_data || ''}</textarea></div>
             `;
         }
         document.getElementById('editModal').style.display = 'flex';
@@ -268,41 +279,25 @@
     function addMarkingRow() {
         const container = document.getElementById('markingSchemeContainer');
         const div = document.createElement('div');
-        div.style.cssText = 'display:flex; gap:5px; margin-bottom:5px;';
-        div.innerHTML = `
-            <input type="number" placeholder="分數" style="width: 60px; flex:none;">
-            <input type="text" placeholder="評分描述" style="flex:1;">
-            <input type="text" placeholder="正則表達式" style="flex:1;">
-        `;
+        div.className = 'marking-row';
+        div.innerHTML = `<input type="number" placeholder="分數" style="width: 60px; flex:none;"><input type="text" placeholder="評分描述" style="flex:1;"><input type="text" placeholder="正則表達式" style="flex:1;">`;
         container.appendChild(div);
     }
 
     async function saveData() {
-        const idToken = localStorage.getItem('admin_token'); // 需要確保登入時有存 token，這裡先簡化處理
-        // 實作上，由於 Google Token 會過期，理想情況下應重新獲取，這裡為了 demo 簡化，我們直接取一個假 token 或要求重新登入
-        // 為了讓儲存能運作，我們在登入時把 token 存起來
-        const token = window.currentToken; 
+        const token = window.currentToken;
+        if (!token) { showToast('請重新登入'); return; }
 
-        if (!token) {
-            showToast('登入狀態已過期，請重新整理頁面登入');
-            return;
-        }
-
-        let payload = { action: currentEditId ? 'updateQuestion' : 'addQuestion', id_token: token };
-        let idKey = currentView === 'questions' ? 'id' : 'keyword';
-        if (currentEditId) payload[idKey] = currentEditId;
+        let payload = { id_token: token };
+        let actionName = '';
 
         if (currentView === 'questions') {
-            // 組裝 marking_scheme
             const rows = document.querySelectorAll('#markingSchemeContainer > div');
             let markingScheme = '';
             rows.forEach(row => {
                 const inputs = row.querySelectorAll('input');
-                if(inputs[0].value && inputs[1].value && inputs[2].value) {
-                    markingScheme += `${inputs[0].value} | ${inputs[1].value} | ${inputs[2].value}\n`;
-                }
+                if(inputs[0].value && inputs[1].value && inputs[2].value) markingScheme += `${inputs[0].value} | ${inputs[1].value} | ${inputs[2].value}\n`;
             });
-
             payload.data = {
                 id: document.getElementById('f_id').value,
                 env_id: document.getElementById('f_env_id').value,
@@ -315,62 +310,88 @@
                 difficulty: document.getElementById('f_difficulty').value,
                 marking_scheme: markingScheme.trim()
             };
-            payload.action = currentEditId ? 'updateQuestion' : 'addQuestion';
-        } else {
+            actionName = currentEditId ? 'updateQuestion' : 'addQuestion';
+            if (currentEditId) payload.id = currentEditId;
+        } else if (currentView === 'dictionary') {
             payload.data = {
                 keyword: document.getElementById('f_keyword').value,
                 category: document.getElementById('f_category').value,
                 description: document.getElementById('f_description').value,
                 example: document.getElementById('f_example').value
             };
-            payload.action = currentEditId ? 'updateDictionary' : 'addDictionary';
+            actionName = currentEditId ? 'updateDictionary' : 'addDictionary';
+            if (currentEditId) payload.keyword = currentEditId;
+        } else {
+            payload.data = {
+                id: document.getElementById('f_id').value,
+                name: document.getElementById('f_name').value,
+                table_data: document.getElementById('f_table_data').value
+            };
+            actionName = currentEditId ? 'updateEnvironment' : 'addEnvironment';
+            if (currentEditId) payload.id = currentEditId;
         }
+        payload.action = actionName;
 
         try {
-            const res = await fetch(API_BASE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload)
-            });
+            const res = await fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
             const result = await res.json();
-            
             if (result.success) {
                 showToast(currentEditId ? '更新成功！' : '新增成功！');
                 closeModal();
-                loadView(currentView); // 重新載入列表
-            } else {
-                showToast(result.error || '儲存失敗');
-            }
-        } catch (err) {
-            showToast('網路錯誤，儲存失敗');
-        }
+                loadView(currentView);
+            } else { showToast(result.error || '儲存失敗'); }
+        } catch (err) { showToast('網路錯誤'); }
     }
 
     async function deleteItem(id) {
-        if(!confirm('確定要刪除這筆資料嗎？此操作無法復原。')) return;
-        
+        if(!confirm('確定要刪除嗎？')) return;
         const token = window.currentToken;
         if (!token) { showToast('請重新登入'); return; }
 
-        const action = currentView === 'questions' ? 'deleteQuestion' : 'deleteDictionary';
-        const idKey = currentView === 'questions' ? 'id' : 'keyword';
+        let actionName = '', idKey = '';
+        if (currentView === 'questions') { actionName = 'deleteQuestion'; idKey = 'id'; }
+        else if (currentView === 'dictionary') { actionName = 'deleteDictionary'; idKey = 'keyword'; }
+        else { actionName = 'deleteEnvironment'; idKey = 'id'; }
 
         try {
-            const res = await fetch(API_BASE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: action, id_token: token, [idKey]: id })
-            });
+            const res = await fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: actionName, id_token: token, [idKey]: id }) });
             const result = await res.json();
-            if (result.success) {
-                showToast('刪除成功！');
-                loadView(currentView);
-            } else {
-                showToast(result.error || '刪除失敗');
-            }
-        } catch (err) {
-            showToast('網路錯誤');
-        }
+            if (result.success) { showToast('刪除成功！'); loadView(currentView); }
+            else { showToast(result.error || '刪除失敗'); }
+        } catch (err) { showToast('網路錯誤'); }
+    }
+
+    function openCategoryModal() {
+        document.getElementById('modalTitle').textContent = '分類管理';
+        document.getElementById('modalBody').innerHTML = `
+            <p style="margin-bottom:1rem; font-size:0.8rem; color:var(--text-muted);">在此新增或查看分類，學生端題目篩選將自動同步。</p>
+            <div class="form-group"><label>新增分類名稱</label>
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="newCatName" placeholder="例如: advanced" style="flex:1;">
+                    <button class="btn btn-small" onclick="addCategory()">加入</button>
+                </div>
+            </div>
+            <div id="catList"></div>
+        `;
+        loadCategoriesToList();
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    async function loadCategoriesToList() {
+        const res = await fetch(`${API_BASE_URL}?action=getCategories`);
+        const cats = await res.json();
+        document.getElementById('catList').innerHTML = cats.map(c => `
+            <div class="list-item"><div class="list-item-info"><div class="list-item-title">${c.name}</div></div></div>
+        `).join('');
+    }
+
+    async function addCategory() {
+        const name = document.getElementById('newCatName').value.trim();
+        if(!name) return;
+        const token = window.currentToken;
+        const res = await fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'addCategory', id_token: token, data: { name: name } }) });
+        const result = await res.json();
+        if(result.success) { document.getElementById('newCatName').value=''; loadCategoriesToList(); showToast('已新增'); }
     }
 
     function closeModal() { document.getElementById('editModal').style.display = 'none'; }
@@ -380,7 +401,6 @@
         document.body.appendChild(t);
         setTimeout(() => t.remove(), 3000);
     }
-
     </script>
 </body>
 </html>
