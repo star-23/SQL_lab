@@ -97,13 +97,17 @@
         .cat-tab{font-family:var(--pixel); font-size:0.55rem; padding:4px 12px; background:var(--glass-subtle); border:1px solid transparent; border-radius:50px; color:var(--text-muted); cursor:pointer; transition:all 0.2s; letter-spacing:0.3px; white-space:nowrap; backdrop-filter:blur(8px); line-height:1.5;}
         .cat-tab:hover{background:var(--accent-soft);border-color:rgba(249,115,22,0.2);color:var(--accent);}
         .cat-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-hover));border-color:transparent;color:#fff;box-shadow:0 2px 12px var(--accent-glow);}
-
+        /* ==========================================
+           響應式設計
+           ========================================== */
+        /* 平板與小螢幕筆電 (1100px 以下) */
         @media (max-width: 1100px) {
-            main { height: auto; min-height: calc(100vh - 74px); }
+            main { height: auto !important; min-height: calc(100vh - 74px); }
+            /* 🌟 強制覆蓋內聯樣式，改為單欄 */
             #practiceView {
-                grid-template-columns: 1fr; /* 改為單欄 */
-                grid-template-rows: auto auto auto; /* 三列高度自適應 */
-                gap: 15px;
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+                height: auto !important;
             }
             .question-list { max-height: 250px; }
             .editor-panel { min-height: 400px; }
@@ -111,12 +115,14 @@
             .nav-progress .progress-bar { width: 50px; }
         }
 
+        /* 手機與小螢幕裝置 (768px 以下) */
         @media (max-width: 768px) {
+            /* 導航列優化：允許換行 */
             header {
+                flex-wrap: wrap;
                 height: auto;
-                flex-direction: column;
                 padding: 0.75rem;
-                gap: 0.75rem;
+                gap: 0.5rem;
             }
             .nav-logo { order: 1; }
             .nav-right { order: 2; width: 100%; justify-content: space-between; gap: 0.5rem; }
@@ -127,27 +133,65 @@
             
             main { padding: 10px; }
             
-            .editor-header { padding: 0.5rem; }
-            .editor-header-left { gap: 4px; }
+            /* 🌟 編輯器工具列強制換行，避免擠壓 */
+            .editor-header { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 8px; 
+                padding: 0.5rem;
+            }
+            .editor-header-left { 
+                width: 100%; 
+                justify-content: flex-start; 
+                gap: 4px; 
+            }
+            .editor-actions { 
+                width: 100%; 
+                justify-content: flex-end; 
+            }
             .cat-tab, .editor-tab { font-size: 0.38rem; padding: 4px 8px; }
             #simpleModeBtn, #dseModeBtn { font-size: 0.38rem !important; padding: 4px 8px !important; }
             
-            #sqlEditor { font-size: 0.75rem; padding: 0.5rem; }
-            .line-numbers { width: 30px; font-size: 0.65rem; }
+            /* 程式碼編輯區字體微調 */
+            #sqlEditor { font-size: 14px; padding: 0.5rem; }
+            .line-numbers { width: 30px; font-size: 12px; padding: 0.5rem 0; }
             
-            #dictView .panel-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-            #dictView .panel-header > div { width: 100%; }
-            #dictSearch { width: 100%; }
+            /* 🌟 字典頁面搜索列強制適配 */
+            #dictView .panel-header { 
+                flex-direction: column !important; 
+                align-items: flex-start !important; 
+                gap: 0.5rem !important; 
+                padding: 0.7rem 1rem !important;
+            }
+            #dictView .panel-header > div { 
+                width: 100% !important; 
+                flex-direction: column !important; 
+            }
+            #dictSearch { width: 100% !important; margin-bottom: 5px; }
             
-            .modal-box { width: 95%; padding: 1.2rem; }
+            /* 🌟 彈窗全面適配手機螢幕 */
+            .modal-overlay { padding: 1rem; align-items: flex-end; /* 從底部彈出更符合手機習慣 */ }
+            .modal-box { 
+                width: calc(100% - 2rem) !important; 
+                max-width: 100% !important; 
+                padding: 1.5rem; 
+                border-radius: 24px 24px 0 0; /* 底部圓角取消，貼合螢幕底部 */
+                max-height: 85vh; 
+                overflow-y: auto; 
+            }
+            /* 讓彈窗內的列表區域可滑動 */
+            #leaderboardList, #announceList {
+                max-height: 60vh !important;
+            }
             
             .plant-section { padding: 0.3rem; }
         }
 
+        /* 超小螢幕手機 (380px 以下) */
         @media (max-width: 380px) {
             .nav-logo h1 { font-size: 0.5rem; }
             .view-tab { font-size: 0.45rem; padding: 4px 8px; }
-            .q-item .q-diff { display: none; } 
+            .q-item .q-diff { display: none; }
         }
 
         .lb-row { display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0.8rem; background:rgba(255,255,255,0.5); border:1px solid var(--border-light); border-radius:12px; transition: all 0.2s; }
