@@ -115,23 +115,21 @@
     };
 
     async function handleLogin(response) {
-        // 將 token 傳給後端驗證是否為管理員
         try {
             const res = await fetch(API_BASE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'verifyToken', id_token: response.credential })
+                // 🌟 帶上 isAdmin: true 標記
+                body: JSON.stringify({ action: 'verifyToken', id_token: response.credential, isAdmin: true })
             });
             const data = await res.json();
             
             if (data.success && data.email) {
-                // 這裡前端無法直接知道是不是 admin，GAS 已經驗證過了
-                // 前端只能先假定登入成功，在呼叫具體 API 時如果權限不足會報錯
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
                 document.getElementById('adminInfo').classList.remove('hidden');
                 document.getElementById('adminEmail').textContent = data.email;
-                showToast('登入成功！');
+                showToast('管理員登入成功！');
             } else {
                 document.getElementById('loginError').textContent = data.error || '登入失敗';
                 document.getElementById('loginError').style.display = 'block';
@@ -143,10 +141,18 @@
         }
     }
 
+    let DB_ENVIRONMENTS = [];
+    let currentEditId = null;
+
     async function loadView(view) {
         currentView = view;
         const contentArea = document.getElementById('contentArea');
         contentArea.innerHTML = '<p style="text-align:center;">載入中...</p>';
+
+        if (view === 'questions' && DB_ENVIRONMENTS.length === 0) {
+            const envRes = await fetch(`${API_BASE_URL}?action=getEnvironments`);
+            DB_ENVIRONMENTS = await envRes.json();
+        }
 
         const action = view === 'questions' ? 'getQuestions' : 'getDictionary';
         const res = await fetch(`${API_BASE_URL}?action=${action}`);
@@ -175,12 +181,196 @@
         contentArea.innerHTML = html;
     }
 
-    // 之後的 openEditModal, openAddModal, saveData 等函數將在下一步實作複雜表單
-    function openAddModal() { alert('新增功能將在下一步實作視覺化表單'); }
-    function openEditModal(id) { alert('編輯功能將在下一步實作視覺化表單: ' + id); }
+    function openAddModal() {
+        currentEditId = null;
+        renderForm({});
+    }
+
+    async function openEditModal(id) {
+        const action = currentView === 'questions' ? 'getQuestions' : 'getDictionary';
+        const res = await fetch(`${API_BASE_URL}?action=${action}`);
+        const data = await res.json();
+        const item = data.find(d => String(d[currentView === 'questions' ? 'id' : 'keyword']) === String(id));
+        
+        currentEditId = id;
+        renderForm(item);
+    }
+
+    function renderForm(data) {
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        
+        if (currentView === 'questions') {
+            modalTitle.textContent = currentEditId ? '編輯題目' : '新增題目';
+            
+            // 處理 marking_scheme 格式化，方便編輯
+            let markingRows = '';
+            if (data.marking_scheme) {
+                data.marking_scheme.split('\n').forEach(line => {
+                    const parts = line.split('|');
+                    if (parts.length >= 3) {
+                        markingRows += `<div style="display:flex; gap:5px; margin-bottom:5px;">
+                            <input type="number" value="${parts[0].trim()}" placeholder="分數" style="width: 60px; flex:none;">
+                            <input type="text" value="${parts[1].trim()}" placeholder="評分描述" style="flex:1;">
+                            <input type="text" value="${parts.slice(2).join('|').trim()}" placeholder="正則表達式" style="flex:1;">
+                        </div>`;
+                    }
+                });
+            }
+            
+            modalBody.innerHTML = `
+                <div class="form-group"><label>題號 (ID)</label><input type="number" id="f_id" value="${data.id || ''}" ${currentEditId ? 'readonly' : ''} placeholder="自動編號或指定數字"></div>
+                <div class="form-group"><label>場景 (Env ID)</label>
+                    <select id="f_env_id">
+                        ${DB_ENVIRONMENTS.map(e => `<option value="${e.id}" ${data.env_id == e.id ? 'selected' : ''}>${e.id} - ${e.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group"><label>分類</label>
+                    <select id="f_category">
+                        ${['basic', 'where', 'order', 'join', 'groupby'].map(c => `<option value="${c}" ${data.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group"><label>標題</label><input type="text" id="f_title" value="${data.title || ''}"></div>
+                <div class="form-group"><label>題目描述</label><textarea id="f_description">${data.description || ''}</textarea></div>
+                <div class="form-group"><label>DSE 提示</label><textarea id="f_dse_tip">${data.dse_tip || ''}</textarea></div>
+                <div class="form-group"><label>標準答案</label><textarea id="f_answer_sql" placeholder="SELECT * FROM STUDENT ORDER BY Stdno;">${data.answer_sql || ''}</textarea></div>
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:1;"><label>自動排序</label>
+                        <select id="f_auto_order">
+                            <option value="Y" ${data.auto_order !== 'N' ? 'selected' : ''}>Y (忽略順序)</option>
+                            <option value="N" ${data.auto_order === 'N' ? 'selected' : ''}>N (嚴格比對)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1;"><label>難度</label>
+                        <select id="f_difficulty">
+                            ${[1,2,3].map(d => `<option value="${d}" ${data.difficulty == d ? 'selected' : ''}>${d}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>DSE 評分標格</label>
+                    <div id="markingSchemeContainer">${markingRows}</div>
+                    <button class="btn btn-secondary" onclick="addMarkingRow()" style="margin-top:5px; font-size: 0.4rem; padding: 0.5rem 1rem;"><i class="fas fa-plus"></i> 新增評分點</button>
+                </div>
+            `;
+        } else {
+            modalTitle.textContent = currentEditId ? '編輯字典' : '新增字典';
+            modalBody.innerHTML = `
+                <div class="form-group"><label>關鍵字</label><input type="text" id="f_keyword" value="${data.keyword || ''}" ${currentEditId ? 'readonly' : ''}></div>
+                <div class="form-group"><label>分類</label><input type="text" id="f_category" value="${data.category || ''}"></div>
+                <div class="form-group"><label>描述</label><textarea id="f_description">${data.description || ''}</textarea></div>
+                <div class="form-group"><label>範例</label><textarea id="f_example">${data.example || ''}</textarea></div>
+            `;
+        }
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function addMarkingRow() {
+        const container = document.getElementById('markingSchemeContainer');
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex; gap:5px; margin-bottom:5px;';
+        div.innerHTML = `
+            <input type="number" placeholder="分數" style="width: 60px; flex:none;">
+            <input type="text" placeholder="評分描述" style="flex:1;">
+            <input type="text" placeholder="正則表達式" style="flex:1;">
+        `;
+        container.appendChild(div);
+    }
+
+    async function saveData() {
+        const idToken = localStorage.getItem('admin_token'); // 需要確保登入時有存 token，這裡先簡化處理
+        // 實作上，由於 Google Token 會過期，理想情況下應重新獲取，這裡為了 demo 簡化，我們直接取一個假 token 或要求重新登入
+        // 為了讓儲存能運作，我們在登入時把 token 存起來
+        const token = window.currentToken; 
+
+        if (!token) {
+            showToast('登入狀態已過期，請重新整理頁面登入');
+            return;
+        }
+
+        let payload = { action: currentEditId ? 'updateQuestion' : 'addQuestion', id_token: token };
+        let idKey = currentView === 'questions' ? 'id' : 'keyword';
+        if (currentEditId) payload[idKey] = currentEditId;
+
+        if (currentView === 'questions') {
+            // 組裝 marking_scheme
+            const rows = document.querySelectorAll('#markingSchemeContainer > div');
+            let markingScheme = '';
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                if(inputs[0].value && inputs[1].value && inputs[2].value) {
+                    markingScheme += `${inputs[0].value} | ${inputs[1].value} | ${inputs[2].value}\n`;
+                }
+            });
+
+            payload.data = {
+                id: document.getElementById('f_id').value,
+                env_id: document.getElementById('f_env_id').value,
+                category: document.getElementById('f_category').value,
+                title: document.getElementById('f_title').value,
+                description: document.getElementById('f_description').value,
+                dse_tip: document.getElementById('f_dse_tip').value,
+                answer_sql: document.getElementById('f_answer_sql').value,
+                auto_order: document.getElementById('f_auto_order').value,
+                difficulty: document.getElementById('f_difficulty').value,
+                marking_scheme: markingScheme.trim()
+            };
+            payload.action = currentEditId ? 'updateQuestion' : 'addQuestion';
+        } else {
+            payload.data = {
+                keyword: document.getElementById('f_keyword').value,
+                category: document.getElementById('f_category').value,
+                description: document.getElementById('f_description').value,
+                example: document.getElementById('f_example').value
+            };
+            payload.action = currentEditId ? 'updateDictionary' : 'addDictionary';
+        }
+
+        try {
+            const res = await fetch(API_BASE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                showToast(currentEditId ? '更新成功！' : '新增成功！');
+                closeModal();
+                loadView(currentView); // 重新載入列表
+            } else {
+                showToast(result.error || '儲存失敗');
+            }
+        } catch (err) {
+            showToast('網路錯誤，儲存失敗');
+        }
+    }
+
     async function deleteItem(id) {
-        if(!confirm('確定要刪除嗎？')) return;
-        // 呼叫刪除 API...
+        if(!confirm('確定要刪除這筆資料嗎？此操作無法復原。')) return;
+        
+        const token = window.currentToken;
+        if (!token) { showToast('請重新登入'); return; }
+
+        const action = currentView === 'questions' ? 'deleteQuestion' : 'deleteDictionary';
+        const idKey = currentView === 'questions' ? 'id' : 'keyword';
+
+        try {
+            const res = await fetch(API_BASE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: action, id_token: token, [idKey]: id })
+            });
+            const result = await res.json();
+            if (result.success) {
+                showToast('刪除成功！');
+                loadView(currentView);
+            } else {
+                showToast(result.error || '刪除失敗');
+            }
+        } catch (err) {
+            showToast('網路錯誤');
+        }
     }
 
     function closeModal() { document.getElementById('editModal').style.display = 'none'; }
@@ -190,6 +380,7 @@
         document.body.appendChild(t);
         setTimeout(() => t.remove(), 3000);
     }
+
     </script>
 </body>
 </html>
