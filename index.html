@@ -155,12 +155,13 @@
 
         /* 🌟 動畫按鈕與舞台樣式 (液態玻璃風格) */
         .anim-trigger-btn { 
-            width: 100%; margin-top: 1.2rem; padding: 10px 15px; 
+            width: 100%; margin-top: 1.2rem; padding: 12px 15px; /* 增加內距 */
             background: var(--glass-subtle); 
             border: 1px solid var(--glass-border); 
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border-radius: 50px; color: var(--text-muted); 
-            font-family: var(--pixel); font-size: 0.45rem; cursor: pointer; 
+            font-family: var(--pixel); font-size: 0.6rem; /* 放大字體 */
+            cursor: pointer; 
             transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; 
             box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.3);
         }
@@ -170,39 +171,46 @@
             box-shadow: 0 4px 16px rgba(249,115,22,0.15), inset 0 1px 0 rgba(255,255,255,0.4);
             transform: translateY(-1px);
         }
-        .dict-anim-stage { 
-            max-height: 0; overflow: hidden; transition: max-height 0.5s ease, padding 0.5s ease, margin 0.5s ease; 
-            padding: 0 1rem; border: 1px solid transparent; background: transparent; 
-            margin-top: 0; border-radius: 12px; 
-        }
-        .dict-anim-stage.active { 
-            max-height: 1000px; padding: 1.5rem; margin-top: 1rem; 
-            border-color: var(--border-light); background: rgba(255,255,255,0.3); 
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-        }
-        .anim-step-box { margin-bottom: 1.5rem; text-align: center; }
-        .anim-sql-code { font-family: var(--code); font-size: 0.95rem; color: var(--text); background: rgba(15,23,42,0.05); padding: 10px 15px; border-radius: 8px; display: inline-block; margin-bottom: 10px; }
-        .anim-highlight-word { background: var(--accent); color: #fff; padding: 3px 8px; border-radius: 4px; transition: all 0.3s; font-weight: bold; }
-        .anim-desc { font-size: 0.85rem; color: var(--text-light); margin-bottom: 15px; line-height: 1.5; }
         
-        /* 🌟 流暢的出場動畫關鍵影格 */
-        @keyframes textReveal { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
-        @keyframes tableGrow { 0% { opacity: 0; transform: scale(0.85) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
-        @keyframes rowSlideIn { 0% { opacity: 0; transform: translateX(-20px); } 100% { opacity: 1; transform: translateX(0); } }
+        /* 動畫彈窗專用樣式 */
+        #dictAnimModal .modal-box { max-width: 800px; text-align: left; }
+        .anim-modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-light); }
+        .anim-modal-title { font-family: var(--pixel); font-size: 0.8rem; color: var(--accent); }
+        .anim-modal-close { background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+        .anim-modal-close:hover { color: var(--error); }
+        
+        .anim-stage-area { min-height: 300px; margin-bottom: 2rem; display: flex; flex-direction: column; justify-content: center; }
+        .anim-controls { display: flex; justify-content: center; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-light); }
+        .anim-ctrl-btn { padding: 10px 24px; background: var(--glass-subtle); border: 1px solid var(--glass-border); border-radius: 50px; color: var(--text); font-family: var(--pixel); font-size: 0.55rem; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(8px); }
+        .anim-ctrl-btn:hover:not(:disabled) { background: var(--accent); color: #fff; border-color: transparent; box-shadow: 0 4px 12px var(--accent-glow); }
+        .anim-ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .anim-ctrl-btn.primary { background: linear-gradient(135deg,var(--accent),var(--accent-hover)); color: #fff; border-color: transparent; box-shadow: 0 2px 12px var(--accent-glow); }
+
+        /* 動畫內容樣式 */
+        .anim-step-box { margin-bottom: 1.5rem; text-align: center; }
+        .anim-sql-code { font-family: var(--code); font-size: 1.1rem; color: var(--text); background: rgba(15,23,42,0.05); padding: 15px 20px; border-radius: 12px; display: inline-block; margin-bottom: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .anim-highlight-word { background: var(--accent); color: #fff; padding: 5px 10px; border-radius: 6px; transition: all 0.3s; font-weight: bold; }
+        .anim-desc { font-size: 1rem; color: var(--text-light); margin-bottom: 20px; line-height: 1.6; }
+        
+        /* 流暢的出場動畫關鍵影格 */
+        @keyframes textReveal { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes tableGrow { 0% { opacity: 0; transform: scale(0.8) translateY(30px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes rowSlideIn { 0% { opacity: 0; transform: translateX(-30px); } 100% { opacity: 1; transform: translateX(0); } }
         
         .anim-text-reveal { opacity: 0; animation: textReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         .anim-table-container { animation: tableGrow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         
-        .anim-compare-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-        .anim-compare-col { flex: 1; min-width: 200px; }
-        .anim-compare-title { font-family: var(--pixel); font-size: 0.5rem; color: var(--text-muted); margin-bottom: 8px; text-align: center; }
+        .anim-compare-container { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+        .anim-compare-col { flex: 1; min-width: 220px; }
+        .anim-compare-title { font-family: var(--pixel); font-size: 0.6rem; color: var(--text-muted); margin-bottom: 12px; text-align: center; }
         
-        .anim-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed; }
-        .anim-table th, .anim-table td { padding: 8px; border: 1px solid rgba(148,163,184,0.3); text-align: center; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-        .anim-table th { background: rgba(249,115,22,0.1); color: var(--accent-hover); font-family: var(--pixel); font-size: 0.5rem; }
+        .anim-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; table-layout: fixed; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; }
+        .anim-table th, .anim-table td { padding: 12px; border: 1px solid rgba(148,163,184,0.3); text-align: center; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .anim-table th { background: rgba(249,115,22,0.15); color: var(--accent-hover); font-family: var(--pixel); font-size: 0.6rem; }
+        .anim-table tr:nth-child(even) td { background: rgba(255,255,255,0.4); }
         .anim-row { opacity: 0; animation: rowSlideIn 0.4s ease-out forwards; }
         .row-fade-out { opacity: 0.2; text-decoration: line-through; transform: scale(0.95); }
-        .row-highlight { background: rgba(16,185,129,0.15); }
+        .row-highlight { background: rgba(16,185,129,0.2) !important; }
 
         /* 深色模式變數覆蓋 */
         body.dark-mode {
@@ -314,6 +322,20 @@
     <div class="modal-overlay hidden" id="leaderboardModal"><div class="modal-box" style="max-width:420px;text-align:left;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;position:relative;z-index:2;"><h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-trophy" style="color:#F59E0B;margin-right:8px;"></i>LEADERBOARD</h2><button id="closeLbBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;"><i class="fas fa-times"></i></button></div><div id="leaderboardList" style="position:relative;z-index:2;max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div></div></div>
     <div class="sys-status" id="sysStatus"><div class="status-item"><div class="status-dot off" id="dotCloud"></div>CLOUD</div><div class="status-item"><div class="status-dot off" id="dotEngine"></div>ENGINE</div><div class="status-item"><div class="status-dot off" id="dotDB"></div>DB</div></div>
     <div class="modal-overlay hidden" id="announceModal"><div class="modal-box" style="max-width:450px;text-align:left;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;position:relative;z-index:2;"><h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-bell" style="color:#3B82F6;margin-right:8px;"></i>NOTIFICATIONS</h2><button id="closeAnnBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;"><i class="fas fa-times"></i></button></div><div id="announceList" style="position:relative;z-index:2;max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;"></div></div></div>
+        <!-- 🌟 動畫演示全域彈窗 -->
+    <div class="modal-overlay hidden" id="dictAnimModal">
+        <div class="modal-box" style="max-width: 800px; text-align: left;">
+            <div class="anim-modal-header">
+                <div class="anim-modal-title" id="animModalTitle">SQL ANIMATION</div>
+                <button class="anim-modal-close" onclick="closeAnimModal()">&times;</button>
+            </div>
+            <div class="anim-stage-area" id="animModalStage"></div>
+            <div class="anim-controls">
+                <button class="anim-ctrl-btn" id="animPrevBtn" onclick="animStep(-1)"><i class="fas fa-chevron-left"></i> 上一步</button>
+                <button class="anim-ctrl-btn primary" id="animNextBtn" onclick="animStep(1)">下一步 <i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
 
     <script>
     const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxR3eHA3KBgU19KCXx0zysRJGctB2A-zJVpyDbU8UvZd_F1tXO2PnXkn9wmkwur52wKrg/exec';
@@ -752,8 +774,7 @@
                 <div class="dict-card-head"><div class="dict-keyword">${item.keyword}</div><div class="dict-category">${item.category}</div></div>
                 <div class="dict-desc">${item.description}</div>
                 <div class="dict-example">${item.example}<button class="dict-copy" onclick="copySqlExample(this, '${item.example.replace(/'/g, "\\'")}')"><i class="fas fa-copy"></i></button></div>
-                <button class="anim-trigger-btn" onclick="playDictAnim('${item.keyword}', 'anim_stage_${item.keyword}', this)"><i class="fas fa-play"></i> 播放動畫演示</button>
-                <div class="dict-anim-stage" id="anim_stage_${item.keyword}"></div>
+                <button class="anim-trigger-btn" onclick="openAnimModal('${item.keyword}')"><i class="fas fa-play"></i> 播放動畫演示</button>
             </div>
         `).join('');
     }
@@ -763,58 +784,70 @@
         });
     };
 
-    // 🌟 SQL 字典動畫引擎 (連貫、可打斷、生長動畫)
-    let animController = { token: 0, canceled: false };
-    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    // 🌟 SQL 字典動畫引擎 (全域彈窗與步驟制)
+    const animModal = document.getElementById('dictAnimModal');
+    const animStage = document.getElementById('animModalStage');
+    const animTitle = document.getElementById('animModalTitle');
+    const animPrevBtn = document.getElementById('animPrevBtn');
+    const animNextBtn = document.getElementById('animNextBtn');
 
-    window.playDictAnim = async function(keyword, stageId, btn) {
-        const stage = document.getElementById(stageId);
-        if (!stage) return;
-        
-        // 取消舊動畫
-        animController.canceled = true;
-        
-        const isActive = stage.classList.contains('active');
-        if (isActive) {
-            stage.classList.remove('active');
-            btn.innerHTML = '<i class="fas fa-play"></i> 播放動畫演示';
-            return;
-        }
+    let currentAnimSteps = [];
+    let currentStepIndex = 0;
 
-        // 關閉其他打開的動畫
-        document.querySelectorAll('.dict-anim-stage.active').forEach(s => {
-            s.classList.remove('active');
-            const otherBtn = s.previousElementSibling;
-            if(otherBtn) otherBtn.innerHTML = '<i class="fas fa-play"></i> 播放動畫演示';
-        });
-
-        stage.classList.add('active');
-        btn.innerHTML = '<i class="fas fa-times"></i> 收起動畫';
-        stage.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1rem 0;"><i class="fas fa-spinner fa-spin"></i> 準備動畫...</div>';
+    window.openAnimModal = function(keyword) {
+        animTitle.textContent = keyword + ' 演示';
+        animModal.classList.remove('hidden');
         
-        // 啟動新動畫令牌
-        const myToken = ++animController.token;
-        animController.canceled = false;
-        
-        await sleep(300);
-        if (animController.token !== myToken) return;
+        // 根據關鍵字獲取步驟
+        const stepsMap = {
+            'SELECT': getSelectSteps(),
+            'WHERE': getWhereSteps(),
+            'ORDER BY': getOrderBySteps(),
+            'GROUP BY': getGroupBySteps(),
+            'LIKE': getLikeSteps()
+        };
 
-        switch(keyword) {
-            case 'SELECT': await animSelect(stage, myToken); break;
-            case 'WHERE': await animWhere(stage, myToken); break;
-            case 'ORDER BY': await animOrderBy(stage, myToken); break;
-            case 'GROUP BY': await animGroupBy(stage, myToken); break;
-            case 'LIKE': await animLike(stage, myToken); break;
-            default: stage.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:2rem 0;">此語法暫無動畫演示</div>';
+        currentAnimSteps = stepsMap[keyword] || [];
+        currentStepIndex = 0;
+        
+        if (currentAnimSteps.length > 0) {
+            renderAnimStep();
+        } else {
+            animStage.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:3rem 0;">此語法暫無動畫演示</div>';
+            animPrevBtn.style.display = 'none';
+            animNextBtn.style.display = 'none';
         }
     };
+
+    window.closeAnimModal = function() {
+        animModal.classList.add('hidden');
+    };
+
+    window.animStep = function(direction) {
+        currentStepIndex += direction;
+        if (currentStepIndex < 0) currentStepIndex = 0;
+        if (currentStepIndex >= currentAnimSteps.length) currentStepIndex = currentAnimSteps.length - 1;
+        renderAnimStep();
+    };
+
+    function renderAnimStep() {
+        // 渲染當前步驟
+        currentAnimSteps[currentStepIndex](animStage);
+        
+        // 控制按鈕狀態
+        animPrevBtn.disabled = (currentStepIndex === 0);
+        if (currentStepIndex === currentAnimSteps.length - 1) {
+            animNextBtn.innerHTML = '完成 <i class="fas fa-check"></i>';
+        } else {
+            animNextBtn.innerHTML = '下一步 <i class="fas fa-chevron-right"></i>';
+        }
+    }
 
     function buildTable(headers, rows, idPrefix, highlightCol = -1) {
         let html = `<table class="anim-table" id="${idPrefix}"><thead><tr>`;
         headers.forEach((h, i) => html += `<th class="${i === highlightCol ? 'row-highlight' : ''}">${h}</th>`);
         html += `</tr></thead><tbody>`;
         rows.forEach((r, i) => {
-            // 逐行生成動畫延遲
             html += `<tr class="anim-row" id="${idPrefix}_r${i}" style="animation-delay: ${0.1 * i + 0.2}s;">`;
             r.forEach((c, j) => html += `<td class="${j === highlightCol ? 'row-highlight' : ''}">${c}</td>`);
             html += `</tr>`;
@@ -823,132 +856,163 @@
         return html;
     }
 
-    async function animSelect(stage, token) {
+    // --- SELECT 步驟定義 ---
+    function getSelectSteps() {
         const headers = ['ID', 'Name', 'Age'];
         const rows = [['1', 'John', '20'], ['2', 'Mary', '17']];
-        stage.innerHTML = `<div class="anim-step-box">
-            <div class="anim-sql-code anim-text-reveal">SELECT <span class="anim-highlight-word">Name</span> FROM Student</div>
-            <div class="anim-desc anim-text-reveal" style="animation-delay: 0.3s;">解析：我們只需要提取 <strong>Name</strong> 這一欄的資料。</div>
-        </div>
-        <div class="anim-compare-container anim-table-container" id="sel_proc" style="animation-delay: 0.5s;"></div>`;
-        await sleep(1000);
-        if (animController.token !== token) return;
-
-        document.getElementById('sel_proc').innerHTML = `<div class="anim-compare-col"><div class="anim-compare-title">處理過程</div>${buildTable(headers, rows, 'sel_t', 1)}</div>`;
-        await sleep(1500);
-        if (animController.token !== token) return;
-
-        let beforeHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-title">處理前 (原表)</div>${buildTable(headers, rows, 'sel_b')}</div>`;
-        let afterHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.5s;"><div class="anim-compare-title">處理後 (結果)</div><table class="anim-table"><thead><tr><th>Name</th></tr></thead><tbody><tr class="anim-row row-highlight" style="animation-delay: 0.6s;"><td>John</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.7s;"><td>Mary</td></tr></tbody></table></div>`;
-        stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT <span class="anim-highlight-word">Name</span> FROM Student</div></div><div class="anim-compare-container">${beforeHTML}${afterHTML}</div>`;
+        return [
+            // Step 0
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box">
+                    <div class="anim-sql-code anim-text-reveal">SELECT <span class="anim-highlight-word">Name</span> FROM Student</div>
+                    <div class="anim-desc anim-text-reveal" style="animation-delay: 0.3s;">解析：我們只需要提取 <strong>Name</strong> 這一欄的資料。</div>
+                </div>`;
+            },
+            // Step 1
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT <span class="anim-highlight-word">Name</span> FROM Student</div></div>
+                <div class="anim-compare-container anim-table-container" style="animation-delay: 0.2s;">
+                    <div class="anim-compare-col"><div class="anim-compare-title">處理過程</div>${buildTable(headers, rows, 'sel_t', 1)}</div>
+                </div>`;
+            },
+            // Step 2
+            (stage) => {
+                let beforeHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-title">處理前 (原表)</div>${buildTable(headers, rows, 'sel_b')}</div>`;
+                let afterHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.5s;"><div class="anim-compare-title">處理後 (結果)</div><table class="anim-table"><thead><tr><th>Name</th></tr></thead><tbody><tr class="anim-row row-highlight" style="animation-delay: 0.6s;"><td>John</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.7s;"><td>Mary</td></tr></tbody></table></div>`;
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT <span class="anim-highlight-word">Name</span> FROM Student</div><div class="anim-desc">最終結果只保留了 Name 欄位。</div></div><div class="anim-compare-container">${beforeHTML}${afterHTML}</div>`;
+            }
+        ];
     }
 
-    async function animWhere(stage, token) {
+    // --- WHERE 步驟定義 ---
+    function getWhereSteps() {
         const headers = ['Name', 'Age'];
         const rows = [['John', '20'], ['Mary', '17'], ['Bob', '25']];
-        stage.innerHTML = `<div class="anim-step-box">
-            <div class="anim-sql-code anim-text-reveal">SELECT * FROM Student <span class="anim-highlight-word">WHERE Age >= 18</span></div>
-            <div class="anim-desc anim-text-reveal" style="animation-delay: 0.3s;">解析：篩選出 Age (年齡) 大於或等於 18 的記錄。</div>
-        </div>
-        <div class="anim-compare-container anim-table-container" id="w_proc" style="animation-delay: 0.5s;"></div>`;
-        await sleep(1000);
-        if (animController.token !== token) return;
-
-        document.getElementById('w_proc').innerHTML = `<div class="anim-compare-col"><div class="anim-compare-title">處理過程</div>${buildTable(headers, rows, 'w_t', 1)}</div>`;
-        await sleep(1500);
-        if (animController.token !== token) return;
-        
-        document.getElementById('w_t_r1').classList.add('row-fade-out');
-        await sleep(1000);
-        if (animController.token !== token) return;
-
-        let beforeHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-title">處理前 (原表)</div>${buildTable(headers, rows, 'w_b')}</div>`;
-        let afterHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.5s;"><div class="anim-compare-title">處理後 (結果)</div><table class="anim-table"><thead><tr><th>Name</th><th>Age</th></tr></thead><tbody><tr class="anim-row row-highlight" style="animation-delay: 0.6s;"><td>John</td><td>20</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.7s;"><td>Bob</td><td>25</td></tr></tbody></table></div>`;
-        stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Student <span class="anim-highlight-word">WHERE Age >= 18</span></div></div><div class="anim-compare-container">${beforeHTML}${afterHTML}</div>`;
+        return [
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box">
+                    <div class="anim-sql-code anim-text-reveal">SELECT * FROM Student <span class="anim-highlight-word">WHERE Age >= 18</span></div>
+                    <div class="anim-desc anim-text-reveal" style="animation-delay: 0.3s;">解析：篩選出 Age (年齡) 大於或等於 18 的記錄。</div>
+                </div>`;
+            },
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Student <span class="anim-highlight-word">WHERE Age >= 18</span></div></div>
+                <div class="anim-compare-container anim-table-container" style="animation-delay: 0.2s;">
+                    <div class="anim-compare-col"><div class="anim-compare-title">處理過程</div>${buildTable(headers, rows, 'w_t', 1)}</div>
+                </div>`;
+            },
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Student <span class="anim-highlight-word">WHERE Age >= 18</span></div></div>
+                <div class="anim-compare-container anim-table-container" style="animation-delay: 0.2s;">
+                    <div class="anim-compare-col"><div class="anim-compare-title">處理過程</div>${buildTable(headers, rows, 'w_t2', 1)}</div>
+                </div>`;
+                // 延遲添加淡出效果，讓用戶看到變化
+                setTimeout(() => {
+                    const r1 = document.getElementById('w_t2_r1');
+                    if(r1) r1.classList.add('row-fade-out');
+                }, 500);
+            },
+            (stage) => {
+                let beforeHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-title">處理前 (原表)</div>${buildTable(headers, rows, 'w_b')}</div>`;
+                let afterHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.5s;"><div class="anim-compare-title">處理後 (結果)</div><table class="anim-table"><thead><tr><th>Name</th><th>Age</th></tr></thead><tbody><tr class="anim-row row-highlight" style="animation-delay: 0.6s;"><td>John</td><td>20</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.7s;"><td>Bob</td><td>25</td></tr></tbody></table></div>`;
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Student <span class="anim-highlight-word">WHERE Age >= 18</span></div><div class="anim-desc">不符合條件的行被移除了。</div></div><div class="anim-compare-container">${beforeHTML}${afterHTML}</div>`;
+            }
+        ];
     }
 
-    async function animOrderBy(stage, token) {
+    // --- ORDER BY 步驟定義 ---
+    function getOrderBySteps() {
         const headers = ['Name', 'Score'];
         const rows = [['John', '80'], ['Mary', '95'], ['Bob', '60']];
-        stage.innerHTML = `<div class="anim-step-box">
-            <div class="anim-sql-code anim-text-reveal">SELECT * FROM Exam <span class="anim-highlight-word">ORDER BY Score DESC</span></div>
-            <div class="anim-desc anim-text-reveal" style="animation-delay: 0.3s;">解析：根據 Score (分數) 進行遞降 (DESC) 排序。</div>
-        </div>
-        <div class="anim-compare-container anim-table-container" id="ob_proc" style="animation-delay: 0.5s;"></div>`;
-        await sleep(1000);
-        if (animController.token !== token) return;
-
-        document.getElementById('ob_proc').innerHTML = `<div class="anim-compare-col"><div class="anim-compare-title">處理過程</div>${buildTable(headers, rows, 'ob_t', 1)}</div>`;
-        await sleep(1500);
-        if (animController.token !== token) return;
-        
-        const r0 = document.getElementById('ob_t_r0');
-        const r1 = document.getElementById('ob_t_r1');
-        const r2 = document.getElementById('ob_t_r2');
-        r1.parentNode.insertBefore(r1, r0);
-        await sleep(800);
-        if (animController.token !== token) return;
-        r2.parentNode.insertBefore(r2, r0);
-        await sleep(1000);
-        if (animController.token !== token) return;
-
-        let beforeHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-title">處理前 (原表)</div>${buildTable(headers, rows, 'ob_b')}</div>`;
-        let afterHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.5s;"><div class="anim-compare-title">處理後 (結果)</div><table class="anim-table"><thead><tr><th>Name</th><th>Score</th></tr></thead><tbody><tr class="anim-row row-highlight" style="animation-delay: 0.6s;"><td>Mary</td><td>95</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.7s;"><td>John</td><td>80</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.8s;"><td>Bob</td><td>60</td></tr></tbody></table></div>`;
-        stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Exam <span class="anim-highlight-word">ORDER BY Score DESC</span></div></div><div class="anim-compare-container">${beforeHTML}${afterHTML}</div>`;
+        return [
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box">
+                    <div class="anim-sql-code anim-text-reveal">SELECT * FROM Exam <span class="anim-highlight-word">ORDER BY Score DESC</span></div>
+                    <div class="anim-desc anim-text-reveal" style="animation-delay: 0.3s;">解析：根據 Score (分數) 進行遞降 (DESC) 排序。</div>
+                </div>`;
+            },
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Exam <span class="anim-highlight-word">ORDER BY Score DESC</span></div></div>
+                <div class="anim-compare-container anim-table-container" style="animation-delay: 0.2s;">
+                    <div class="anim-compare-col"><div class="anim-compare-title">處理過程</div>${buildTable(headers, rows, 'ob_t', 1)}</div>
+                </div>`;
+            },
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Exam <span class="anim-highlight-word">ORDER BY Score DESC</span></div></div>
+                <div class="anim-compare-container anim-table-container" style="animation-delay: 0.2s;">
+                    <div class="anim-compare-col"><div class="anim-compare-title">處理過程 (交換中...)</div>${buildTable([['Mary', '95'], ['John', '80'], ['Bob', '60']], 'ob_t2', 1)}</div>
+                </div>`;
+            },
+            (stage) => {
+                let beforeHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-title">處理前 (原表)</div>${buildTable(headers, rows, 'ob_b')}</div>`;
+                let afterHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.5s;"><div class="anim-compare-title">處理後 (結果)</div><table class="anim-table"><thead><tr><th>Name</th><th>Score</th></tr></thead><tbody><tr class="anim-row row-highlight" style="animation-delay: 0.6s;"><td>Mary</td><td>95</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.7s;"><td>John</td><td>80</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.8s;"><td>Bob</td><td>60</td></tr></tbody></table></div>`;
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Exam <span class="anim-highlight-word">ORDER BY Score DESC</span></div><div class="anim-desc">資料已按分數從高到低排列。</div></div><div class="anim-compare-container">${beforeHTML}${afterHTML}</div>`;
+            }
+        ];
     }
 
-    async function animGroupBy(stage, token) {
+    // --- GROUP BY 步驟定義 ---
+    function getGroupBySteps() {
         const headers = ['Dept', 'Name'];
         const rows = [['IT', 'John'], ['HR', 'Mary'], ['IT', 'Bob']];
-        stage.innerHTML = `<div class="anim-step-box">
-            <div class="anim-sql-code anim-text-reveal">SELECT Dept, COUNT(*) <span class="anim-highlight-word">GROUP BY Dept</span></div>
-            <div class="anim-desc anim-text-reveal" style="animation-delay: 0.3s;">解析：將相同 Dept (部門) 的記錄分組，並計算每組的數量。</div>
-        </div>
-        <div class="anim-compare-container anim-table-container" id="gb_proc" style="animation-delay: 0.5s;"></div>`;
-        await sleep(1000);
-        if (animController.token !== token) return;
-
-        document.getElementById('gb_proc').innerHTML = `<div class="anim-compare-col"><div class="anim-compare-title">處理過程</div>${buildTable(headers, rows, 'gb_t', 0)}</div>`;
-        await sleep(1500);
-        if (animController.token !== token) return;
-        
-        document.getElementById('gb_t_r0').classList.add('row-highlight');
-        document.getElementById('gb_t_r2').classList.add('row-highlight');
-        const r0 = document.getElementById('gb_t_r0');
-        const r2 = document.getElementById('gb_t_r2');
-        r2.parentNode.insertBefore(r2, r0);
-        await sleep(1000);
-        if (animController.token !== token) return;
-
-        let beforeHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-title">處理前 (原表)</div>${buildTable(headers, rows, 'gb_b')}</div>`;
-        let afterHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.5s;"><div class="anim-compare-title">處理後 (結果)</div><table class="anim-table"><thead><tr><th>Dept</th><th>COUNT(*)</th></tr></thead><tbody><tr class="anim-row row-highlight" style="animation-delay: 0.6s;"><td>IT</td><td>2</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.7s;"><td>HR</td><td>1</td></tr></tbody></table></div>`;
-        stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT Dept, COUNT(*) <span class="anim-highlight-word">GROUP BY Dept</span></div></div><div class="anim-compare-container">${beforeHTML}${afterHTML}</div>`;
+        return [
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box">
+                    <div class="anim-sql-code anim-text-reveal">SELECT Dept, COUNT(*) <span class="anim-highlight-word">GROUP BY Dept</span></div>
+                    <div class="anim-desc anim-text-reveal" style="animation-delay: 0.3s;">解析：將相同 Dept (部門) 的記錄分組，並計算每組的數量。</div>
+                </div>`;
+            },
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT Dept, COUNT(*) <span class="anim-highlight-word">GROUP BY Dept</span></div></div>
+                <div class="anim-compare-container anim-table-container" style="animation-delay: 0.2s;">
+                    <div class="anim-compare-col"><div class="anim-compare-title">處理過程 (分組中...)</div>${buildTable([['IT', 'John'], ['IT', 'Bob'], ['HR', 'Mary']], 'gb_t', 0)}</div>
+                </div>`;
+            },
+            (stage) => {
+                let beforeHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-title">處理前 (原表)</div>${buildTable(headers, rows, 'gb_b')}</div>`;
+                let afterHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.5s;"><div class="anim-compare-title">處理後 (結果)</div><table class="anim-table"><thead><tr><th>Dept</th><th>COUNT(*)</th></tr></thead><tbody><tr class="anim-row row-highlight" style="animation-delay: 0.6s;"><td>IT</td><td>2</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.7s;"><td>HR</td><td>1</td></tr></tbody></table></div>`;
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT Dept, COUNT(*) <span class="anim-highlight-word">GROUP BY Dept</span></div><div class="anim-desc">每個部門被合併為一行，並顯示總數。</div></div><div class="anim-compare-container">${beforeHTML}${afterHTML}</div>`;
+            }
+        ];
     }
 
-    async function animLike(stage, token) {
+    // --- LIKE 步驟定義 ---
+    function getLikeSteps() {
         const headers = ['Name'];
         const rows = [['Johnson'], ['Mary'], ['John']];
-        stage.innerHTML = `<div class="anim-step-box">
-            <div class="anim-sql-code anim-text-reveal">SELECT * FROM Users <span class="anim-highlight-word">WHERE Name LIKE '%John%'</span></div>
-            <div class="anim-desc anim-text-reveal" style="animation-delay: 0.3s;">解析：尋找 Name 中包含 "John" 字串的記錄 (%) 代表任意字符。</div>
-        </div>
-        <div class="anim-compare-container anim-table-container" id="lk_proc" style="animation-delay: 0.5s;"></div>`;
-        await sleep(1000);
-        if (animController.token !== token) return;
-
-        document.getElementById('lk_proc').innerHTML = `<div class="anim-compare-col"><div class="anim-compare-title">處理過程</div>${buildTable(headers, rows, 'lk_t')}</div>`;
-        await sleep(1500);
-        if (animController.token !== token) return;
-        
-        document.getElementById('lk_t_r1').classList.add('row-fade-out');
-        document.getElementById('lk_t_r0').classList.add('row-highlight');
-        document.getElementById('lk_t_r2').classList.add('row-highlight');
-        await sleep(1000);
-        if (animController.token !== token) return;
-
-        let beforeHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-title">處理前 (原表)</div>${buildTable(headers, rows, 'lk_b')}</div>`;
-        let afterHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.5s;"><div class="anim-compare-title">處理後 (結果)</div><table class="anim-table"><thead><tr><th>Name</th></tr></thead><tbody><tr class="anim-row row-highlight" style="animation-delay: 0.6s;"><td>Johnson</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.7s;"><td>John</td></tr></tbody></table></div>`;
-        stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Users <span class="anim-highlight-word">WHERE Name LIKE '%John%'</span></div></div><div class="anim-compare-container">${beforeHTML}${afterHTML}</div>`;
+        return [
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box">
+                    <div class="anim-sql-code anim-text-reveal">SELECT * FROM Users <span class="anim-highlight-word">WHERE Name LIKE '%John%'</span></div>
+                    <div class="anim-desc anim-text-reveal" style="animation-delay: 0.3s;">解析：尋找 Name 中包含 "John" 字串的記錄 (%) 代表任意字符。</div>
+                </div>`;
+            },
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Users <span class="anim-highlight-word">WHERE Name LIKE '%John%'</span></div></div>
+                <div class="anim-compare-container anim-table-container" style="animation-delay: 0.2s;">
+                    <div class="anim-compare-col"><div class="anim-compare-title">處理過程</div>${buildTable(headers, rows, 'lk_t')}</div>
+                </div>`;
+            },
+            (stage) => {
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Users <span class="anim-highlight-word">WHERE Name LIKE '%John%'</span></div></div>
+                <div class="anim-compare-container anim-table-container" style="animation-delay: 0.2s;">
+                    <div class="anim-compare-col"><div class="anim-compare-title">處理過程 (標記符合項)</div>${buildTable(headers, rows, 'lk_t2')}</div>
+                </div>`;
+                setTimeout(() => {
+                    const r0 = document.getElementById('lk_t2_r0');
+                    const r1 = document.getElementById('lk_t2_r1');
+                    const r2 = document.getElementById('lk_t2_r2');
+                    if(r0) r0.classList.add('row-highlight');
+                    if(r1) r1.classList.add('row-fade-out');
+                    if(r2) r2.classList.add('row-highlight');
+                }, 500);
+            },
+            (stage) => {
+                let beforeHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-title">處理前 (原表)</div>${buildTable(headers, rows, 'lk_b')}</div>`;
+                let afterHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.5s;"><div class="anim-compare-title">處理後 (結果)</div><table class="anim-table"><thead><tr><th>Name</th></tr></thead><tbody><tr class="anim-row row-highlight" style="animation-delay: 0.6s;"><td>Johnson</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.7s;"><td>John</td></tr></tbody></table></div>`;
+                stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Users <span class="anim-highlight-word">WHERE Name LIKE '%John%'</span></div><div class="anim-desc">只保留了包含 "John" 的記錄。</div></div><div class="anim-compare-container">${beforeHTML}${afterHTML}</div>`;
+            }
+        ];
     }
 
     const themeToggleBtn = document.getElementById('themeToggleBtn');
