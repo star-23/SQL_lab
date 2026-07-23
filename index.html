@@ -145,6 +145,25 @@
         .dse-desc { flex:1; font-size:0.82rem; color:var(--text); line-height:1.5; }
         .dse-marks { font-family:var(--pixel); font-size:0.65rem; color:var(--text-muted); flex-shrink:0; }
         .dse-marks.got { color:var(--success); }
+        /* 資料表預覽樣式 (包含數據) */
+        .data-preview-table { width: 100%; font-size: 0.65rem; border-collapse: collapse; margin-bottom: 12px; background: rgba(255,255,255,0.4); border-radius: 8px; overflow: hidden; }
+        .data-preview-table th { background: rgba(15,23,42,0.8); color: #fff; padding: 5px; text-align: left; font-family: var(--code); }
+        .data-preview-table th.pk { color: var(--accent); }
+        .data-preview-table td { padding: 4px 5px; border-bottom: 1px solid var(--border-light); font-family: var(--code); color: var(--text); }
+        .data-preview-table tr:last-child td { border-bottom: none; }
+
+        /* SQL 動畫演示樣式 */
+        .dict-anim-stage { margin-top: 1rem; background: rgba(15,23,42,0.03); border: 1px dashed var(--border-light); border-radius: 12px; padding: 1rem; min-height: 150px; position: relative; overflow: hidden; }
+        .anim-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed; }
+        .anim-table th, .anim-table td { padding: 8px; border: 1px solid rgba(148,163,184,0.3); text-align: center; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .anim-table th { background: rgba(249,115,22,0.1); color: var(--accent-hover); font-family: var(--pixel); font-size: 0.5rem; }
+        .anim-row { transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .row-fade-out { opacity: 0; transform: translateX(40px) scale(0.8); }
+        .row-highlight { background: rgba(16,185,129,0.2); }
+        .col-fade-out { opacity: 0; transform: translateY(10px); }
+        .anim-code-hint { margin-top: 1rem; font-family: var(--code); font-size: 0.8rem; color: var(--success); text-align: center; opacity: 0; transition: opacity 0.5s; }
+        .anim-code-hint.show { opacity: 1; }
+
         /* 深色模式變數覆蓋 */
         body.dark-mode {
             --bg: #0F172A; --glass: rgba(30, 41, 59, 0.6); --glass-strong: rgba(30, 41, 59, 0.8);
@@ -279,7 +298,7 @@
             let currentTable = null; let currentColumns = []; let currentData = [];
             const saveCurrentTable = () => {
                 if (currentTable && currentColumns.length > 0) {
-                    tables.push({ name: currentTable, columns: currentColumns });
+                    tables.push({ name: currentTable, columns: currentColumns, rows: currentData });
                     const colDef = currentColumns.map(c => `${c.name} ${c.type}${c.pk ? ' PRIMARY KEY' : ''}`).join(', ');
                     sqlStatements.push(`CREATE TABLE ${currentTable} (${colDef});`);
                     if (currentData.length > 0) {
@@ -484,14 +503,19 @@
         let schemaHtml = '';
         const tables = sandbox.currentSchema; 
         if (tables && tables.length > 0) {
-            schemaHtml = `<div class="schema-section"><h4><i class="fas fa-database" style="margin-right:3px"></i> SCHEMA</h4>`;
+            schemaHtml = `<div class="schema-section"><h4><i class="fas fa-table" style="margin-right:3px"></i> TABLE PREVIEW</h4>`;
             tables.forEach(table => {
                 schemaHtml += `<div class="schema-table-title">TABLE: ${table.name}</div>
-                <table class="schema-table"><thead><tr><th>Column</th><th>Type</th></tr></thead>
-                <tbody>${table.columns.map(c=>`<tr><td class="${c.pk?'pk':''}">${c.name}</td><td>${c.type}</td></tr>`).join('')}</tbody></table>`;
+                <table class="data-preview-table">
+                    <thead><tr>${table.columns.map(c=>`<th class="${c.pk?'pk':''}">${c.name}</th>`).join('')}</tr></thead>
+                    <tbody>
+                    ${table.rows.map(r => `<tr>${r.map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}
+                    </tbody>
+                </table>`;
             });
             schemaHtml += `</div>`;
         }
+
         questionDetail.innerHTML = `<div class="detail-title"><span style="font-family:var(--pixel);font-size:0.4rem;color:var(--accent);">[${q.category.toUpperCase()}]</span><br>${q.title}</div><div class="detail-desc">${q.description}</div><div class="dse-tip"><i class="fas fa-lightbulb"></i><span>${q.dse_tip}</span></div>${schemaHtml}`;
     }
 
@@ -748,14 +772,154 @@
                 <div class="dict-card-head"><div class="dict-keyword">${item.keyword}</div><div class="dict-category">${item.category}</div></div>
                 <div class="dict-desc">${item.description}</div>
                 <div class="dict-example">${item.example}<button class="dict-copy" onclick="copySqlExample(this, '${item.example.replace(/'/g, "\\'")}')"><i class="fas fa-copy"></i></button></div>
+                <button class="btn btn-small" style="width:100%; margin-top:1rem; background:linear-gradient(135deg,#3B82F6,#2563EB); box-shadow:0 2px 8px rgba(59,130,246,0.3);" onclick="playDictAnim('${item.keyword}', 'anim_stage_${item.keyword}')"><i class="fas fa-play"></i> 播放動畫演示</button>
+                <div class="dict-anim-stage" id="anim_stage_${item.keyword}"></div>
             </div>
         `).join('');
     }
+
     window.copySqlExample = function(btn, text) {
         navigator.clipboard.writeText(text).then(() => {
             btn.innerHTML = '<i class="fas fa-check"></i>'; showToast('success', '已複製到剪貼簿'); setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i>', 1500);
         });
     };
+    // 🌟 SQL 字典動畫引擎
+    window.playDictAnim = function(keyword, stageId) {
+        const stage = document.getElementById(stageId);
+        if (!stage) return;
+        stage.innerHTML = ''; // 清空舞台
+
+        const anims = {
+            'SELECT': playSelectAnim,
+            'WHERE': playWhereAnim,
+            'ORDER BY': playOrderByAnim,
+            'GROUP BY': playGroupByAnim,
+            'INNER JOIN': playJoinAnim,
+            'LIKE': playLikeAnim,
+            'COUNT': playCountAnim
+        };
+
+        if (anims[keyword]) {
+            anims[keyword](stage);
+        } else {
+            stage.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:2rem 0;">此語法暫無動畫演示</p>';
+        }
+    };
+
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+    // 1. SELECT 動畫 (只保留特定欄位)
+    async function playSelectAnim(stage) {
+        stage.innerHTML = `<table class="anim-table"><thead><tr><th>ID</th><th>Name</th><th>Age</th></tr></thead><tbody>
+            <tr class="anim-row"><td>1</td><td>John</td><td>20</td></tr><tr class="anim-row"><td>2</td><td>Mary</td><td>22</td></tr></tbody></table>
+            <div class="anim-code-hint">SELECT Name FROM ...</div>`;
+        await sleep(300);
+        const hint = stage.querySelector('.anim-code-hint');
+        hint.classList.add('show');
+        const cols = stage.querySelectorAll('th, td');
+        // 隱藏 ID 和 Age 欄位
+        for(let i=0; i<cols.length; i+=3) cols[i].classList.add('col-fade-out'); // ID
+        for(let i=2; i<cols.length; i+=3) cols[i].classList.add('col-fade-out'); // Age
+    }
+
+    // 2. WHERE 動畫 (篩選掉不符合條件的行)
+    async function playWhereAnim(stage) {
+        stage.innerHTML = `<table class="anim-table"><thead><tr><th>Name</th><th>Age</th></tr></thead><tbody>
+            <tr class="anim-row" id="r1"><td>John</td><td>20</td></tr>
+            <tr class="anim-row" id="r2"><td>Mary</td><td>17</td></tr>
+            <tr class="anim-row" id="r3"><td>Bob</td><td>25</td></tr></tbody></table>
+            <div class="anim-code-hint">WHERE Age >= 18</div>`;
+        await sleep(300);
+        stage.querySelector('.anim-code-hint').classList.add('show');
+        await sleep(800);
+        stage.querySelector('#r2').classList.add('row-fade-out');
+    }
+
+    // 3. ORDER BY 動畫 (排序)
+    async function playOrderByAnim(stage) {
+        stage.innerHTML = `<table class="anim-table"><thead><tr><th>Name</th><th>Score</th></tr></thead><tbody style="display:block;">
+            <tr class="anim-row" id="s1" style="display:flex; width:100%;"><td style="flex:1">John</td><td style="flex:1">80</td></tr>
+            <tr class="anim-row" id="s2" style="display:flex; width:100%;"><td style="flex:1">Mary</td><td style="flex:1">95</td></tr>
+            <tr class="anim-row" id="s3" style="display:flex; width:100%;"><td style="flex:1">Bob</td><td style="flex:1">60</td></tr></tbody></table>
+            <div class="anim-code-hint">ORDER BY Score DESC</div>`;
+        await sleep(300);
+        stage.querySelector('.anim-code-hint').classList.add('show');
+        await sleep(800);
+        // 交換位置
+        const r1 = stage.querySelector('#s1');
+        const r2 = stage.querySelector('#s2');
+        const r3 = stage.querySelector('#s3');
+        const parent = r1.parentNode;
+        parent.insertBefore(r2, r1); // Mary 到最前
+        parent.insertBefore(r3, r1); // Bob 到中間
+    }
+
+    // 4. GROUP BY 動畫 (分組)
+    async function playGroupByAnim(stage) {
+        stage.innerHTML = `<table class="anim-table"><thead><tr><th>Dept</th><th>Name</th></tr></thead><tbody>
+            <tr class="anim-row" id="g1"><td>IT</td><td>John</td></tr>
+            <tr class="anim-row" id="g2"><td>HR</td><td>Mary</td></tr>
+            <tr class="anim-row" id="g3"><td>IT</td><td>Bob</td></tr></tbody></table>
+            <div class="anim-code-hint">GROUP BY Dept</div>`;
+        await sleep(300);
+        stage.querySelector('.anim-code-hint').classList.add('show');
+        await sleep(800);
+        // 將 IT 的行變色，並移動到一起
+        stage.querySelector('#g1').classList.add('row-highlight');
+        stage.querySelector('#g3').classList.add('row-highlight');
+        const g1 = stage.querySelector('#g1');
+        const g3 = stage.querySelector('#g3');
+        g1.parentNode.insertBefore(g3, g1); // Bob 移到 John 前面
+    }
+
+    // 5. INNER JOIN 動畫 (合併表格)
+    async function playJoinAnim(stage) {
+        stage.innerHTML = `<div style="display:flex; gap:20px; justify-content:center;">
+            <table class="anim-table" style="width:45%"><thead><tr><th>ID</th><th>Name</th></tr></thead><tbody>
+            <tr class="anim-row" id="j1"><td>1</td><td>John</td></tr></tbody></table>
+            <table class="anim-table" style="width:45%"><thead><tr><th>ID</th><th>Course</th></tr></thead><tbody>
+            <tr class="anim-row" id="j2"><td>1</td><td>ICT</td></tr></tbody></table>
+        </div><div class="anim-code-hint">ON TableA.ID = TableB.ID</div>`;
+        await sleep(300);
+        stage.querySelector('.anim-code-hint').classList.add('show');
+        await sleep(1000);
+        // 模擬合併：將兩個表格的內容合而為一
+        stage.innerHTML = `<table class="anim-table"><thead><tr><th>ID</th><th>Name</th><th>Course</th></tr></thead><tbody>
+            <tr class="anim-row row-highlight"><td>1</td><td>John</td><td>ICT</td></tr></tbody></table>
+            <div class="anim-code-hint show">JOIN 成功！</div>`;
+    }
+
+    // 6. LIKE 動畫 (模糊匹配)
+    async function playLikeAnim(stage) {
+        stage.innerHTML = `<table class="anim-table"><thead><tr><th>Name</th></tr></thead><tbody>
+            <tr class="anim-row" id="l1"><td>Johnson</td></tr>
+            <tr class="anim-row" id="l2"><td>Mary</td></tr>
+            <tr class="anim-row" id="l3"><td>John</td></tr></tbody></table>
+            <div class="anim-code-hint">WHERE Name LIKE '%John%'</div>`;
+        await sleep(300);
+        stage.querySelector('.anim-code-hint').classList.add('show');
+        await sleep(800);
+        stage.querySelector('#l2').classList.add('row-fade-out');
+        stage.querySelector('#l1').classList.add('row-highlight');
+        stage.querySelector('#l3').classList.add('row-highlight');
+    }
+
+    // 7. COUNT 動畫 (計數)
+    async function playCountAnim(stage) {
+        stage.innerHTML = `<table class="anim-table"><thead><tr><th>Name</th></tr></thead><tbody>
+            <tr class="anim-row"><td>John</td></tr>
+            <tr class="anim-row"><td>Mary</td></tr>
+            <tr class="anim-row"><td>Bob</td></tr></tbody></table>
+            <div class="anim-code-hint">COUNT(*)</div>`;
+        await sleep(300);
+        stage.querySelector('.anim-code-hint').classList.add('show');
+        await sleep(1000);
+        // 模擬計數並輸出結果
+        stage.innerHTML = `<div style="text-align:center; padding:2rem;">
+            <div style="font-family:var(--pixel); font-size:2rem; color:var(--success);">3</div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">總計記錄數</div>
+        </div><div class="anim-code-hint show">計算完成！</div>`;
+    }
 
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const themeIcon = document.getElementById('themeIcon');
