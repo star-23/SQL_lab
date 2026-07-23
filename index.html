@@ -29,18 +29,69 @@
         }
         *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
         html{font-size:15px;scroll-behavior:smooth;}
-        body{font-family:var(--body);color:var(--text);min-height:100vh;overflow-x:hidden;background:var(--bg);position:relative;}
+        body{font-family:var(--body);color:var(--text);min-height:100vh;overflow-x:hidden;background:var(--bg);position:relative; transition: background 1.5s ease;}
         
-        .bg-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;background:linear-gradient(135deg,#F8FAFC 0%,#EFF6FF 30%,#F0FDF4 60%,#FFF7ED 100%);}
-        .blob{position:fixed;border-radius:50%;filter:blur(90px);will-change:transform;z-index:0;}
-        .blob-1{width:600px;height:600px;background:radial-gradient(circle,rgba(249,115,22,0.18),transparent 70%);top:-10%;left:-5%;animation:bd1 25s ease-in-out infinite;}
-        .blob-2{width:500px;height:500px;background:radial-gradient(circle,rgba(16,185,129,0.14),transparent 70%);bottom:-8%;right:-3%;animation:bd2 30s ease-in-out infinite;}
-        .blob-3{width:400px;height:400px;background:radial-gradient(circle,rgba(56,189,248,0.12),transparent 70%);top:30%;right:25%;animation:bd3 22s ease-in-out infinite;}
+        .bg-canvas{position:fixed;inset:0;z-index:0;overflow:hidden; transition: background 1.5s ease;}
+        .blob{position:fixed;border-radius:50%;filter:blur(90px);will-change:transform;z-index:0; transition: background 1.5s ease;}
+        .blob-1{width:600px;height:600px;top:-10%;left:-5%;animation:bd1 25s ease-in-out infinite;}
+        .blob-2{width:500px;height:500px;bottom:-8%;right:-3%;animation:bd2 30s ease-in-out infinite;}
+        .blob-3{width:400px;height:400px;top:30%;right:25%;animation:bd3 22s ease-in-out infinite;}
         @keyframes bd1{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(60px,40px) scale(1.08);}66%{transform:translate(-30px,70px) scale(0.95);}}
         @keyframes bd2{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(-50px,-30px) scale(1.05);}66%{transform:translate(40px,-60px) scale(0.97);}}
         @keyframes bd3{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-40px,50px) scale(1.1);}}
         
-        .glass{background:var(--glass);backdrop-filter:blur(32px) saturate(180%);-webkit-backdrop-filter:blur(32px) saturate(180%);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md),inset 0 1px 0 var(--glass-highlight),inset 0 -1px 1px rgba(255,255,255,0.2);position:relative;overflow:hidden;}
+        /* 主題：白天 (預設明亮玻璃) */
+        body.theme-day { --bg: #F0F2F5; --text: #0F172A; --text-light: #475569; --text-muted: #64748B; }
+        body.theme-day .bg-canvas { background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 30%, #F0FDF4 60%, #FFF7ED 100%); }
+        body.theme-day .blob-1 { background: radial-gradient(circle, rgba(249,115,22,0.18), transparent 70%); }
+        body.theme-day .blob-2 { background: radial-gradient(circle, rgba(16,185,129,0.14), transparent 70%); }
+        body.theme-day .blob-3 { background: radial-gradient(circle, rgba(56,189,248,0.12), transparent 70%); }
+
+        /* 主題：黃昏 (火燒雲玻璃) */
+        body.theme-dusk { 
+            --bg: #806F93; --text: #F8FAFC; --text-light: #E2E8F0; --text-muted: #CBD5E1; 
+            --glass: rgba(128, 111, 147, 0.35); --glass-strong: rgba(128, 111, 147, 0.6); 
+            --glass-border: rgba(255, 255, 255, 0.3); --glass-highlight: rgba(255, 255, 255, 0.6);
+            --border-light: rgba(255, 255, 255, 0.2); --shadow-sm: 0 4px 12px rgba(7,65,136,0.2); 
+            --shadow-md: 0 12px 40px rgba(7,65,136,0.3); --accent: #FEB475; --accent-hover: #FBA85E;
+            --accent-glow: rgba(254,180,117,0.3); --accent-soft: rgba(254,180,117,0.15);
+        }
+        body.theme-dusk .bg-canvas { background: linear-gradient(135deg, #074188 0%, #806F93 50%, #FEB475 100%); }
+        body.theme-dusk .blob-1 { background: radial-gradient(circle, rgba(7,65,136,0.4), transparent 70%); }
+        body.theme-dusk .blob-2 { background: radial-gradient(circle, rgba(254,180,117,0.3), transparent 70%); }
+        body.theme-dusk .blob-3 { background: radial-gradient(circle, rgba(128,111,147,0.3), transparent 70%); }
+        body.theme-dusk .glass { background: rgba(255, 255, 255, 0.15); }
+        body.theme-dusk .glass::before { background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.05) 30%, rgba(255,255,255,0.1)); }
+        body.theme-dusk .glass::after { background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent); }
+        body.theme-dusk .schema-table th { background: rgba(7,65,136,0.8); }
+        body.theme-dusk .result-table th { background: rgba(7,65,136,0.8); }
+        body.theme-dusk .editor-tab.active { background: rgba(255,255,255,0.25); color: #fff; }
+        body.theme-dusk .editor-area { background: rgba(7,65,136,0.2); }
+        body.theme-dusk .data-preview-table th { background: rgba(7,65,136,0.8); }
+
+        /* 主題：夜晚 (寧靜星空，去除過多紫色) */
+        body.theme-night { 
+            --bg: #1E293B; --glass: rgba(30, 41, 59, 0.5); --glass-strong: rgba(30, 41, 59, 0.7); 
+            --glass-subtle: rgba(30, 41, 59, 0.3); --glass-border: rgba(148, 163, 184, 0.2); 
+            --glass-highlight: rgba(255, 255, 255, 0.08); --text: #F1F5F9; --text-light: #CBD5E1; 
+            --text-muted: #94A3B8; --border-light: rgba(148, 163, 184, 0.15); 
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.2); --shadow-md: 0 12px 40px rgba(0,0,0,0.3); 
+            --accent: #38BDF8; --accent-hover: #0EA5E9; --accent-glow: rgba(56,189,248,0.2); 
+            --accent-soft: rgba(56,189,248,0.1); --success: #34D399; --error: #F87171;
+        }
+        body.theme-night .bg-canvas { background: linear-gradient(135deg, #0F172A 0%, #1E293B 40%, #334155 80%, #475569 100%); }
+        body.theme-night .blob-1 { background: radial-gradient(circle, rgba(56,189,248,0.12), transparent 70%); }
+        body.theme-night .blob-2 { background: radial-gradient(circle, rgba(99,102,241,0.1), transparent 70%); }
+        body.theme-night .blob-3 { background: radial-gradient(circle, rgba(45,212,191,0.08), transparent 70%); }
+        body.theme-night .glass { background: var(--glass); border-color: var(--glass-border); }
+        body.theme-night .glass::before { background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.02) 30%, rgba(255,255,255,0.05)); }
+        body.theme-night .glass::after { background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent); }
+        body.theme-night .schema-table th { background: rgba(51, 65, 85, 0.9); color: #F1F5F9; }
+        body.theme-night .result-table th { background: rgba(51, 65, 85, 0.9); color: #F1F5F9; }
+        body.theme-night .editor-tab.active { background: rgba(51, 65, 85, 0.8); color: #F1F5F9; }
+        body.theme-night .data-preview-table th { background: rgba(51, 65, 85, 0.9); color: #F1F5F9; }
+        
+        .glass{background:var(--glass);backdrop-filter:blur(32px) saturate(180%);-webkit-backdrop-filter:blur(32px) saturate(180%);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md),inset 0 1px 0 var(--glass-highlight),inset 0 -1px 1px rgba(255,255,255,0.2);position:relative;overflow:hidden; transition: background 1s ease, border-color 1s ease;}
         .glass::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.1) 30%,rgba(255,255,255,0.05) 70%,rgba(255,255,255,0.4));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:1;}
         .glass::after{content:'';position:absolute;top:0;left:0;right:0;height:60%;background:linear-gradient(180deg,rgba(255,255,255,0.35),transparent);border-radius:var(--radius-xl) var(--radius-xl) 0 0;pointer-events:none;z-index:1;}
         
@@ -60,6 +111,11 @@
         .nav-progress .progress-fill{height:100%;background:linear-gradient(90deg,var(--success),#34D399);border-radius:3px;transition:width 0.6s cubic-bezier(0.34,1.56,0.64,1);}
         .nav-avatar{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),var(--accent-hover));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px var(--accent-glow); border:none;} .nav-avatar:hover{transform:scale(1.1);}
         
+        /* 🌟 時光機主題選擇器 */
+        .theme-selector { position:relative; display:flex; align-items:center; background:var(--glass-subtle); padding:3px; border-radius:50px; border: 1px solid var(--glass-border); }
+        .theme-btn { position:relative; z-index:2; width:28px; height:28px; background:transparent; border:none; color:var(--text-muted); cursor:pointer; transition:color 0.3s; display:flex; align-items:center; justify-content:center; font-size:0.8rem; }
+        .theme-btn.active { color:#fff; }
+
         main{position:relative;z-index:10;display:block;padding:15px;height:calc(100vh - 74px); overflow:hidden;}
         .view-grid{width:100%;height:100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;}
         #practiceView{display:grid; grid-template-columns: 264px 1fr 284px; gap: 10px;}
@@ -197,24 +253,6 @@
         .liquid-ripple { position: fixed; pointer-events: none; border-radius: 50%; background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.6); transform: translate(-50%, -50%) scale(0); animation: rippleEffect 0.6s ease-out forwards; z-index: 9999; backdrop-filter: blur(4px); }
         @keyframes rippleEffect { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0.8; } 100% { transform: translate(-50%, -50%) scale(4); opacity: 0; } }
 
-        /* 深色模式變數覆蓋 */
-        body.dark-mode {
-            --bg: #0F172A; --glass: rgba(30, 41, 59, 0.6); --glass-strong: rgba(30, 41, 59, 0.8);
-            --glass-subtle: rgba(30, 41, 59, 0.4); --glass-border: rgba(148, 163, 184, 0.25);
-            --glass-highlight: rgba(255, 255, 255, 0.1); --text: #F1F5F9; --text-light: #CBD5E1;
-            --text-muted: #64748B; --border-light: rgba(148, 163, 184, 0.2);
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.3); --shadow-md: 0 8px 32px rgba(0,0,0,0.4);
-        }
-        body.dark-mode .blob-1 { background: radial-gradient(circle, rgba(249,115,22,0.22), transparent 70%); }
-        body.dark-mode .blob-2 { background: radial-gradient(circle, rgba(16,185,129,0.18), transparent 70%); }
-        body.dark-mode .blob-3 { background: radial-gradient(circle, rgba(56,189,248,0.15), transparent 70%); }
-        body.dark-mode .glass { background: rgba(30, 41, 59, 0.4); border-color: rgba(255, 255, 255, 0.15); box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 1px rgba(255,255,255,0.05); }
-        body.dark-mode .glass::before { background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.05) 30%, rgba(255,255,255,0.02) 70%, rgba(255,255,255,0.1)); }
-        body.dark-mode .glass::after { background: linear-gradient(180deg, rgba(255,255,255,0.1), transparent); }
-        body.dark-mode .schema-table th { background: rgba(148, 163, 184, 0.2); color: var(--text); }
-        body.dark-mode .result-table th { background: rgba(148, 163, 184, 0.2); color: var(--text); }
-        body.dark-mode .editor-tab.active { background: rgba(148, 163, 184, 0.2); }
-
         /* 響應式設計 */
         @media (max-width: 1100px) {
             main { height: auto !important; min-height: calc(100vh - 74px); }
@@ -240,7 +278,7 @@
         @media (max-width: 380px) { .nav-logo h1 { font-size: 0.5rem; } .view-tab { font-size: 0.45rem; padding: 4px 8px; } .q-item .q-diff { display: none; } }
     </style>
 </head>
-<body>
+<body class="theme-day">
     <div class="bg-canvas" aria-hidden="true"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
     <header role="banner">
         <div class="nav-logo"><div class="logo-icon">SQL</div><h1><span>SQL</span> Quest</h1></div>
@@ -251,11 +289,21 @@
         </nav>
         <div class="nav-right">
             <div class="nav-progress"><span id="progressText">0/0</span><div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div></div>
+            
+            <!-- 🌟 時光機主題選擇器 (移至排行榜前) -->
+            <div class="theme-selector slider-container" id="themeSelectorContainer">
+                <div class="slider-indicator" id="themeSlider"></div>
+                <button class="theme-btn" data-theme="auto" title="跟隨系統時間"><i class="fas fa-clock"></i></button>
+                <button class="theme-btn active" data-theme="day" title="白天"><i class="fas fa-sun"></i></button>
+                <button class="theme-btn" data-theme="dusk" title="黃昏"><i class="fas fa-cloud-sun"></i></button>
+                <button class="theme-btn" data-theme="night" title="夜晚"><i class="fas fa-moon"></i></button>
+            </div>
+
             <button class="nav-avatar" id="leaderboardBtn" aria-label="排行榜" tabindex="0" style="background:linear-gradient(135deg,#FBBF24,#F59E0B); box-shadow:0 2px 8px rgba(245,158,11,0.4);"><i class="fas fa-trophy"></i></button>
             <button class="nav-avatar" id="bellBtn" aria-label="通知中心" tabindex="0" style="background:linear-gradient(135deg,#60A5FA,#3B82F6); box-shadow:0 2px 8px rgba(59,130,246,0.4); position:relative;"><i class="fas fa-bell"></i><span id="newMsgDot" style="position:absolute;top:-2px;right:-2px;width:10px;height:10px;background:#EF4444;border-radius:50%;border:2px solid #fff;display:none;"></span></button>
-            <button class="nav-avatar" id="themeToggleBtn" aria-label="切換日夜模式" tabindex="0" style="background:linear-gradient(135deg, #6B7280, #4B5563); box-shadow:0 2px 8px rgba(0,0,0,0.2);"><i class="fas fa-moon" id="themeIcon"></i></button>
             <button class="nav-avatar" id="avatarBtn"><i class="fas fa-user"></i></button>
         </div>
+
     </header>
     <main>
         <div id="practiceView" class="view-grid active-view" style="display:grid; grid-template-columns: 264px 1fr 284px; gap: 10px; height: 100%;">
@@ -319,7 +367,7 @@
 
     // 點擊氣泡效果
     document.addEventListener('click', function(e) {
-        const target = e.target.closest('button, .q-item, .nav-avatar, .cat-tab, .view-tab, .anim-ctrl-btn');
+        const target = e.target.closest('button, .q-item, .nav-avatar, .cat-tab, .view-tab, .anim-ctrl-btn, .theme-btn');
         if (target) {
             const ripple = document.createElement('div');
             ripple.className = 'liquid-ripple';
@@ -839,23 +887,42 @@
     function getGroupBySteps() { const headers = ['Dept', 'Name']; const rows = [['IT', 'John'], ['HR', 'Mary'], ['IT', 'Bob']]; return [ (stage) => { stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code anim-text-reveal">SELECT Dept, COUNT(*) <span class="anim-highlight-word">GROUP BY Dept</span></div><div class="anim-desc anim-text-reveal" style="animation-delay: 0.3s;">解析：將相同 Dept (部門) 的記錄分組，並計算每組的數量。</div></div>`; }, (stage) => { stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT Dept, COUNT(*) <span class="anim-highlight-word">GROUP BY Dept</span></div></div><div class="anim-compare-container anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-col"><div class="anim-compare-title">處理過程 (分組中...)</div>${buildTable([['IT', 'John'], ['IT', 'Bob'], ['HR', 'Mary']], 'gb_t', 0)}</div></div>`; }, (stage) => { let beforeHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-title">處理前 (原表)</div>${buildTable(headers, rows, 'gb_b')}</div>`; let afterHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.5s;"><div class="anim-compare-title">處理後 (結果)</div><table class="anim-table"><thead><tr><th>Dept</th><th>COUNT(*)</th></tr></thead><tbody><tr class="anim-row row-highlight" style="animation-delay: 0.6s;"><td>IT</td><td>2</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.7s;"><td>HR</td><td>1</td></tr></tbody></table></div>`; stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT Dept, COUNT(*) <span class="anim-highlight-word">GROUP BY Dept</span></div><div class="anim-desc">每個部門被合併為一行，並顯示總數。</div></div><div class="anim-compare-container">${beforeHTML}${afterHTML}</div>`; } ]; }
     function getLikeSteps() { const headers = ['Name']; const rows = [['Johnson'], ['Mary'], ['John']]; return [ (stage) => { stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code anim-text-reveal">SELECT * FROM Users <span class="anim-highlight-word">WHERE Name LIKE '%John%'</span></div><div class="anim-desc anim-text-reveal" style="animation-delay: 0.3s;">解析：尋找 Name 中包含 "John" 字串的記錄 (%) 代表任意字符。</div></div>`; }, (stage) => { stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Users <span class="anim-highlight-word">WHERE Name LIKE '%John%'</span></div></div><div class="anim-compare-container anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-col"><div class="anim-compare-title">處理過程</div>${buildTable(headers, rows, 'lk_t')}</div></div>`; }, (stage) => { stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Users <span class="anim-highlight-word">WHERE Name LIKE '%John%'</span></div></div><div class="anim-compare-container anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-col"><div class="anim-compare-title">處理過程 (標記符合項)</div>${buildTable(headers, rows, 'lk_t2')}</div></div>`; setTimeout(() => { const r0 = document.getElementById('lk_t2_r0'); const r1 = document.getElementById('lk_t2_r1'); const r2 = document.getElementById('lk_t2_r2'); if(r0) r0.classList.add('row-highlight'); if(r1) r1.classList.add('row-fade-out'); if(r2) r2.classList.add('row-highlight'); }, 500); }, (stage) => { let beforeHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.2s;"><div class="anim-compare-title">處理前 (原表)</div>${buildTable(headers, rows, 'lk_b')}</div>`; let afterHTML = `<div class="anim-compare-col anim-table-container" style="animation-delay: 0.5s;"><div class="anim-compare-title">處理後 (結果)</div><table class="anim-table"><thead><tr><th>Name</th></tr></thead><tbody><tr class="anim-row row-highlight" style="animation-delay: 0.6s;"><td>Johnson</td></tr><tr class="anim-row row-highlight" style="animation-delay: 0.7s;"><td>John</td></tr></tbody></table></div>`; stage.innerHTML = `<div class="anim-step-box"><div class="anim-sql-code">SELECT * FROM Users <span class="anim-highlight-word">WHERE Name LIKE '%John%'</span></div><div class="anim-desc">只保留了包含 "John" 的記錄。</div></div><div class="anim-compare-container">${beforeHTML}${afterHTML}</div>`; } ]; }
 
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    const themeIcon = document.getElementById('themeIcon');
-    function applyTheme(theme) {
-        if (theme === 'dark') { document.body.classList.add('dark-mode'); themeIcon.className = 'fas fa-sun'; themeToggleBtn.style.background = 'linear-gradient(135deg, #FBBF24, #F59E0B)'; } 
-        else { document.body.classList.remove('dark-mode'); themeIcon.className = 'fas fa-moon'; themeToggleBtn.style.background = 'linear-gradient(135deg, #6B7280, #4B5563)'; }
+    // 🌟 時光機主題邏輯
+    const themeSelectorContainer = $('themeSelectorContainer');
+    const themeBtns = themeSelectorContainer.querySelectorAll('.theme-btn');
+
+    function applyTheme(mode) {
+        let actualTheme = mode;
+        if (mode === 'auto') {
+            const hour = new Date().getHours();
+            if (hour >= 6 && hour < 17) actualTheme = 'day';
+            else if (hour >= 17 && hour < 19) actualTheme = 'dusk';
+            else actualTheme = 'night';
+        }
+
+        document.body.className = 'theme-' + actualTheme;
+
+        themeBtns.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.theme === mode) btn.classList.add('active');
+        });
+        updateSlider(themeSelectorContainer);
+        localStorage.setItem('sql-quest-theme', mode);
     }
-    themeToggleBtn.addEventListener('click', () => {
-        const isDark = document.body.classList.contains('dark-mode');
-        const newTheme = isDark ? 'light' : 'dark'; applyTheme(newTheme); localStorage.setItem('sql-quest-theme', newTheme);
+
+    themeBtns.forEach(btn => {
+        btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
     });
-    const savedTheme = localStorage.getItem('sql-quest-theme') || 'light'; applyTheme(savedTheme);
+
+    // 啟動時讀取偏好 (預設為 auto)
+    const savedTheme = localStorage.getItem('sql-quest-theme') || 'auto';
+    applyTheme(savedTheme);
 
     async function initApp() {
         updateStatus('engine', 'off'); updateStatus('cloud', 'off'); updateStatus('db', 'off');
         const engineReady = await sandbox.init();
         updateStatus('engine', engineReady ? 'on' : 'err');
-        if(engineReady) { await loadData(); openModal(loginModal); setTimeout(() => updateSlider(document.getElementById('navCats')), 300); } 
+        if(engineReady) { await loadData(); openModal(loginModal); setTimeout(() => { updateSlider(document.getElementById('navCats')); updateSlider(themeSelectorContainer); }, 300); } 
         else { showToast('error', 'SQLite 引擎載入失敗，請重新整理'); }
     }
     initApp();
