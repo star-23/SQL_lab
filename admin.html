@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQL Quest 管理後台</title>
+    <title>SQL Quest 管理後台 v3</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@300;400;500;700;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -20,12 +20,9 @@
         .blob{position:fixed;border-radius:50%;filter:blur(90px);z-index:0;}
         .blob-1{width:600px;height:600px;background:radial-gradient(circle,rgba(249,115,22,0.18),transparent 70%);top:-10%;left:-5%;}
         .blob-2{width:500px;height:500px;background:radial-gradient(circle,rgba(16,185,129,0.14),transparent 70%);bottom:-8%;right:-3%;}
-        
-        /* 🌟 液態玻璃核心樣式 */
         .glass{background:var(--glass);backdrop-filter:blur(32px) saturate(180%);-webkit-backdrop-filter:blur(32px) saturate(180%);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md),inset 0 1px 0 rgba(255,255,255,1),inset 0 -1px 1px rgba(255,255,255,0.2);position:relative;overflow:hidden;}
         .glass::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.1) 30%,rgba(255,255,255,0.05) 70%,rgba(255,255,255,0.4));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:1;}
         .glass::after{content:'';position:absolute;top:0;left:0;right:0;height:60%;background:linear-gradient(180deg,rgba(255,255,255,0.35),transparent);border-radius:var(--radius-xl) var(--radius-xl) 0 0;pointer-events:none;z-index:1;}
-
         .container{position:relative;z-index:10;max-width:1000px;margin:2rem auto;padding:0 1rem;}
         header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;}
         h1{font-family:var(--pixel);font-size:0.9rem;color:var(--accent);}
@@ -39,40 +36,44 @@
         .btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(249,115,22,0.4);}
         .btn-secondary{background:linear-gradient(135deg,#6B7280,#4B5563);box-shadow:0 4px 12px rgba(0,0,0,0.2);}
         .btn-small{padding:0.5rem 1rem;font-size:0.4rem;}
-        
-        .menu-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;}
+        .menu-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;}
         .list-item{background:rgba(255,255,255,0.4);border:1px solid var(--border-light);border-radius:12px;padding:1rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2;transition:all 0.2s;}
         .list-item:hover{background:rgba(255,255,255,0.6);transform:translateX(4px);}
-        .list-item-info{flex:1;}
+        .list-item-info{flex:1;min-width:0;}
         .list-item-title{font-weight:700;font-size:1rem;margin-bottom:0.5rem;color:var(--text);}
         .list-item-desc{font-size:0.8rem;color:var(--text-muted);word-break:break-all;}
         .actions{display:flex;gap:0.5rem;flex-shrink:0;}
         .icon-btn{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;transition:all 0.2s;}
-        .edit-btn{background:linear-gradient(135deg,#3B82F6,#2563EB);} 
+        .edit-btn{background:linear-gradient(135deg,#3B82F6,#2563EB);}
         .delete-btn{background:linear-gradient(135deg,#EF4444,#DC2626);}
         .icon-btn:hover{transform:scale(1.1);}
-        
         .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.2);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(8px);}
-        .modal-content{background:var(--glass-strong);backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:0 12px 40px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,1);padding:2rem;width:90%;max-width:600px;max-height:90vh;overflow-y:auto;position:relative;}
+        .modal-content{background:var(--glass-strong);backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:0 12px 40px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,1);padding:2rem;width:90%;max-width:640px;max-height:90vh;overflow-y:auto;position:relative;}
         .modal-content::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.1) 30%,rgba(255,255,255,0.05) 70%,rgba(255,255,255,0.4));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
         .hidden{display:none;}
-        
         .toast{position:fixed;top:20px;right:20px;background:rgba(16,185,129,0.9);backdrop-filter:blur(12px);color:#fff;padding:1rem 2rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:200;animation:slideIn 0.3s ease-out;border:1px solid rgba(255,255,255,0.2);}
         @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
-        
         .marking-row{display:flex;gap:5px;margin-bottom:5px;align-items:center;}
         .marking-row input{padding:0.5rem;font-size:0.8rem;}
-        .table-builder-row{display:flex;gap:5px;margin-bottom:5px;align-items:center;background:rgba(255,255,255,0.3);padding:5px;border-radius:8px;}
-        .table-builder-row input{padding:0.5rem;font-size:0.8rem;}
-        .remove-row-btn{background:#EF4444;color:#fff;border:none;border-radius:6px;cursor:pointer;padding:0.5rem;flex-shrink:0;}
+        .badge{display:inline-block;padding:2px 10px;border-radius:50px;font-size:0.68rem;font-weight:600;margin-right:6px;}
+        .badge-cat{background:rgba(249,115,22,0.14);color:var(--accent-hover);}
+        .badge-anim{background:rgba(59,130,246,0.12);color:#2563EB;}
+        .badge-ok{background:rgba(16,185,129,0.14);color:#047857;}
+        .badge-bad{background:rgba(239,68,68,0.14);color:#B91C1C;}
+        table.records{width:100%;border-collapse:collapse;font-size:0.78rem;position:relative;z-index:2;}
+        table.records th{font-family:var(--pixel);font-size:0.42rem;color:var(--text-muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border-light);white-space:nowrap;}
+        table.records td{padding:8px 10px;border-bottom:1px solid rgba(148,163,184,0.12);vertical-align:top;}
+        table.records td code{font-family:'Fira Code',monospace;font-size:0.72rem;background:rgba(15,23,42,0.05);padding:2px 6px;border-radius:6px;}
+        .form-row{display:flex;gap:10px;} .form-row .form-group{flex:1;}
+        .hint{font-size:0.72rem;color:var(--text-muted);margin-top:4px;position:relative;z-index:2;}
     </style>
 </head>
 <body>
     <div class="blob blob-1"></div><div class="blob blob-2"></div>
-    
+
     <div class="container">
         <header>
-            <h1><i class="fas fa-cog"></i> SQL Quest 管理後台</h1>
+            <h1><i class="fas fa-cog"></i> SQL Quest 管理後台 v3</h1>
             <div id="adminInfo" class="hidden" style="display:flex; align-items:center; gap:1rem; background:rgba(255,255,255,0.4); padding:0.5rem 1rem; border-radius:50px; border:1px solid var(--border-light);">
                 <span id="adminEmail" style="font-size:0.8rem; font-weight:500;"></span>
                 <button class="btn btn-secondary btn-small" onclick="location.reload()">登出</button>
@@ -90,12 +91,14 @@
                 <h2 style="font-family:var(--pixel); font-size:0.6rem; margin-bottom:1rem; color:var(--text);">功能選單</h2>
                 <div class="menu-grid">
                     <button class="btn" onclick="loadView('questions')"><i class="fas fa-question-circle"></i> 題目管理</button>
-                    <button class="btn" onclick="loadView('dictionary')"><i class="fas fa-book"></i> 字典管理</button>
+                    <button class="btn" onclick="loadView('dictionary')"><i class="fas fa-book"></i> 字典管理 v3</button>
                     <button class="btn" onclick="loadView('environments')"><i class="fas fa-database"></i> 資料表管理</button>
+                    <button class="btn" onclick="loadView('announcements')"><i class="fas fa-bullhorn"></i> 公告管理</button>
+                    <button class="btn" onclick="loadView('analytics')"><i class="fas fa-user-graduate"></i> 學生分析</button>
+                    <button class="btn" onclick="loadView('submissions')"><i class="fas fa-clipboard-list"></i> 答題記錄</button>
                     <button class="btn btn-secondary" onclick="openCategoryModal()"><i class="fas fa-tags"></i> 分類管理</button>
                 </div>
             </div>
-
             <div id="contentArea" class="glass panel">
                 <p style="text-align:center; color:var(--text-muted); position:relative;z-index:2;">請選擇上方功能進行管理</p>
             </div>
@@ -121,6 +124,19 @@
     let DB_DATA = [];
     let DB_ENVIRONMENTS = [];
     let DB_CATEGORIES = [];
+
+    // v3 字典：八大分類與動畫類型（與前端 SQL.html 的 DICT_CATS / BUILDERS 對應）
+    const DICT_CATS = [
+        {id:'db',   name:'數據庫管理'},   {id:'ddl',  name:'資料表結構'},
+        {id:'dml',  name:'數據操縱'},     {id:'dql',  name:'基本查詢'},
+        {id:'func', name:'內置函數'},     {id:'join', name:'多表連接'},
+        {id:'sub',  name:'子查詢與集合'}, {id:'view', name:'檢視與索引'}
+    ];
+    const CAT_NAME = Object.fromEntries(DICT_CATS.map(c => [c.id, c.name]));
+    const DICT_ANIMS = ['db','tblCreate','pkAdd','fkAdd','tblShowCreate','tblRename','colAdd','colRename','colModify','colDrop','tblDrop','insertOne','insertMulti','insertSelect','update','deleteWhere','deleteAll','selectPipeline','selectDistinct','selectAs','whereLogic','whereBetween','whereIn','whereNull','whereLike','agg','func','join','subScalar','subIn','subExists','subAnyAll','setOps','view','index'];
+
+    // HTML 轉義（v1 缺失：資料含引號或 < > 會破壞表單與列表）
+    const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
     window.onload = function() {
         google.accounts.id.initialize({
@@ -158,65 +174,99 @@
         }
     }
 
+    async function apiGet(action) {
+        const res = await fetch(`${API_BASE_URL}?action=${action}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    }
+
+    // 管理員專屬 GET（getSubmissions / getStudentAnalytics / getStudentDetail 需帶 id_token）
+    async function apiGetAdmin(action) {
+        const token = window.currentToken ? '&id_token=' + encodeURIComponent(window.currentToken) : '';
+        const res = await fetch(`${API_BASE_URL}?action=${action}${token}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data && data.error) throw new Error(data.error);
+        return data;
+    }
+
     async function loadView(view) {
         currentView = view;
         const contentArea = document.getElementById('contentArea');
         contentArea.innerHTML = '<p style="text-align:center; position:relative;z-index:2;">載入中...</p>';
 
-        const actionMap = {
-            questions: 'getQuestions',
-            dictionary: 'getDictionary',
-            environments: 'getEnvironmentsForAdmin'
-        };
-        const res = await fetch(`${API_BASE_URL}?action=${actionMap[view]}`);
-        DB_DATA = await res.json();
+        try {
+            if (view === 'submissions') { await renderSubmissions(contentArea); return; }
+            if (view === 'analytics') { await renderAnalytics(contentArea); return; }
 
-        if (view === 'questions') {
-            const catRes = await fetch(`${API_BASE_URL}?action=getCategories`);
-            DB_CATEGORIES = await catRes.json();
-            const envRes = await fetch(`${API_BASE_URL}?action=getEnvironmentsForAdmin`);
-            DB_ENVIRONMENTS = await envRes.json();
+            const actionMap = {
+                questions: 'getQuestions',
+                dictionary: 'getDictionary',
+                environments: 'getEnvironmentsForAdmin',
+                announcements: 'getAnnouncements'
+            };
+            DB_DATA = await apiGet(actionMap[view]);
+
+            if (view === 'questions') {
+                DB_CATEGORIES = await apiGet('getCategories');
+                DB_ENVIRONMENTS = await apiGet('getEnvironmentsForAdmin');
+            }
+
+            const addLabel = { questions:'題目', dictionary:'字典', environments:'資料表', announcements:'公告' }[view];
+            let html = `<button class="btn btn-small" onclick="openAddModal()" style="margin-bottom:1.5rem;"><i class="fas fa-plus"></i> 新增${addLabel}</button>`;
+
+            // 字典 v3 按 sort 排序顯示
+            if (view === 'dictionary') DB_DATA.sort((a, b) => (Number(a.sort) || 999) - (Number(b.sort) || 999));
+            // 公告按日期新→舊
+            if (view === 'announcements') DB_DATA.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            DB_DATA.forEach(item => {
+                let title, desc, idKey;
+                if (view === 'questions') { idKey = 'id'; title = `Q${item.id}: ${esc(item.title)}`; desc = esc(item.description); }
+                else if (view === 'dictionary') {
+                    idKey = 'keyword';
+                    const catId = item.cat_id || item.category || '';
+                    const catLabel = CAT_NAME[catId] ? ` <span class="badge badge-cat">${CAT_NAME[catId]}</span>` : ` <span class="badge badge-cat">${esc(item.category || '')}</span>`;
+                    const animLabel = item.anim ? ` <span class="badge badge-anim"><i class="fas fa-film"></i> ${esc(item.anim)}</span>` : ` <span class="badge" style="background:rgba(148,163,184,0.15);color:var(--text-muted);">無動畫</span>`;
+                    title = `${esc(item.kw || item.keyword)}${catLabel}${animLabel}`;
+                    desc = esc(item.description);
+                }
+                else if (view === 'announcements') { idKey = 'date'; title = `【${esc(String(item.date).split('T')[0])}】${esc(item.title)}`; desc = esc(item.content); }
+                else { idKey = 'id'; title = `Env ${item.id}: ${esc(item.name)}`; desc = item.table_data ? esc(item.table_data.substring(0, 50)) + '...' : ''; }
+
+                html += `
+                    <div class="list-item">
+                        <div class="list-item-info">
+                            <div class="list-item-title">${title}</div>
+                            <div class="list-item-desc">${desc}</div>
+                        </div>
+                        <div class="actions">
+                            <button class="icon-btn edit-btn" onclick="openEditModal('${esc(String(item[idKey]))}')"><i class="fas fa-edit"></i></button>
+                            <button class="icon-btn delete-btn" onclick="deleteItem('${esc(String(item[idKey]))}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`;
+            });
+            contentArea.innerHTML = html;
+        } catch (err) {
+            contentArea.innerHTML = `<p style="text-align:center;color:#EF4444;position:relative;z-index:2;">載入失敗：${esc(err.message)}<br><span class="hint">若為新增功能，請先將 AppsScript_增補.gs 的內容部署到 Apps Script。</span></p>`;
         }
-
-        let html = `<button class="btn btn-small" onclick="openAddModal()" style="margin-bottom:1.5rem;"><i class="fas fa-plus"></i> 新增${view === 'questions' ? '題目' : view === 'dictionary' ? '字典' : '資料表'}</button>`;
-        
-        DB_DATA.forEach(item => {
-            let title, desc, idKey;
-            if (view === 'questions') { idKey = 'id'; title = `Q${item.id}: ${item.title}`; desc = item.description; }
-            else if (view === 'dictionary') { idKey = 'keyword'; title = item.keyword; desc = item.description; }
-            else { idKey = 'id'; title = `Env ${item.id}: ${item.name}`; desc = item.table_data ? item.table_data.substring(0, 50) + '...' : ''; }
-            
-            html += `
-                <div class="list-item">
-                    <div class="list-item-info">
-                        <div class="list-item-title">${title}</div>
-                        <div class="list-item-desc">${desc}</div>
-                    </div>
-                    <div class="actions">
-                        <button class="icon-btn edit-btn" onclick="openEditModal('${item[idKey]}')"><i class="fas fa-edit"></i></button>
-                        <button class="icon-btn delete-btn" onclick="deleteItem('${item[idKey]}')"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-            `;
-        });
-        contentArea.innerHTML = html;
     }
-
     function openAddModal() {
         currentEditId = null;
         renderForm({});
     }
 
     function openEditModal(id) {
-        const item = DB_DATA.find(d => String(d[currentView === 'questions' ? 'id' : currentView === 'dictionary' ? 'keyword' : 'id']) === String(id));
+        const idKey = currentView === 'dictionary' ? 'keyword' : currentView === 'announcements' ? 'date' : 'id';
+        const item = DB_DATA.find(d => String(d[idKey]) === String(id));
         currentEditId = id;
-        renderForm(item);
+        renderForm(item || {});
     }
 
     function renderForm(data) {
         const modalTitle = document.getElementById('modalTitle');
         const modalBody = document.getElementById('modalBody');
-        
+
         if (currentView === 'questions') {
             modalTitle.textContent = currentEditId ? '編輯題目' : '新增題目';
             let markingRows = '';
@@ -225,30 +275,30 @@
                     const parts = line.split('|');
                     if (parts.length >= 3) {
                         markingRows += `<div class="marking-row">
-                            <input type="number" value="${parts[0].trim()}" placeholder="分數" style="width: 60px; flex:none;">
-                            <input type="text" value="${parts[1].trim()}" placeholder="評分描述" style="flex:1;">
-                            <input type="text" value="${parts.slice(2).join('|').trim()}" placeholder="正則表達式" style="flex:1;">
+                            <input type="number" value="${esc(parts[0].trim())}" placeholder="分數" style="width: 60px; flex:none;">
+                            <input type="text" value="${esc(parts[1].trim())}" placeholder="評分描述" style="flex:1;">
+                            <input type="text" value="${esc(parts.slice(2).join('|').trim())}" placeholder="正則表達式" style="flex:1;">
                         </div>`;
                     }
                 });
             }
             modalBody.innerHTML = `
-                <div class="form-group"><label>題號 (ID)</label><input type="number" id="f_id" value="${data.id || ''}" ${currentEditId ? 'readonly' : ''}></div>
+                <div class="form-group"><label>題號 (ID)</label><input type="number" id="f_id" value="${esc(data.id || '')}" ${currentEditId ? 'readonly' : ''}></div>
                 <div class="form-group"><label>場景 (Env ID)</label>
-                    <select id="f_env_id">${DB_ENVIRONMENTS.map(e => `<option value="${e.id}" ${data.env_id == e.id ? 'selected' : ''}>${e.id} - ${e.name}</option>`).join('')}</select>
+                    <select id="f_env_id">${DB_ENVIRONMENTS.map(e => `<option value="${esc(e.id)}" ${data.env_id == e.id ? 'selected' : ''}>${esc(e.id)} - ${esc(e.name)}</option>`).join('')}</select>
                 </div>
                 <div class="form-group"><label>分類</label>
-                    <select id="f_category">${DB_CATEGORIES.map(c => `<option value="${c.name}" ${data.category === c.name ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
+                    <select id="f_category">${DB_CATEGORIES.map(c => `<option value="${esc(c.name)}" ${data.category === c.name ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
                 </div>
-                <div class="form-group"><label>標題</label><input type="text" id="f_title" value="${data.title || ''}"></div>
-                <div class="form-group"><label>題目描述</label><textarea id="f_description">${data.description || ''}</textarea></div>
-                <div class="form-group"><label>DSE 提示</label><textarea id="f_dse_tip">${data.dse_tip || ''}</textarea></div>
-                <div class="form-group"><label>標準答案</label><textarea id="f_answer_sql">${data.answer_sql || ''}</textarea></div>
-                <div style="display:flex; gap:10px;">
-                    <div class="form-group" style="flex:1;"><label>自動排序</label>
+                <div class="form-group"><label>標題</label><input type="text" id="f_title" value="${esc(data.title || '')}"></div>
+                <div class="form-group"><label>題目描述</label><textarea id="f_description">${esc(data.description || '')}</textarea></div>
+                <div class="form-group"><label>DSE 提示</label><textarea id="f_dse_tip">${esc(data.dse_tip || '')}</textarea></div>
+                <div class="form-group"><label>標準答案</label><textarea id="f_answer_sql">${esc(data.answer_sql || '')}</textarea></div>
+                <div class="form-row">
+                    <div class="form-group"><label>自動排序</label>
                         <select id="f_auto_order"><option value="Y" ${data.auto_order !== 'N' ? 'selected' : ''}>Y (忽略順序)</option><option value="N" ${data.auto_order === 'N' ? 'selected' : ''}>N (嚴格比對)</option></select>
                     </div>
-                    <div class="form-group" style="flex:1;"><label>難度</label>
+                    <div class="form-group"><label>難度</label>
                         <select id="f_difficulty">${[1,2,3].map(d => `<option value="${d}" ${data.difficulty == d ? 'selected' : ''}>${d}</option>`).join('')}</select>
                     </div>
                 </div>
@@ -258,22 +308,175 @@
                 </div>
             `;
         } else if (currentView === 'dictionary') {
+            // ── v3 字典：完整欄位（與前端 SQL_DICT 對應） ──
             modalTitle.textContent = currentEditId ? '編輯字典' : '新增字典';
+            const catId = data.cat_id || '';
+            const dJson = data.d_json != null ? data.d_json : (data.d ? JSON.stringify(data.d) : '{}');
             modalBody.innerHTML = `
-                <div class="form-group"><label>關鍵字</label><input type="text" id="f_keyword" value="${data.keyword || ''}" ${currentEditId ? 'readonly' : ''}></div>
-                <div class="form-group"><label>分類</label><input type="text" id="f_category" value="${data.category || ''}"></div>
-                <div class="form-group"><label>描述</label><textarea id="f_description">${data.description || ''}</textarea></div>
-                <div class="form-group"><label>範例</label><textarea id="f_example">${data.example || ''}</textarea></div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:0 0 110px;"><label>排序 (sort)</label><input type="number" id="f_sort" value="${esc(data.sort || '')}"></div>
+                    <div class="form-group"><label>關鍵字 (kw)</label><input type="text" id="f_kw" value="${esc(data.kw || data.keyword || '')}" ${currentEditId && !data.kw ? 'readonly' : ''} placeholder="如：CREATE TABLE"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>八大分類 (cat_id)</label>
+                        <select id="f_cat_id" onchange="document.getElementById('f_category').value = CAT_NAME[this.value] || '';">
+                            <option value="">— 無（不顯示動畫按鈕）—</option>
+                            ${DICT_CATS.map(c => `<option value="${c.id}" ${catId === c.id ? 'selected' : ''}>${c.id} - ${c.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group"><label>分類名稱 (category)</label><input type="text" id="f_category" value="${esc(data.category || CAT_NAME[catId] || '')}"></div>
+                </div>
+                <div class="form-group"><label>語法 (syn)</label><textarea id="f_syn" style="min-height:70px;" placeholder="CREATE TABLE 資料表名稱 (&#10;  欄位 數據類型 [限制], ...&#10;);">${esc(data.syn || '')}</textarea></div>
+                <div class="form-group"><label>描述 (description)</label><textarea id="f_description" style="min-height:60px;">${esc(data.description || '')}</textarea></div>
+                <div class="form-group"><label>示例 (example)</label><textarea id="f_example" style="min-height:80px;">${esc(data.example || data.ex || '')}</textarea></div>
+                <div class="form-row">
+                    <div class="form-group"><label>動畫類型 (anim)</label>
+                        <select id="f_anim">
+                            <option value="">— 無動畫（純文字卡片）—</option>
+                            ${DICT_ANIMS.map(a => `<option value="${a}" ${(data.anim || '') === a ? 'selected' : ''}>${a}</option>`).join('')}
+                        </select>
+                        <div class="hint">anim 必須與前端 BUILDERS 鍵名一致，否則前端自動退回純文字卡片。</div>
+                    </div>
+                    <div class="form-group"><label>動畫參數 (d_json)</label>
+                        <input type="text" id="f_d_json" value="${esc(dJson)}" style="font-family:'Fira Code',monospace;" placeholder='{"mode":"show"}'>
+                        <div class="hint">JSON 物件；無參數填 {}。儲存時自動驗證格式。</div>
+                    </div>
+                </div>
+            `;
+        } else if (currentView === 'announcements') {
+            modalTitle.textContent = currentEditId ? '編輯公告' : '新增公告';
+            modalBody.innerHTML = `
+                <div class="form-group"><label>日期</label><input type="date" id="f_date" value="${esc(String(data.date || '').split('T')[0].slice(0,10))}"></div>
+                <div class="form-group"><label>標題</label><input type="text" id="f_title" value="${esc(data.title || '')}"></div>
+                <div class="form-group"><label>內容</label><textarea id="f_content" style="min-height:120px;">${esc(data.content || '')}</textarea></div>
+                <div class="hint">學生端按 date 由新至舊排序顯示於公告彈窗。</div>
             `;
         } else {
             modalTitle.textContent = currentEditId ? '編輯資料表' : '新增資料表';
             modalBody.innerHTML = `
-                <div class="form-group"><label>環境 ID</label><input type="number" id="f_id" value="${data.id || ''}" ${currentEditId ? 'readonly' : ''}></div>
-                <div class="form-group"><label>環境名稱</label><input type="text" id="f_name" value="${data.name || ''}"></div>
-                <div class="form-group"><label>資料表結構與數據</label><textarea id="f_table_data" style="min-height:200px;" placeholder="[STUDENT]&#10;Stdno (TEXT, PK)&#10;SName (TEXT)&#10;S01, Chan Tai Man">${data.table_data || ''}</textarea></div>
+                <div class="form-group"><label>環境 ID</label><input type="number" id="f_id" value="${esc(data.id || '')}" ${currentEditId ? 'readonly' : ''}></div>
+                <div class="form-group"><label>環境名稱</label><input type="text" id="f_name" value="${esc(data.name || '')}"></div>
+                <div class="form-group"><label>資料表結構與數據</label><textarea id="f_table_data" style="min-height:200px;" placeholder="[STUDENT]&#10;Stdno (TEXT, PK)&#10;SName (TEXT)&#10;S01, Chan Tai Man">${esc(data.table_data || '')}</textarea></div>
             `;
         }
         document.getElementById('editModal').style.display = 'flex';
+    }
+
+    // ── 答題記錄（只讀，需 Apps Script 新增 getSubmissions） ──
+    async function renderSubmissions(contentArea) {
+        const limit = 200;
+        const rows = await apiGetAdmin('getSubmissions&limit=' + limit);
+        if (!Array.isArray(rows)) throw new Error('無法載入記錄');
+        const stats = { total: rows.length, correct: rows.filter(r => String(r.is_correct) === 'true' || r.is_correct === true).length };
+        const byUser = {};
+        rows.forEach(r => { byUser[r.username] = (byUser[r.username] || 0) + 1; });
+        const topUsers = Object.entries(byUser).sort((a,b)=>b[1]-a[1]).slice(0,5)
+            .map(([u,n]) => `<span class="badge badge-cat" style="margin:2px;">${esc(u)} × ${n}</span>`).join(' ');
+        contentArea.innerHTML = `
+            <div style="position:relative;z-index:2;margin-bottom:1rem;">
+                <span class="badge badge-ok">最近 ${stats.total} 筆（上限 ${limit}）</span>
+                <span class="badge badge-ok">正確 ${stats.correct}</span>
+                <span class="badge badge-bad">錯誤 ${stats.total - stats.correct}</span>
+                <span class="hint" style="margin-top:8px;">活躍學生：${topUsers || '—'}</span>
+            </div>
+            <div style="overflow-x:auto;position:relative;z-index:2;">
+            <table class="records">
+                <thead><tr><th>時間</th><th>學生</th><th>題號</th><th>結果</th><th>提交 SQL</th></tr></thead>
+                <tbody>
+                ${rows.map(r => `
+                    <tr>
+                        <td style="white-space:nowrap;">${esc(String(r.timestamp).replace('T',' ').slice(0,19))}</td>
+                        <td>${esc(r.username)}</td>
+                        <td>Q${esc(r.question_id)}</td>
+                        <td>${(String(r.is_correct) === 'true' || r.is_correct === true) ? '<span class="badge badge-ok">✓ 正確</span>' : '<span class="badge badge-bad">✗ 錯誤</span>'}</td>
+                        <td><code>${esc(r.submitted_sql)}</code></td>
+                    </tr>`).join('') || '<tr><td colspan="5">暫無記錄</td></tr>'}
+                </tbody>
+            </table></div>
+            <p class="hint" style="margin-top:1rem;">記錄由學生端每次提交自動寫入 Submissions 工作表；此視圖為只讀。</p>`;
+    }
+
+    // ── 學生分析（v3 新增分區：全班概況＋學生完成狀況＋題目通過率） ──
+    async function renderAnalytics(contentArea) {
+        const data = await apiGetAdmin('getStudentAnalytics');
+        const S = data.summary || {};
+        const students = Array.isArray(data.students) ? data.students : [];
+        const questions = Array.isArray(data.questions) ? data.questions.slice() : [];
+        const hardest = questions.filter(q => q.attempts > 0).sort((a, b) => a.passRate - b.passRate || b.attempts - a.attempts).slice(0, 10);
+        const notTried = questions.filter(q => q.attempts === 0).length;
+        contentArea.innerHTML = `
+            <div style="position:relative;z-index:2;margin-bottom:1.2rem;">
+                <span class="badge badge-ok">學生 ${S.students || 0}</span>
+                <span class="badge badge-ok">提交 ${S.submissions || 0}</span>
+                <span class="badge badge-cat">整體正確率 ${S.accuracy != null ? S.accuracy : 0}%</span>
+                <span class="badge badge-anim">平均完成 ${S.avgCompleted != null ? S.avgCompleted : 0} 題</span>
+                <div class="hint" style="margin-top:6px;">已有人嘗試的題目 ${questions.length - notTried}/${questions.length}；無人嘗試 ${notTried} 題</div>
+            </div>
+            <h3 style="font-family:var(--pixel); font-size:0.5rem; margin-bottom:0.8rem; position:relative;z-index:2;">學生完成狀況（按完成題數排序）</h3>
+            <div style="overflow-x:auto;position:relative;z-index:2;">
+            <table class="records">
+                <thead><tr><th>學生</th><th>提交</th><th>正確</th><th>完成題數</th><th>正確率</th><th>活躍天數</th><th>最近活動</th><th></th></tr></thead>
+                <tbody>
+                ${students.map(s => `
+                    <tr>
+                        <td style="font-weight:600;">${esc(s.username)}</td>
+                        <td>${s.submissions}</td>
+                        <td>${s.correct}</td>
+                        <td>${s.completed}</td>
+                        <td>${s.accuracy}%</td>
+                        <td>${s.activeDays}</td>
+                        <td style="white-space:nowrap;">${esc(s.lastActive || '—')}</td>
+                        <td><button class="btn btn-small" onclick="openStudentDetail('${esc(String(s.username))}')"><i class="fas fa-search"></i> 詳情</button></td>
+                    </tr>`).join('') || '<tr><td colspan="8">暫無學生數據</td></tr>'}
+                </tbody>
+            </table></div>
+            <h3 style="font-family:var(--pixel); font-size:0.5rem; margin:1.5rem 0 0.8rem; position:relative;z-index:2;">題目通過率排行（最難前 10）</h3>
+            <div style="overflow-x:auto;position:relative;z-index:2;">
+            <table class="records">
+                <thead><tr><th>題號</th><th>標題</th><th>嘗試</th><th>通過</th><th>通過率</th></tr></thead>
+                <tbody>
+                ${hardest.map(q => `
+                    <tr>
+                        <td>Q${esc(q.id)}</td>
+                        <td>${esc(q.title)}</td>
+                        <td>${q.attempts}</td>
+                        <td>${q.correct}</td>
+                        <td>${q.passRate}%</td>
+                    </tr>`).join('') || '<tr><td colspan="5">暫無作答數據</td></tr>'}
+                </tbody>
+            </table></div>
+            <p class="hint" style="margin-top:1rem;">按「詳情」查看該學生逐題完成狀況、嘗試次數與最近提交時間。</p>`;
+    }
+
+    async function openStudentDetail(username) {
+        document.getElementById('modalTitle').textContent = '學生詳情';
+        document.getElementById('modalBody').innerHTML = '<p style="text-align:center;">載入中...</p>';
+        document.getElementById('editModal').style.display = 'flex';
+        try {
+            const data = await apiGetAdmin('getStudentDetail&username=' + encodeURIComponent(username));
+            const rows = Array.isArray(data.questions) ? data.questions : [];
+            document.getElementById('modalTitle').textContent = '學生詳情：' + esc(username) + '（完成 ' + data.completed + '/' + data.totalQuestions + ' 題）';
+            document.getElementById('modalBody').innerHTML = `
+                <div style="overflow-x:auto;">
+                <table class="records">
+                    <thead><tr><th>題號</th><th>標題</th><th>難度</th><th>狀態</th><th>嘗試</th><th>最近提交</th><th>最近提交 SQL</th></tr></thead>
+                    <tbody>
+                    ${rows.map(r => `
+                        <tr>
+                            <td>Q${esc(r.id)}</td>
+                            <td>${esc(r.title)}</td>
+                            <td>${esc(r.difficulty)}</td>
+                            <td>${r.status === 'correct' ? '<span class="badge badge-ok">✓ 完成</span>' : r.status === 'wrong' ? '<span class="badge badge-bad">✗ 錯誤</span>' : '<span class="badge" style="background:rgba(148,163,184,0.15);color:var(--text-muted);">未作答</span>'}</td>
+                            <td>${r.attempts}</td>
+                            <td style="white-space:nowrap;">${esc(r.lastAttempt || '—')}</td>
+                            <td><code>${esc(r.lastSql || '—')}</code></td>
+                        </tr>`).join('') || '<tr><td colspan="7">暫無題目</td></tr>'}
+                    </tbody>
+                </table></div>
+                <p class="hint" style="margin-top:0.8rem;">狀態說明：✓ 完成＝該題最近一次作答正確；✗ 錯誤＝已嘗試但尚未答對。</p>`;
+        } catch (err) {
+            document.getElementById('modalBody').innerHTML = '<p style="color:#EF4444;">載入失敗：' + esc(err.message) + '</p>';
+        }
     }
 
     function addMarkingRow() {
@@ -313,14 +516,36 @@
             actionName = currentEditId ? 'updateQuestion' : 'addQuestion';
             if (currentEditId) payload.id = currentEditId;
         } else if (currentView === 'dictionary') {
+            // ── v3：完整欄位 ＋ d_json 格式驗證 ──
+            const dRaw = document.getElementById('f_d_json').value.trim() || '{}';
+            let dObj;
+            try { dObj = JSON.parse(dRaw); if (typeof dObj !== 'object' || Array.isArray(dObj)) throw new Error(); }
+            catch (e) { showToast('d_json 格式錯誤：必須是 JSON 物件，如 {"mode":"show"}'); return; }
+            const kw = document.getElementById('f_kw').value.trim();
+            if (!kw) { showToast('關鍵字不可空白'); return; }
             payload.data = {
-                keyword: document.getElementById('f_keyword').value,
+                sort: document.getElementById('f_sort').value || '999',
+                cat_id: document.getElementById('f_cat_id').value,
                 category: document.getElementById('f_category').value,
+                kw: kw,
+                keyword: kw,
+                syn: document.getElementById('f_syn').value,
                 description: document.getElementById('f_description').value,
-                example: document.getElementById('f_example').value
+                example: document.getElementById('f_example').value,
+                anim: document.getElementById('f_anim').value,
+                d_json: JSON.stringify(dObj)
             };
             actionName = currentEditId ? 'updateDictionary' : 'addDictionary';
             if (currentEditId) payload.keyword = currentEditId;
+        } else if (currentView === 'announcements') {
+            // ── v2 新增：公告（需 Apps Script addAnnouncement / updateAnnouncement） ──
+            payload.data = {
+                date: document.getElementById('f_date').value,
+                title: document.getElementById('f_title').value,
+                content: document.getElementById('f_content').value
+            };
+            actionName = currentEditId ? 'updateAnnouncement' : 'addAnnouncement';
+            if (currentEditId) payload.date = currentEditId;
         } else {
             payload.data = {
                 id: document.getElementById('f_id').value,
@@ -351,6 +576,7 @@
         let actionName = '', idKey = '';
         if (currentView === 'questions') { actionName = 'deleteQuestion'; idKey = 'id'; }
         else if (currentView === 'dictionary') { actionName = 'deleteDictionary'; idKey = 'keyword'; }
+        else if (currentView === 'announcements') { actionName = 'deleteAnnouncement'; idKey = 'date'; }
         else { actionName = 'deleteEnvironment'; idKey = 'id'; }
 
         try {
@@ -364,7 +590,7 @@
     function openCategoryModal() {
         document.getElementById('modalTitle').textContent = '分類管理';
         document.getElementById('modalBody').innerHTML = `
-            <p style="margin-bottom:1rem; font-size:0.8rem; color:var(--text-muted);">在此新增或查看分類，學生端題目篩選將自動同步。</p>
+            <p style="margin-bottom:1rem; font-size:0.8rem; color:var(--text-muted);">題目分類（Categories 表）：學生端題目篩選自動同步。刪除前會檢查是否仍有題目使用。</p>
             <div class="form-group"><label>新增分類名稱</label>
                 <div style="display:flex; gap:5px;">
                     <input type="text" id="newCatName" placeholder="例如: advanced" style="flex:1;">
@@ -378,10 +604,18 @@
     }
 
     async function loadCategoriesToList() {
-        const res = await fetch(`${API_BASE_URL}?action=getCategories`);
-        const cats = await res.json();
+        const cats = await apiGet('getCategories');
+        const qRes = await apiGet('getQuestions');
+        const usage = {};
+        qRes.forEach(q => { usage[q.category] = (usage[q.category] || 0) + 1; });
         document.getElementById('catList').innerHTML = cats.map(c => `
-            <div class="list-item"><div class="list-item-info"><div class="list-item-title">${c.name}</div></div></div>
+            <div class="list-item"><div class="list-item-info">
+                <div class="list-item-title">${esc(c.name)} <span class="badge badge-cat">${usage[c.name] || 0} 題</span></div>
+            </div>
+            <div class="actions">
+                <button class="icon-btn edit-btn" title="改名" onclick="renameCategory('${esc(c.name)}')"><i class="fas fa-pen"></i></button>
+                <button class="icon-btn delete-btn" title="刪除" onclick="deleteCategory('${esc(c.name)}')" ${usage[c.name] ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}><i class="fas fa-trash"></i></button>
+            </div></div>
         `).join('');
     }
 
@@ -392,6 +626,25 @@
         const res = await fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'addCategory', id_token: token, data: { name: name } }) });
         const result = await res.json();
         if(result.success) { document.getElementById('newCatName').value=''; loadCategoriesToList(); showToast('已新增'); }
+        else showToast(result.error || '新增失敗');
+    }
+
+    // ── v2 新增：分類改名 / 刪除（需 Apps Script renameCategory / deleteCategory） ──
+    async function renameCategory(oldName) {
+        const newName = prompt(`將分類「${oldName}」改名為：`, oldName);
+        if (!newName || newName === oldName) return;
+        const res = await fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'renameCategory', id_token: window.currentToken, data: { old_name: oldName, new_name: newName.trim() } }) });
+        const result = await res.json();
+        if (result.success) { showToast('已改名並同步題目'); loadCategoriesToList(); }
+        else showToast(result.error || '改名失敗');
+    }
+
+    async function deleteCategory(name) {
+        if (!confirm(`確定刪除分類「${name}」？（有題目使用的分類無法刪除）`)) return;
+        const res = await fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'deleteCategory', id_token: window.currentToken, data: { name: name } }) });
+        const result = await res.json();
+        if (result.success) { showToast('已刪除'); loadCategoriesToList(); }
+        else showToast(result.error || '刪除失敗');
     }
 
     function closeModal() { document.getElementById('editModal').style.display = 'none'; }
