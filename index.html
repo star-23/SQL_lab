@@ -299,9 +299,66 @@
         .dse-desc { flex:1; font-size:0.82rem; color:var(--text); line-height:1.5; }
         .dse-marks { font-family:var(--pixel); font-size:0.65rem; color:var(--text-muted); flex-shrink:0; }
         .dse-marks.got { color:var(--success); }
+
+        /* ============ 開機載入動畫（Boot Splash） ============ */
+        body.boot-lock{overflow:hidden;}
+        #bootOverlay{position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .55s ease,visibility .55s ease;}
+        #bootOverlay::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,var(--accent-soft,rgba(249,115,22,.12)),transparent 55%);}
+        #bootOverlay.exit{opacity:0;visibility:hidden;pointer-events:none;}
+        .boot-inner{position:relative;text-align:center;padding:2rem;transition:transform .45s cubic-bezier(.34,1.56,.64,1),opacity .45s;}
+        #bootOverlay.exit .boot-inner{transform:translateY(-26px) scale(.92);opacity:0;}
+        .boot-logo{width:76px;height:76px;margin:0 auto 1.1rem;background:linear-gradient(135deg,var(--accent),var(--accent-hover));border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:var(--pixel);font-size:1rem;color:#fff;box-shadow:0 8px 30px var(--accent-glow);animation:bootPulse 1.8s ease-in-out infinite;position:relative;}
+        .boot-logo::after{content:'';position:absolute;inset:-8px;border-radius:20px;border:2px dashed var(--accent-glow);animation:bootOrbit 6s linear infinite;}
+        @keyframes bootPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+        @keyframes bootOrbit{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+        .boot-title{font-family:var(--pixel);font-size:1.15rem;color:var(--text);letter-spacing:1px;} .boot-title span{color:var(--accent);}
+        .boot-sub{font-size:.72rem;color:var(--text-muted);margin:.35rem 0 1.3rem;letter-spacing:.2px;}
+        .boot-chips{display:flex;gap:8px;justify-content:center;margin-bottom:1.5rem;}
+        .boot-chips span{font-family:var(--pixel);font-size:.5rem;color:var(--text-light);background:var(--glass);border:1px solid var(--glass-border);padding:4px 10px;border-radius:50px;animation:bootFloat 2.6s ease-in-out infinite;}
+        .boot-chips span:nth-child(2){animation-delay:.35s;} .boot-chips span:nth-child(3){animation-delay:.7s;}
+        @keyframes bootFloat{0%,100%{transform:translateY(0);opacity:.75;}50%{transform:translateY(-6px);opacity:1;}}
+        .boot-bar{width:min(300px,68vw);height:8px;margin:0 auto;background:var(--glass);border:1px solid var(--glass-border);border-radius:50px;overflow:hidden;position:relative;}
+        .boot-fill{height:100%;width:0%;border-radius:50px;background:linear-gradient(90deg,var(--accent),var(--accent-hover));transition:width .5s cubic-bezier(.4,0,.2,1);position:relative;}
+        .boot-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:bootSheen 1.2s linear infinite;}
+        @keyframes bootSheen{from{transform:translateX(-100%);}to{transform:translateX(100%);}}
+        .boot-phase{font-family:var(--pixel);font-size:.52rem;color:var(--text-muted);margin-top:.75rem;letter-spacing:.5px;}
+        .boot-phase b{color:var(--accent);font-weight:600;}
+        #bootOverlay.boot-error .boot-fill{background:linear-gradient(90deg,#EF4444,#DC2626);}
+        #bootOverlay.boot-error .boot-phase b{color:var(--error,#EF4444);}
+        /* ============ 通用等待動畫（Busy 卡片，帶網站頭像） ============ */
+        #busyOverlay{position:fixed;inset:0;z-index:1500;background:rgba(15,23,42,.28);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;}
+        #busyOverlay.show{opacity:1;visibility:visible;}
+        .busy-card{background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:16px;box-shadow:0 12px 40px rgba(15,23,42,.18);padding:1.4rem 2rem;text-align:center;transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1);position:relative;z-index:2;}
+        #busyOverlay.show .busy-card{transform:scale(1);}
+        .busy-logo{width:46px;height:46px;margin:0 auto .8rem;background:linear-gradient(135deg,var(--accent),var(--accent-hover));border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--pixel);font-size:.55rem;color:#fff;position:relative;box-shadow:0 4px 16px var(--accent-glow);}
+        .busy-logo::before{content:'';position:absolute;inset:-7px;border-radius:16px;border:2px solid transparent;border-top-color:var(--accent);border-right-color:var(--accent);animation:busySpin .9s linear infinite;}
+        @keyframes busySpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+        .busy-text{font-size:.8rem;color:var(--text);font-weight:600;margin-bottom:.55rem;}
+        .busy-dots{display:flex;gap:6px;justify-content:center;}
+        .busy-dots span{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:busyBounce 1s ease-in-out infinite;}
+        .busy-dots span:nth-child(2){animation-delay:.15s;} .busy-dots span:nth-child(3){animation-delay:.3s;}
+        @keyframes busyBounce{0%,100%{transform:translateY(0);opacity:.5;}50%{transform:translateY(-7px);opacity:1;}}
+        @media (prefers-reduced-motion:reduce){.boot-logo,.boot-logo::after,.boot-chips span,.boot-fill::after,.busy-logo::before,.busy-dots span{animation:none!important;}#bootOverlay,#busyOverlay,.busy-card,.boot-inner{transition-duration:.15s!important;}}
     </style>
 </head>
 <body>
+    <div id="bootOverlay" aria-hidden="true">
+        <div class="boot-inner">
+            <div class="boot-logo">SQL</div>
+            <div class="boot-title"><span>SQL</span> Quest</div>
+            <div class="boot-sub">數據庫操練平台 · 正在準備你的練習環境</div>
+            <div class="boot-chips"><span>SELECT</span><span>JOIN</span><span>WHERE</span></div>
+            <div class="boot-bar"><div class="boot-fill" id="bootFill"></div></div>
+            <div class="boot-phase" id="bootPhase"><b>START</b> · 準備中…</div>
+        </div>
+    </div>
+    <div id="busyOverlay" aria-hidden="true">
+        <div class="busy-card">
+            <div class="busy-logo">SQL</div>
+            <div class="busy-text" id="busyText">載入中…</div>
+            <div class="busy-dots"><span></span><span></span><span></span></div>
+        </div>
+    </div>
     <div class="bg-canvas" aria-hidden="true"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
     <header role="banner">
         <div class="nav-logo"><div class="logo-icon">SQL</div><h1><span>SQL</span> Quest</h1></div>
@@ -528,6 +585,8 @@
 
     async function loadData() {
         updateStatus('cloud', 'off');
+        const bootBusy = window.Boot && !window.Boot.isDone();  // 開機動畫進行中時由 Splash 負責
+        if (!bootBusy && window.Busy) Busy.show('同步題目與環境…');
         try {
             const qRes = await fetch(`${API_BASE_URL}?action=getQuestions`); if (!qRes.ok) throw new Error(`HTTP ${qRes.status}`); DB_QUESTIONS = await qRes.json();
             const eRes = await fetch(`${API_BASE_URL}?action=getEnvironments`); if (!eRes.ok) throw new Error(`HTTP ${eRes.status}`); DB_ENVIRONMENTS = await eRes.json();
@@ -539,7 +598,7 @@
             const errorP = document.querySelector('#connErrorModal p');
             if(errorP) errorP.innerHTML = `無法連接至后臺伺服器。<br><span style="font-size:0.7rem;color:var(--error);">原因：${err.message}</span>`;
             connErrorModal.classList.remove('hidden'); 
-        }
+        } finally { if (!bootBusy && window.Busy) Busy.hide(); }
     }
 
     async function submitResult(qId, isCorrect, sql) {
@@ -902,8 +961,8 @@
     $('leaderboardBtn').addEventListener('click', openLeaderboard);
     $('closeLbBtn').addEventListener('click', () => leaderboardModal.classList.add('hidden'));
     async function openLeaderboard() {
-        leaderboardList.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:2rem 0;"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>`;
         leaderboardModal.classList.remove('hidden');
+        Busy.show('載入排行榜…');
         try {
             const res = await fetch(`${API_BASE_URL}?action=getLeaderboard`); if (!res.ok) throw new Error('載入失敗');
             const data = await res.json();
@@ -918,6 +977,7 @@
             });
             leaderboardList.innerHTML = html;
         } catch (err) { console.error('讀取排行榜失敗:', err); leaderboardList.innerHTML = `<div style="text-align:center;color:var(--error);padding:2rem 0;">讀取失敗，請重試</div>`; }
+        finally { Busy.hide(); }
     }
 
     const announceModal = $('announceModal');
@@ -927,8 +987,8 @@
     bellBtn.addEventListener('click', openAnnouncements);
     $('closeAnnBtn').addEventListener('click', () => announceModal.classList.add('hidden'));
     async function openAnnouncements() {
-        announceList.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:2rem 0;"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>`;
         announceModal.classList.remove('hidden'); newMsgDot.style.display = 'none';
+        Busy.show('載入通知…');
         try {
             const res = await fetch(`${API_BASE_URL}?action=getAnnouncements`); if (!res.ok) throw new Error('載入失敗');
             const data = await res.json();
@@ -941,6 +1001,7 @@
             });
             announceList.innerHTML = html;
         } catch (err) { console.error('讀取通知失敗:', err); announceList.innerHTML = `<div style="text-align:center;color:var(--error);padding:2rem 0;">讀取失敗，請重試</div>`; }
+        finally { Busy.hide(); }
     }
     async function checkNewAnnouncements() {
         try {
@@ -996,6 +1057,79 @@
             checkNewAnnouncements();
         } else { 
             showToast('error', 'SQLite 引擎載入失敗，請重新整理'); 
+        }
+    }
+    // ==================== 開機載入動畫控制器（Splash） ====================
+    // 進度條跟隨真實載入階段（引擎 → 雲端同步 → 就緒），以緩動逼近目標值，完成後流暢退場。
+    const Boot = window.Boot = (() => {
+        const ov = $('bootOverlay'), fill = $('bootFill'), phase = $('bootPhase');
+        let cur = 0, target = 0, raf = null, done = false;
+        document.body.classList.add('boot-lock');
+        function tick() {
+            cur += (target - cur) * 0.12;
+            if (target - cur < 0.3) cur = target;
+            fill.style.width = cur + '%';
+            if (target < 100 || Math.abs(target - cur) > 0.3) raf = requestAnimationFrame(tick); else raf = null;
+        }
+        function set(p, label) {
+            if (done) return;
+            target = p;
+            if (label) { const seg = label.split(' '); phase.innerHTML = '<b>' + seg[0] + '</b> · ' + seg.slice(1).join(' '); }
+            if (!raf) raf = requestAnimationFrame(tick);
+        }
+        function finish(ok, errMsg) {
+            if (done) return; done = true;
+            if (raf) cancelAnimationFrame(raf);
+            fill.style.width = '100%';
+            phase.innerHTML = ok ? '<b>READY</b> · 載入完成，祝練習愉快！' : '<b>ERROR</b> · ' + (errMsg || '載入失敗');
+            if (!ok) ov.classList.add('boot-error');
+            setTimeout(() => {
+                ov.classList.add('exit');            // 流暢退場：內容上浮縮小 → 疊層淡出
+                document.body.classList.remove('boot-lock');
+                setTimeout(() => { ov.remove(); }, 650);  // 退場完畢後自 DOM 移除
+            }, ok ? 420 : 1100);
+        }
+        // 15 秒保險：任何階段卡住都會強制結束，使用者不會被困在開機畫面
+        setTimeout(() => finish(false, '載入逾時，請重新整理'), 15000);
+        return { set, finish, isDone: () => done };
+    })();
+
+    // ==================== 通用等待動畫（帶網站頭像的 Busy 卡片） ====================
+    // 用於登入後的各種載入場景（排行榜 / 公告 / 題目同步等）。
+    // 支援嵌套呼叫（計數制），最短顯示 450ms 避免閃爍。
+    const Busy = window.Busy = (() => {
+        const ov = $('busyOverlay'), tx = $('busyText');
+        let n = 0, shownAt = 0, hideTimer = null;
+        function show(text) {
+            n++;
+            if (text) tx.textContent = text;
+            if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+            shownAt = Date.now();
+            ov.classList.add('show');
+        }
+        function hide() {
+            n = Math.max(0, n - 1);
+            if (n > 0) return;
+            const wait = Math.max(0, 450 - (Date.now() - shownAt));
+            hideTimer = setTimeout(() => ov.classList.remove('show'), wait);
+        }
+        return { show, hide };
+    })();
+
+    async function initApp() {
+        updateStatus('engine', 'off'); updateStatus('cloud', 'off'); updateStatus('db', 'off');
+        Boot.set(12, 'ENGINE 載入 SQLite 引擎');
+        const engineReady = await sandbox.init();
+        updateStatus('engine', engineReady ? 'on' : 'err');
+        if(engineReady) {
+            Boot.set(58, 'CLOUD 同步題目與環境');
+            await loadData();
+            Boot.set(96, 'CHECK 檢查新通知');
+            checkNewAnnouncements();
+            Boot.finish(true);
+        } else {
+            Boot.finish(false, 'SQLite 引擎載入失敗，請重新整理');
+            showToast('error', 'SQLite 引擎載入失敗，請重新整理');
         }
     }
     initApp();
