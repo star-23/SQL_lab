@@ -339,6 +339,13 @@
         .busy-dots span:nth-child(2){animation-delay:.15s;} .busy-dots span:nth-child(3){animation-delay:.3s;}
         @keyframes busyBounce{0%,100%{transform:translateY(0);opacity:.5;}50%{transform:translateY(-7px);opacity:1;}}
         @media (prefers-reduced-motion:reduce){.boot-logo,.boot-logo::after,.boot-chips span,.boot-fill::after,.busy-logo::before,.busy-dots span{animation:none!important;}#bootOverlay,#busyOverlay,.busy-card,.boot-inner{transition-duration:.15s!important;}}
+
+        /* ============ SQL 草稿自動儲存狀態指示 ============ */
+        #draftStatus{font-family:var(--pixel);font-size:0.5rem;letter-spacing:.3px;transition:color .2s;}
+        #draftStatus.draft-saving{color:var(--text-muted);animation:draftPulse 1s ease-in-out infinite;}
+        #draftStatus.draft-saved{color:var(--accent);}
+        #draftStatus.draft-local{color:var(--text-muted);}
+        @keyframes draftPulse{0%,100%{opacity:.45;}50%{opacity:1;}}
     </style>
 </head>
 <body>
@@ -416,7 +423,7 @@
                 <div class="editor-actions"><button class="btn-clear" id="clearBtn"><i class="fas fa-eraser"></i> CLEAR</button><button class="btn-run" id="runBtn"><i class="fas fa-play"></i> RUN</button></div>
                 </div>
                 <div class="editor-area"><div class="line-numbers" id="lineNumbers"><div>1</div></div><textarea id="sqlEditor" spellcheck="false" autocomplete="off" placeholder="載入中..." disabled></textarea></div>
-                <div class="editor-footer"><span class="shortcut-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> 執行</span><span id="charCount">0 字元</span></div>
+                <div class="editor-footer"><span class="shortcut-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> 執行</span><span id="draftStatus"></span><span id="charCount">0 字元</span></div>
             </section>
             <aside class="glass" style="display:flex;flex-direction:column;">
                 <div class="panel-header"><i class="fas fa-terminal"></i> OUTPUT</div>
@@ -640,7 +647,7 @@
             if (data.success && data.email) {
                 studentName = data.email; isLoggedIn = true; loginModal.classList.add('hidden');
                 showToast('info', '正在讀取作答紀錄...');
-                loadUserProgress(studentName);
+                loadUserProgress(studentName); syncCloudDrafts(studentName);
             } else {
                 errorMsgEl.textContent = data.error || '登入失敗，請重試。';
                 errorMsgEl.style.display = 'block';
@@ -686,7 +693,7 @@
     function renderQuestionList() {
         const filtered = currentCat==='all' ? DB_QUESTIONS : DB_QUESTIONS.filter(q=>q.category===currentCat);
         questionList.innerHTML = filtered.map(q => { const isActive = q.id===currentQId, isDone = completedIds.has(q.id); return `<div class="q-item ${isActive?'active':''} ${isDone?'completed':''}" data-id="${q.id}" tabindex="0"><div class="q-num"><span>${q.id}</span></div><div class="q-title">${q.title}</div><div class="q-diff">${[1,2,3].map(d=>`<div class="dot ${d<=q.difficulty?'filled':''}"></div>`).join('')}</div></div>`; }).join('');
-        questionList.querySelectorAll('.q-item').forEach(item=>{item.addEventListener('click',()=>{currentQId=parseInt(item.dataset.id);renderQuestionList();renderQuestionDetail();resetResult();loadSandboxEnv();});});
+        questionList.querySelectorAll('.q-item').forEach(item=>{item.addEventListener('click',()=>{currentQId=parseInt(item.dataset.id);renderQuestionList();renderQuestionDetail();resetResult();loadSandboxEnv();resetEditorForQuestion(currentQId);});});
     }
     
     function loadSandboxEnv() {
@@ -722,10 +729,93 @@
     }
 
     function updateLineNumbers(){const lines=sqlEditor.value.split('\n').length;const nums=[];for(let i=1;i<=Math.max(lines,8);i++)nums.push(`<div>${i}</div>`);lineNumbers.innerHTML=nums.join('');}
-    sqlEditor.addEventListener('input',()=>{updateLineNumbers();charCount.textContent=sqlEditor.value.length+' 字元';});
+    sqlEditor.addEventListener('input',()=>{updateLineNumbers();charCount.textContent=sqlEditor.value.length+' 字元';scheduleDraftSave();});
     sqlEditor.addEventListener('scroll',()=>{lineNumbers.scrollTop=sqlEditor.scrollTop;});
     sqlEditor.addEventListener('keydown',e=>{ if(e.key==='Tab'){e.preventDefault();const s=sqlEditor.selectionStart;sqlEditor.value=sqlEditor.value.substring(0,s)+'  '+sqlEditor.value.substring(sqlEditor.selectionEnd);sqlEditor.selectionStart=sqlEditor.selectionEnd=s+2;sqlEditor.dispatchEvent(new Event('input'));} if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();executeSQL();} });
     clearBtn.addEventListener('click',()=>{sqlEditor.value='';sqlEditor.dispatchEvent(new Event('input'));sqlEditor.focus();});
+
+    // ══════════ SQL 草稿自動儲存（跟帳戶走：本機快取 + 雲端同步） ══════════
+    const draftStatus=$('draftStatus');
+    let draftStore={},draftLoadedKey=null,draftTimer=null,draftPending=null,draftSuppress=false;
+    function draftLocalKey(){return 'sq_drafts_'+((isLoggedIn&&studentName)?studentName:'guest');}
+    function loadDraftStore(){
+        const key=draftLocalKey();
+        if(draftLoadedKey===key)return;           // 同一帳戶只讀一次，換帳戶自動重載
+        try{draftStore=JSON.parse(localStorage.getItem(key)||'{}');}catch(e){draftStore={};}
+        draftLoadedKey=key;
+    }
+    function saveDraftStore(){try{localStorage.setItem(draftLoadedKey,JSON.stringify(draftStore));}catch(e){console.warn('草稿本機儲存失敗',e);}}
+    function setDraftStatus(text,cls){if(!draftStatus)return;draftStatus.textContent=text;draftStatus.className=cls?('draft-'+cls):'';}
+    // 切題前把尚未落盤的輸入立即寫入（歸屬排程時的題目）
+    function flushDraft(){
+        if(draftTimer){clearTimeout(draftTimer);draftTimer=null;if(draftPending)persistDraft(draftPending.qId,draftPending.sql);draftPending=null;}
+    }
+    function applyDraftToEditor(qId){
+        loadDraftStore();
+        const rec=draftStore[String(qId)];
+        if(rec&&rec.sql){
+            draftSuppress=true;
+            sqlEditor.value=rec.sql;
+            sqlEditor.dispatchEvent(new Event('input'));
+            draftSuppress=false;
+            setDraftStatus('✓ 已還原上次草稿','saved');
+        }else{setDraftStatus('',null);}
+    }
+    function scheduleDraftSave(){
+        if(draftSuppress||!currentQId)return;
+        loadDraftStore();
+        setDraftStatus('儲存中…','saving');
+        clearTimeout(draftTimer);
+        draftPending={qId:currentQId,sql:sqlEditor.value};
+        draftTimer=setTimeout(fireDraftSave,800);
+    }
+    function fireDraftSave(){draftTimer=null;const p=draftPending;draftPending=null;if(p)persistDraft(p.qId,p.sql);}
+    function persistDraft(qId,sql){
+        loadDraftStore();
+        draftStore[String(qId)]={sql:sql,saved_at:Date.now()};
+        saveDraftStore();
+        const t=new Date();
+        const hhmm=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+        if(isLoggedIn&&studentName){
+            setDraftStatus('✓ 已自動儲存 '+hhmm,'saved');
+            // 雲端同步（fire-and-forget；失敗不影響本機草稿）
+            fetch(API_BASE_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+                body:JSON.stringify({action:'saveDraft',username:studentName,question_id:qId,sql:sql})})
+              .then(r=>{if(!r.ok)console.warn('草稿雲端同步失敗: HTTP '+r.status);})
+              .catch(err=>console.warn('草稿雲端同步失敗（已存本機）:',err));
+        }else{
+            setDraftStatus('✓ 已存本機（登入後同步雲端）','local');
+        }
+    }
+    // 登入成功後：讀取該帳戶的本機快取，並與雲端草稿合併（較新者勝），當前題目即時回填
+    async function syncCloudDrafts(username){
+        loadDraftStore();
+        try{
+            const res=await fetch(`${API_BASE_URL}?action=getDrafts&username=${encodeURIComponent(username)}`);
+            if(!res.ok)return;
+            const data=await res.json();
+            let changed=false;
+            (data.drafts||[]).forEach(d=>{
+                const qId=String(d.question_id);
+                const t=Date.parse(d.updated_at)||0;
+                const cur=draftStore[qId];
+                if(d.sql&&(!cur||t>=(cur.saved_at||0))){draftStore[qId]={sql:d.sql,saved_at:t||Date.now()};changed=true;}
+            });
+            if(changed)saveDraftStore();
+            flushDraft();               // 先落盤編輯器現有輸入，避免覆寫
+            applyDraftToEditor(currentQId);
+        }catch(e){console.warn('草稿雲端同步失敗（僅本機）:',e);}
+    }
+    // 切題統一入口：沖刷舊草稿 → 清空編輯器 → 回填新題草稿（無草稿則空白）
+    function resetEditorForQuestion(qId){
+        draftSuppress=true;
+        flushDraft();
+        sqlEditor.value='';
+        sqlEditor.dispatchEvent(new Event('input'));  // 更新行號/字數（保存已被抑制）
+        draftSuppress=false;
+        applyDraftToEditor(qId);
+    }
+    loadDraftStore();
     runBtn.addEventListener('click',executeSQL);
     hintBtn.addEventListener('click',()=>{const q=DB_QUESTIONS.find(q=>q.id===currentQId);if(!q)return;showToast('info','提示：答案開頭為 "'+q.answer_sql.substring(0,18)+'..."');});
 
@@ -887,7 +977,7 @@
         if(nextBtn) nextBtn.addEventListener('click', () => {
             const n = DB_QUESTIONS.find(q => q.id > currentQId); if(n) {
                 currentQId = n.id; renderQuestionList(); renderQuestionDetail(); resetResult(); loadSandboxEnv(); 
-                sqlEditor.value = ''; sqlEditor.dispatchEvent(new Event('input'));
+                resetEditorForQuestion(currentQId);
             }
         });
     }
@@ -897,7 +987,7 @@
         if(data && data.columns && data.rows) { html += `<div class="result-table-wrap"><div class="result-table-label">COLUMNS: ${data.columns.join(', ')}</div><table class="result-table"><thead><tr>${data.columns.map(c=>'<th>'+c+'</th>').join('')}</tr></thead><tbody>${data.rows.map(r=>'<tr>'+r.map(v=>'<td>'+(v===null?'NULL':v)+'</td>').join('')+'</tr>').join('')}</tbody></table></div>`; }
         if(answer) html += `<div class="answer-compare"><h5>${type==='success'?'你的答案':'參考答案'}</h5><pre>${answer}</pre></div>`;
         if(type==='success'){ const nextQ=DB_QUESTIONS.find(q=>q.id>currentQId&&!completedIds.has(q.id)); if(nextQ)html+=`<button class="btn-next" id="nextBtn">NEXT QUEST <i class="fas fa-arrow-right"></i></button>`; else if(completedIds.size===DB_QUESTIONS.length)html+=`<button class="btn-next" style="background:linear-gradient(135deg,var(--success),#34D399);">ALL CLEAR</button>`; }
-        resultDisplay.innerHTML=html; const nextBtn=document.getElementById('nextBtn'); if(nextBtn)nextBtn.addEventListener('click',()=>{const n=DB_QUESTIONS.find(q=>q.id>currentQId);if(n){currentQId=n.id;renderQuestionList();renderQuestionDetail();resetResult();loadSandboxEnv();sqlEditor.value='';sqlEditor.dispatchEvent(new Event('input'));}});
+        resultDisplay.innerHTML=html; const nextBtn=document.getElementById('nextBtn'); if(nextBtn)nextBtn.addEventListener('click',()=>{const n=DB_QUESTIONS.find(q=>q.id>currentQId);if(n){currentQId=n.id;renderQuestionList();renderQuestionDetail();resetResult();loadSandboxEnv();resetEditorForQuestion(currentQId);}});
     }
     
     function resetResult(){resultDisplay.innerHTML=`<div class="result-idle"><div class="idle-icon"><i class="fas fa-database"></i></div><p>輸入 SQL 語句並按下<br><strong>RUN</strong> 來執行查詢</p></div>`;}
