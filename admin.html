@@ -655,5 +655,507 @@
         setTimeout(() => t.remove(), 3000);
     }
     </script>
+
+<style>
+    /* ══════════ AI 題目助手（v3.2） ══════════ */
+    #aiFab{position:fixed;right:22px;bottom:22px;width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent-hover));color:#fff;font-size:1.35rem;box-shadow:0 8px 24px rgba(249,115,22,0.45);z-index:95;display:none;align-items:center;justify-content:center;transition:transform .2s;}
+    #aiFab:hover{transform:translateY(-3px) scale(1.06);}
+    #aiFab.show{display:flex;animation:aiPulse 2.6s ease-in-out infinite;}
+    @keyframes aiPulse{0%,100%{box-shadow:0 8px 24px rgba(249,115,22,0.45);}50%{box-shadow:0 8px 36px rgba(249,115,22,0.8);}}
+    #aiPanel{position:fixed;right:22px;bottom:92px;width:min(470px,calc(100vw - 24px));height:min(660px,calc(100vh - 128px));background:rgba(255,255,255,0.62);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid rgba(255,255,255,0.7);border-radius:22px;box-shadow:0 18px 60px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,1);z-index:96;display:none;flex-direction:column;overflow:hidden;}
+    #aiPanel.open{display:flex;animation:aiIn .28s ease-out;}
+    @keyframes aiIn{from{opacity:0;transform:translateY(14px) scale(.97);}to{opacity:1;transform:none;}}
+    .ai-head{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid rgba(148,163,184,0.18);flex:none;}
+    .ai-head h3{font-family:var(--pixel);font-size:0.52rem;color:var(--accent);flex:1;margin:0;}
+    .ai-mini{width:30px;height:30px;border-radius:50%;border:1px solid var(--border-light);background:rgba(255,255,255,0.6);color:var(--text-muted);cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;transition:all .2s;flex:none;}
+    .ai-mini:hover{color:var(--accent);border-color:var(--accent);transform:scale(1.08);}
+    #aiSettings{padding:12px 16px;border-bottom:1px solid rgba(148,163,184,0.15);flex:none;}
+    #aiSettings input{margin-bottom:8px;}
+    #aiGenPanel{padding:12px 16px;border-bottom:1px solid rgba(148,163,184,0.15);flex:none;overflow-y:auto;max-height:52%;}
+    .ai-gen-grid > div{margin-bottom:10px;}
+    .ai-skills{display:flex;flex-wrap:wrap;gap:6px;}
+    .ai-skills label{display:inline-flex;align-items:center;gap:4px;font-family:var(--body);font-size:0.75rem;color:var(--text);background:rgba(255,255,255,0.55);border:1px solid var(--border-light);border-radius:50px;padding:4px 10px;cursor:pointer;margin:0;transition:all .15s;}
+    .ai-skills label:has(input:checked){background:rgba(249,115,22,0.14);border-color:var(--accent);color:var(--accent-hover);}
+    .ai-skills input{width:auto;margin:0;}
+    .ai-gen-actions{display:flex;gap:8px;justify-content:flex-end;}
+    .ai-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+    .ai-msg{max-width:88%;padding:10px 12px;border-radius:14px;font-size:0.82rem;line-height:1.55;white-space:pre-wrap;word-break:break-word;position:relative;z-index:2;}
+    .ai-msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--accent),var(--accent-hover));color:#fff;border-bottom-right-radius:4px;}
+    .ai-msg.bot{align-self:flex-start;background:rgba(255,255,255,0.8);border:1px solid rgba(148,163,184,0.22);color:var(--text);border-bottom-left-radius:4px;}
+    .ai-preview{align-self:flex-start;max-width:92%;background:rgba(255,255,255,0.85);border:1px solid rgba(249,115,22,0.35);border-radius:14px;padding:10px 12px;font-size:0.78rem;position:relative;z-index:2;}
+    .ai-preview.warn{border-color:#EF4444;}
+    .ai-preview-bar{margin-bottom:6px;}
+    .ai-preview summary{cursor:pointer;color:var(--accent-hover);font-weight:600;font-size:0.75rem;margin:4px 0;}
+    .ai-preview table.records{font-size:0.7rem;margin:6px 0;}
+    .ai-import-btn{width:100%;margin-top:6px;}
+    .ai-foot{flex:none;padding:10px 12px;border-top:1px solid rgba(148,163,184,0.18);display:flex;gap:8px;align-items:flex-end;}
+    .ai-foot textarea{flex:1;min-height:44px;max-height:110px;font-size:0.82rem;font-family:var(--body);resize:none;padding:10px 12px;}
+    @media(max-width:640px){
+        #aiPanel{right:8px;left:8px;width:auto;bottom:86px;height:min(72vh,580px);}
+        #aiFab{right:14px;bottom:14px;}
+    }
+</style>
+
+<button id="aiFab" onclick="aiTogglePanel()" title="AI 題目助手"><i class="fas fa-robot"></i></button>
+
+<div id="aiPanel">
+    <div class="ai-head">
+        <i class="fas fa-robot" style="color:var(--accent);"></i>
+        <h3>AI 題目助手</h3>
+        <button class="ai-mini" onclick="aiToggleGen()" title="生成設定"><i class="fas fa-sliders"></i></button>
+        <button class="ai-mini" onclick="aiToggleSettings()" title="API 設定"><i class="fas fa-gear"></i></button>
+        <button class="ai-mini" onclick="aiTogglePanel()" title="收起"><i class="fas fa-xmark"></i></button>
+    </div>
+
+    <div id="aiSettings" class="hidden">
+        <div id="aiCfgStatus" class="hint" style="margin-bottom:8px;">讀取設定中…</div>
+        <label>Gemini API Key</label>
+        <input type="password" id="ai_apikey" placeholder="貼上 Gemini API Key（AIza…）">
+        <label>模型</label>
+        <input type="text" id="ai_model" placeholder="gemini-2.5-flash">
+        <button class="btn btn-small" onclick="aiSaveConfig()"><i class="fas fa-floppy-disk"></i> 儲存設定</button>
+        <div class="hint">Key 僅存於 Apps Script 的 Script Properties（或 Code.gs 內建），不會存於瀏覽器、不會回傳前端。</div>
+    </div>
+
+    <div id="aiGenPanel">
+        <div class="ai-gen-grid">
+            <div><label>主題／場景</label><input type="text" id="ai_theme" placeholder="如：運動會成績、網店銷售（留空由 AI 自選）"></div>
+            <div style="display:flex;gap:8px;">
+                <div style="flex:1;"><label>題數</label><input type="number" id="ai_count" value="3" min="1" max="8"></div>
+                <div style="flex:1;"><label>難度</label>
+                    <select id="ai_diff">
+                        <option value="">混合（由淺入深）</option>
+                        <option value="1">1 基礎</option>
+                        <option value="2">2 進階</option>
+                        <option value="3">3 綜合</option>
+                    </select>
+                </div>
+            </div>
+            <div><label>考查技能</label>
+                <div class="ai-skills" id="ai_skills">
+                    <label><input type="checkbox" id="ai_skill_basic">basic</label>
+                    <label><input type="checkbox" id="ai_skill_where">where</label>
+                    <label><input type="checkbox" id="ai_skill_order">order</label>
+                    <label><input type="checkbox" id="ai_skill_join">join</label>
+                    <label><input type="checkbox" id="ai_skill_groupby">groupby</label>
+                    <label><input type="checkbox" id="ai_skill_count">count</label>
+                </div>
+            </div>
+            <div><label>環境</label>
+                <div style="display:flex;gap:8px;">
+                    <select id="ai_env" style="flex:1;">
+                        <option value="auto">由 AI 決定（沿用或新建）</option>
+                        <option value="reuse">沿用現有環境</option>
+                        <option value="new">新建環境</option>
+                    </select>
+                    <select id="ai_env_existing" style="flex:1;" class="hidden"></select>
+                </div>
+            </div>
+            <div id="ai_env_new_row" class="hidden">
+                <label>新環境名稱／期望內容</label>
+                <input type="text" id="ai_env_new" placeholder="名稱，如 sports_db（留空由 AI 命名）">
+                <input type="text" id="ai_env_desc" placeholder="希望包含的表與欄位（可留空由 AI 設計）">
+            </div>
+            <div><label>額外要求</label><input type="text" id="ai_extra" placeholder="如：須含一題 HAVING；題幹不得出現欄位全名等"></div>
+        </div>
+        <div class="ai-gen-actions">
+            <button class="btn btn-secondary btn-small" onclick="aiQuickGenerate()"><i class="fas fa-wand-magic-sparkles"></i> 一鍵 AI 編寫</button>
+            <button class="btn btn-small" onclick="aiGenerate()"><i class="fas fa-paper-plane"></i> 依設定生成</button>
+        </div>
+    </div>
+
+    <div class="ai-body" id="aiMsgs"></div>
+
+    <div class="ai-foot">
+        <textarea id="aiInput" placeholder="直接輸入需求或修改要求（Enter 送出，Shift+Enter 換行）"></textarea>
+        <button class="btn btn-small" id="aiSendBtn" onclick="aiSendInput()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<script>
+/* ══════════ AI 題目助手模組（v3.2，對應 Code.gs aiChat / aiImport / aiSetConfig / aiGetConfig）══════════ */
+(function () {
+    'use strict';
+    var AI_CATS = ['basic', 'where', 'order', 'join', 'groupby', 'count'];
+    var AI_QHEAD = ['id', 'env_id', 'category', 'title', 'description', 'dse_tip', 'answer_sql', 'auto_order', 'difficulty', 'marking_scheme'];
+    var AI_EHEAD = ['id', 'name', 'table_data'];
+    var aiState = { firstOpen: true, history: [], sending: false, typing: null, cfgLoaded: false, configured: null };
+
+    function aiPost(payload) {
+        payload.id_token = window.currentToken;
+        return fetch(API_BASE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        }).then(function (r) { return r.json(); });
+    }
+
+    // ── AI 解析器（純函數，可獨立測試）──
+    function aiCsvParse(text) {
+        var rows = [], row = [], field = '', inQ = false;
+        var s = String(text);
+        for (var i = 0; i < s.length; i++) {
+            var ch = s[i];
+            if (inQ) {
+                if (ch === '"') { if (s[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
+                else field += ch;
+            } else if (ch === '"') inQ = true;
+            else if (ch === ',') { row.push(field); field = ''; }
+            else if (ch === '\n' || ch === '\r') {
+                if (ch === '\r' && s[i + 1] === '\n') i++;
+                row.push(field); field = '';
+                if (row.length > 1 || row[0].trim() !== '') rows.push(row);
+                row = [];
+            } else field += ch;
+        }
+        if (field !== '' || row.length) { row.push(field); rows.push(row); }
+        return rows;
+    }
+
+    function aiParseCsvBlocks(reply) {
+        function grab(kind) {
+            var lines = String(reply).split('\n');
+            var buf = null, out = [];
+            for (var i = 0; i < lines.length; i++) {
+                var ln = lines[i].trim();
+                if (buf === null) { if (ln.indexOf('```csv') === 0 && ln.indexOf(kind) !== -1) buf = []; }
+                else if (ln === '```') { out.push(buf.join('\n')); buf = null; }
+                else buf.push(lines[i]);
+            }
+            return out;
+        }
+        function rows(kind, head) {
+            var blocks = grab(kind);
+            if (!blocks.length) return null;
+            var parsed = aiCsvParse(blocks[0]);
+            if (!parsed.length) return null;
+            var idx = {};
+            parsed[0].forEach(function (h, i) { idx[String(h).trim()] = i; });
+            for (var k = 0; k < head.length; k++) if (idx[head[k]] === undefined) return { error: kind + ' 表頭缺欄：' + head[k] };
+            var items = [];
+            for (var r = 1; r < parsed.length; r++) {
+                var has = false;
+                parsed[r].forEach(function (c) { if (String(c).trim() !== '') has = true; });
+                if (!has) continue;
+                var obj = {};
+                head.forEach(function (h) { obj[h] = (parsed[r][idx[h]] !== undefined ? parsed[r][idx[h]] : '').trim(); });
+                items.push(obj);
+            }
+            return { items: items };
+        }
+        var e = rows('environments.csv', AI_EHEAD);
+        var q = rows('questions.csv', AI_QHEAD);
+        if ((e && e.error) || (q && q.error)) return { error: (e && e.error) || (q && q.error) };
+        if (!q || !q.items.length) return null;
+        return { envs: e ? e.items : [], qs: q.items };
+    }
+    // ── AI 解析器結束 ──
+    if (typeof module !== 'undefined' && module.exports) { module.exports = { aiCsvParse: aiCsvParse, aiParseCsvBlocks: aiParseCsvBlocks }; return; }
+
+    function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+    function aiBubble(role, text) {
+        var box = document.getElementById('aiMsgs');
+        var div = document.createElement('div');
+        div.className = 'ai-msg ' + (role === 'user' ? 'user' : 'bot');
+        div.textContent = text;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+        return div;
+    }
+
+    function aiBusy(on) {
+        var b = document.getElementById('aiSendBtn');
+        if (b) b.disabled = on;
+        if (on) aiState.typing = aiBubble('bot', '⏳ AI 生成中…（約 10–30 秒，請勿關閉面板）');
+        else if (aiState.typing) { aiState.typing.remove(); aiState.typing = null; }
+    }
+
+    async function aiBuildContext() {
+        var qs = await apiGet('getQuestions');
+        var cats = await apiGet('getCategories');
+        var envs = await apiGet('getEnvironmentsForAdmin');
+        var maxQ = 0, maxE = 0;
+        qs.forEach(function (q) { var n = parseInt(q.id, 10); if (n > maxQ) maxQ = n; });
+        envs.forEach(function (e) { var n = parseInt(e.id, 10); if (n > maxE) maxE = n; });
+        var envList = envs.map(function (e) {
+            var tables = (String(e.table_data || '').match(/\[([^\]]+)\]/g) || [])
+                .map(function (t) { return t.slice(1, -1); }).join('、');
+            return e.id + ' ' + e.name + '（表：' + (tables || '—') + '）';
+        }).join('；');
+        var catList = cats.map(function (c) { return c.name; }).join('、') || AI_CATS.join('、');
+        return '【平台現況】\n可用分類：' + catList +
+            '\n現有環境：' + (envList || '（無）') +
+            '\nQuestions 最大 id：' + maxQ + '；Environments 最大 id：' + maxE;
+    }
+
+    async function aiSendRequest(raw) {
+        if (aiState.sending) return;
+        if (!window.currentToken) { showToast('請先登入管理後台'); return; }
+        aiState.sending = true;
+        aiBubble('user', raw);
+        aiBusy(true);
+        try {
+            var ctx = await aiBuildContext();
+            var msgs = aiState.history.slice(-16);
+            for (var i = msgs.length - 1; i >= 0; i--) {
+                if (msgs[i].role === 'user') {
+                    msgs[i] = { role: 'user', text: ctx + '\n\n【老師需求】\n' + msgs[i].text };
+                    break;
+                }
+            }
+            if (!msgs.length || msgs[msgs.length - 1].role !== 'user') msgs.push({ role: 'user', text: ctx + '\n\n【老師需求】\n' + raw });
+            aiState.history.push({ role: 'user', text: raw });
+            var resp = await aiPost({ action: 'aiChat', messages: msgs });
+            aiBusy(false);
+            if (resp.error) {
+                aiBubble('bot', '⚠ ' + resp.error);
+            } else {
+                aiState.history.push({ role: 'model', text: resp.reply });
+                var bub = aiBubble('bot', resp.reply);
+                var parsed = aiParseCsvBlocks(resp.reply);
+                if (parsed) aiAttachPreview(bub, parsed);
+            }
+        } catch (e) {
+            aiBusy(false);
+            aiBubble('bot', '⚠ 網路錯誤：' + e.message);
+        }
+        aiState.sending = false;
+    }
+
+    function aiAttachPreview(bub, parsed) {
+        var box = document.getElementById('aiMsgs');
+        var div = document.createElement('div');
+        if (parsed.error) {
+            div.className = 'ai-preview warn';
+            div.textContent = '⚠ CSV 解析失敗：' + parsed.error + '（可在下方輸入「請重新輸出 CSV」要求修正）';
+            box.insertBefore(div, bub.nextSibling);
+            return;
+        }
+        function marks(s) {
+            var t = 0;
+            String(s || '').split('\n').forEach(function (l) {
+                var m = parseInt(String(l).split('|')[0], 10);
+                if (m > 0) t += m;
+            });
+            return t;
+        }
+        var ids = parsed.qs.map(function (q) { return 'Q' + q.id; }).join('、');
+        var rowsHtml = parsed.qs.map(function (q) {
+            return '<tr><td>Q' + esc(q.id) + '</td><td>' + esc(q.title) + '</td><td>' + esc(q.category) +
+                '</td><td>' + esc(q.difficulty) + '</td><td>' + esc(q.auto_order) + '</td><td>Env ' + esc(q.env_id) +
+                '</td><td>' + marks(q.marking_scheme) + ' 分</td></tr>';
+        }).join('');
+        div.className = 'ai-preview';
+        div.innerHTML =
+            '<div class="ai-preview-bar"><span class="badge badge-ok">✓ 解析成功：' + parsed.qs.length +
+            ' 題（' + esc(ids) + '）</span>' +
+            (parsed.envs.length ? '<span class="badge badge-anim">新環境 ' + parsed.envs.length + ' 個</span>' : '') +
+            '</div>' +
+            (parsed.envs.length ? '<div class="hint">新環境：' + parsed.envs.map(function (e) { return esc(e.id + ' ' + e.name); }).join('；') + '</div>' : '') +
+            '<details><summary>展開預覽</summary><div style="overflow-x:auto;"><table class="records"><thead><tr><th>題號</th><th>標題</th><th>分類</th><th>難度</th><th>排序</th><th>環境</th><th>總分</th></tr></thead><tbody>' +
+            rowsHtml + '</tbody></table></div></details>' +
+            '<button class="btn btn-small ai-import-btn"><i class="fas fa-download"></i> 一鍵匯入題庫</button>';
+        div.querySelector('.ai-import-btn').addEventListener('click', function () { aiImport(parsed, div); });
+        box.insertBefore(div, bub.nextSibling);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function aiImport(parsed, box) {
+        var btn = box.querySelector('.ai-import-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 匯入中…';
+        try {
+            var resp = await aiPost({ action: 'aiImport', environments: parsed.envs, questions: parsed.qs });
+            if (resp.success) {
+                var msg = '匯入成功：題目 ' + resp.importedQuestions + '、環境 ' + resp.importedEnvironments;
+                if (resp.skipped && resp.skipped.length) {
+                    msg += '；略過 ' + resp.skipped.length + ' 筆（' + resp.skipped.map(function (s) { return s.id + '：' + s.reason; }).join('；') + '）';
+                }
+                showToast(msg);
+                if (resp.warnings && resp.warnings.length) showToast(resp.warnings[0]);
+                btn.innerHTML = '<i class="fas fa-check"></i> 已匯入';
+                var ok = document.createElement('div');
+                ok.className = 'hint';
+                ok.textContent = '✓ 已寫入 Google Sheet，題目列表已刷新；建議到學生端跑一次標準答案驗收。';
+                box.appendChild(ok);
+                if (currentView === 'questions') loadView('questions');
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-download"></i> 重試匯入';
+                showToast(resp.error || '匯入失敗');
+            }
+        } catch (e) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-download"></i> 重試匯入';
+            showToast('網路錯誤：' + e.message);
+        }
+    }
+
+    // —— 面板與設定 ——
+    window.aiTogglePanel = function () {
+        // 休眠保護：未設定 API Key 時不開啟面板（正常情況下入口已隱藏）
+        if (aiState.configured !== true) { showToast('AI 題目助手未啟用：請先設定 Gemini API Key（見接入說明第 2 節）'); return; }
+        var p = document.getElementById('aiPanel');
+        var opening = !p.classList.contains('open');
+        p.classList.toggle('open', opening);
+        if (opening && aiState.firstOpen) {
+            aiState.firstOpen = false;
+            aiBubble('bot', '你好！我是 AI 題目助手 🤖\n· 按上方「🎚 生成設定」自訂主題／難度／題數／環境後生成\n· 或按「一鍵 AI 編寫」由我自由出題\n· 生成後自動解析 CSV，可展開預覽並一鍵匯入題庫\n更換 API Key／模型可按右上 ⚙ 設定。');
+            aiRefreshEnvOptions();
+        }
+    };
+    window.aiToggleGen = function () { document.getElementById('aiGenPanel').classList.toggle('hidden'); };
+    window.aiToggleSettings = function () {
+        var s = document.getElementById('aiSettings');
+        s.classList.toggle('hidden');
+        if (!s.classList.contains('hidden') && !aiState.cfgLoaded) aiLoadConfig();
+    };
+
+    async function aiRefreshEnvOptions() {
+        try {
+            var envs = await apiGet('getEnvironmentsForAdmin');
+            var sel = document.getElementById('ai_env_existing');
+            sel.innerHTML = envs.map(function (e) {
+                return '<option value="' + esc(e.id) + '">' + esc(e.id + ' - ' + e.name) + '</option>';
+            }).join('');
+        } catch (e) { /* 環境選單失敗不阻斷 */ }
+    }
+
+    async function aiLoadConfig() {
+        aiState.cfgLoaded = true;
+        var st = document.getElementById('aiCfgStatus');
+        st.textContent = '讀取設定中…';
+        try {
+            var r = await aiPost({ action: 'aiGetConfig' });
+            if (r.success) {
+                st.innerHTML = r.configured
+                    ? '<span class="badge badge-ok">✓ API Key 已設定（' + (r.keySource === 'properties' ? 'Script Properties' : 'Code.gs 內建') + '）</span>　模型：<code>' + esc(r.model) + '</code>'
+                    : '<span class="badge badge-bad">⚠ 未設定 API Key</span>　請於下方貼上';
+                document.getElementById('ai_model').value = r.model || 'gemini-2.5-flash';
+            }
+        } catch (e) { st.textContent = '讀取失敗：' + e.message; }
+    }
+
+    // —— 啟用狀態檢查：未設定 API Key 時整個功能休眠（FAB／視圖按鈕全部隱藏）——
+    async function aiCheckConfig() {
+        try {
+            var r = await aiPost({ action: 'aiGetConfig' });
+            aiState.configured = !!(r && r.success && r.configured);
+        } catch (e) {
+            aiState.configured = false;
+        }
+        if (aiState.configured === true && currentView === 'questions') aiInjectViewButton();
+        if (typeof syncFab === 'function') syncFab();
+    }
+
+    window.aiSaveConfig = async function () {
+        var key = val('ai_apikey');
+        var model = val('ai_model');
+        if (!key && !model) { showToast('請貼上 API Key 或填寫模型名稱'); return; }
+        try {
+            var r = await aiPost({ action: 'aiSetConfig', apiKey: key, model: model });
+            if (r.success) {
+                showToast(r.configured ? '設定已儲存 ✓' : '已儲存，但尚未設定 API Key');
+                document.getElementById('ai_apikey').value = '';
+                aiLoadConfig();
+            } else showToast(r.error || '儲存失敗');
+        } catch (e) { showToast('網路錯誤：' + e.message); }
+    };
+
+    // —— 生成入口 ——
+    window.aiQuickGenerate = function () {
+        aiSendRequest('請自由為平台編寫一批新題目：3–5 題、難度由淺入深、主題自選（香港校園場景）。');
+    };
+
+    window.aiGenerate = function () {
+        var theme = val('ai_theme');
+        var count = parseInt(val('ai_count'), 10) || 3;
+        var diff = val('ai_diff');
+        var envMode = val('ai_env');
+        var skills = AI_CATS.filter(function (c) {
+            var el = document.getElementById('ai_skill_' + c);
+            return el && el.checked;
+        });
+        var envLine;
+        if (envMode === 'reuse') {
+            var eid = val('ai_env_existing') || '（未選擇）';
+            envLine = '沿用現有環境 env_id=' + eid + '（出題前請依平台現況中該環境的表結構設計）';
+        } else if (envMode === 'new') {
+            var nm = val('ai_env_new');
+            var desc = val('ai_env_desc');
+            envLine = '新建環境' + (nm ? '：' + nm : '（名稱由你命名）') + (desc ? '；期望內容：' + desc : '');
+        } else {
+            envLine = '由你決定（沿用現有或新建皆可，以最合題者為準）';
+        }
+        var lines = [
+            '請為 SQL Quest 生成題目。',
+            '主題／場景：' + (theme || '由你自選合適的香港校園場景'),
+            '題數：' + count,
+            '難度：' + (diff ? diff + '（全部同級）' : '混合，由淺入深'),
+            '考查技能：' + (skills.length ? skills.join('、') : '由你安排'),
+            '環境：' + envLine
+        ];
+        var extra = val('ai_extra');
+        if (extra) lines.push('額外要求：' + extra);
+        document.getElementById('aiGenPanel').classList.add('hidden');
+        aiSendRequest(lines.join('\n'));
+    };
+
+    window.aiSendInput = function () {
+        var t = val('aiInput');
+        if (!t) return;
+        document.getElementById('aiInput').value = '';
+        aiSendRequest(t);
+    };
+
+    // —— 視圖整合：題目管理注入按鈕（包裝 loadView）——
+    var origLoadView = window.loadView;
+    if (typeof origLoadView === 'function') {
+        window.loadView = async function (view) {
+            var r = await origLoadView.apply(this, arguments);
+            try { if (view === 'questions') aiInjectViewButton(); } catch (e) { /* 忽略 */ }
+            return r;
+        };
+    }
+    function aiInjectViewButton() {
+        if (aiState.configured !== true) return; // 休眠中：不注入視圖按鈕
+        var area = document.getElementById('contentArea');
+        if (!area || document.getElementById('aiViewBtn')) return;
+        var b = document.createElement('button');
+        b.id = 'aiViewBtn';
+        b.className = 'btn btn-small';
+        b.style.marginRight = '0.5rem';
+        b.innerHTML = '<i class="fas fa-robot"></i> AI 題目助手';
+        b.addEventListener('click', function () { aiTogglePanel(); });
+        area.insertBefore(b, area.firstChild);
+    }
+
+    // —— 事件繫結 ——
+    document.getElementById('aiInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSendInput(); }
+    });
+    document.getElementById('ai_env').addEventListener('change', function () {
+        var m = this.value;
+        document.getElementById('ai_env_existing').classList.toggle('hidden', m !== 'reuse');
+        document.getElementById('ai_env_new_row').classList.toggle('hidden', m !== 'new');
+    });
+
+    // —— FAB 與登入狀態同步 ——
+    var dash = document.getElementById('dashboard');
+    if (dash) {
+        var syncFab = function () {
+            var dashVisible = !dash.classList.contains('hidden');
+            var show = dashVisible && aiState.configured === true;
+            document.getElementById('aiFab').classList.toggle('show', show);
+            if (!show) document.getElementById('aiPanel').classList.remove('open');
+            // 登入後尚未偵測過啟用狀態時，向後端查詢一次；未設定 Key 期間功能保持休眠
+            if (dashVisible && aiState.configured === null) aiCheckConfig();
+        };
+        new MutationObserver(syncFab).observe(dash, { attributes: true, attributeFilter: ['class'] });
+        syncFab();
+    }
+})();
+</script>
 </body>
 </html>
