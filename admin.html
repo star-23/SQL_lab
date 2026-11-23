@@ -185,13 +185,21 @@
         return res.json();
     }
 
-    // 管理員專屬 GET（getSubmissions / getStudentAnalytics / getStudentDetail 需帶 id_token）
+    // 管理員專屬資料讀取（v3.2.2：改以 POST 傳送 id_token，與登入同路徑。
+    // 背景：GET 網址帶 1100+ 字憑證，於部分校網／代理環境會被截改，令 Google
+    // tokeninfo 收到壞憑證而誤報「憑證無效」；POST body 傳送可徹底避開。
+    // 呼叫格式不變：apiGetAdmin('getSubmissions&limit=200') → POST {action, limit, id_token}）
     async function apiGetAdmin(action) {
-        // v3.2.1：先自檢憑證，避免發出必定「權限不足」的請求而誤導排查方向
+        // 先自檢憑證，避免發出必定「權限不足」的請求而誤導排查方向
         if (!window.currentToken) throw new Error('登入狀態已失效，請重新整理頁面並重新登入');
         if (window.tokenExp && Date.now() / 1000 > window.tokenExp) throw new Error('登入憑證已過期（Google 憑證約 1 小時有效），請重新整理頁面並重新登入');
-        const token = '&id_token=' + encodeURIComponent(window.currentToken);
-        const res = await fetch(`${API_BASE_URL}?action=${action}${token}`);
+        const seg = String(action).split('&');
+        const payload = { action: seg[0], id_token: window.currentToken };
+        for (let i = 1; i < seg.length; i++) {
+            const kv = seg[i].split('=');
+            payload[decodeURIComponent(kv[0])] = kv.length > 1 ? decodeURIComponent(kv[1]) : '';
+        }
+        const res = await fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (data && data.error) throw new Error(data.error);
