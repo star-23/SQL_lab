@@ -151,6 +151,11 @@
 
     async function handleLogin(response) {
         window.currentToken = response.credential;
+        // v3.2.1：記錄憑證過期時間（Google id_token 約 1 小時有效），過期前提示重新登入
+        try {
+            const _pl = JSON.parse(atob(response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+            window.tokenExp = _pl.exp || 0;
+        } catch (_e) { window.tokenExp = 0; }
         try {
             const res = await fetch(API_BASE_URL, {
                 method: 'POST',
@@ -182,7 +187,10 @@
 
     // 管理員專屬 GET（getSubmissions / getStudentAnalytics / getStudentDetail 需帶 id_token）
     async function apiGetAdmin(action) {
-        const token = window.currentToken ? '&id_token=' + encodeURIComponent(window.currentToken) : '';
+        // v3.2.1：先自檢憑證，避免發出必定「權限不足」的請求而誤導排查方向
+        if (!window.currentToken) throw new Error('登入狀態已失效，請重新整理頁面並重新登入');
+        if (window.tokenExp && Date.now() / 1000 > window.tokenExp) throw new Error('登入憑證已過期（Google 憑證約 1 小時有效），請重新整理頁面並重新登入');
+        const token = '&id_token=' + encodeURIComponent(window.currentToken);
         const res = await fetch(`${API_BASE_URL}?action=${action}${token}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -248,7 +256,7 @@
             });
             contentArea.innerHTML = html;
         } catch (err) {
-            contentArea.innerHTML = `<p style="text-align:center;color:#EF4444;position:relative;z-index:2;">載入失敗：${esc(err.message)}<br><span class="hint">若為新增功能，請先將 AppsScript_增補.gs 的內容部署到 Apps Script。</span></p>`;
+            contentArea.innerHTML = `<p style="text-align:center;color:#EF4444;position:relative;z-index:2;">載入失敗：${esc(err.message)}<br><span class="hint">若顯示「權限不足」，請老師依序檢查：① 修改代碼後是否已「部署→管理部署作業→編輯→新版本」（生效需 5-15 分鐘）；② Script Properties 的 ADMIN_EMAILS 與代碼內 DEFAULT_ADMIN_EMAILS 是否含此帳號；③ 於 API 網址後加 ?action=checkAdminAccess 並帶 id_token 自檢。</span></p>`;
         }
     }
     function openAddModal() {
