@@ -399,7 +399,7 @@
                 <div class="editor-header">
                 <div class="editor-header-left" style="gap: 6px; flex-wrap: wrap;">
                     <button class="editor-tab active">QUERY.sql</button>
-                    <button class="editor-tab" id="hintBtn"><i class="fas fa-lightbulb"></i> HINT</button>
+                    <button class="editor-tab" id="hintBtn"><i class="fas fa-lightbulb"></i> 提示</button>
     
                     <!-- 🌟 模式切換：液態玻璃滑軌（開頁即定位滑行指示器） -->
                     <div class="slider-track" id="modeSlider" style="margin:0 4px;">
@@ -478,6 +478,7 @@
     <div class="toast-container" id="toastContainer"></div>
     <div class="modal-overlay hidden" id="leaderboardModal"><div class="modal-box" style="max-width:420px;text-align:left;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;position:relative;z-index:2;"><h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-trophy" style="color:#F59E0B;margin-right:8px;"></i>LEADERBOARD</h2><button id="closeLbBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;"><i class="fas fa-times"></i></button></div><div id="leaderboardList" style="position:relative;z-index:2;max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div></div></div>
     <div class="sys-status" id="sysStatus"><div class="status-item"><div class="status-dot off" id="dotCloud"></div>CLOUD</div><div class="status-item"><div class="status-dot off" id="dotEngine"></div>ENGINE</div><div class="status-item"><div class="status-dot off" id="dotDB"></div>DB</div></div>
+    <div class="modal-overlay hidden" id="hintModal"><div class="modal-box" style="max-width:430px;text-align:left;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;position:relative;z-index:2;"><h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-lightbulb" style="color:#F59E0B;margin-right:8px;"></i>AI 提示</h2><button id="closeHintBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;position:relative;z-index:2;"><i class="fas fa-times"></i></button></div><div id="hintBody" style="position:relative;z-index:2;font-size:0.8rem;line-height:1.75;color:var(--text-light);max-height:320px;overflow-y:auto;white-space:pre-wrap;">請先選擇題目</div></div></div>
     <div class="modal-overlay hidden" id="announceModal"><div class="modal-box" style="max-width:450px;text-align:left;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;position:relative;z-index:2;"><h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-bell" style="color:#3B82F6;margin-right:8px;"></i>NOTIFICATIONS</h2><button id="closeAnnBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;"><i class="fas fa-times"></i></button></div><div id="announceList" style="position:relative;z-index:2;max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;"></div></div></div>
 
     <script>
@@ -817,7 +818,22 @@
     }
     loadDraftStore();
     runBtn.addEventListener('click',executeSQL);
-    hintBtn.addEventListener('click',()=>{const q=DB_QUESTIONS.find(q=>q.id===currentQId);if(!q)return;showToast('info','提示：答案開頭為 "'+q.answer_sql.substring(0,18)+'..."');});
+    hintBtn.addEventListener('click',async()=>{
+      const hintModal=$('hintModal'),hintBody=$('hintBody');
+      const q=DB_QUESTIONS.find(q=>q.id===currentQId);
+      if(!q){showToast('info','請先選擇題目');return;}
+      hintModal.classList.remove('hidden');
+      hintBody.innerHTML='<span class="loading-dots"><span></span><span></span><span></span></span> AI 正在準備提示…';
+      try{
+        const res=await fetch(API_BASE_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'getHint',username:studentName||'',question_id:currentQId,sql:sqlEditor.value||''})});
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const data=await res.json();
+        hintBody.textContent=data.error?('⚠️ '+data.error):(data.hint||'暫無提示');
+        if(data.source==='fallback')hintBody.insertAdjacentHTML('beforeend','\n\n（AI 未設定或暫時不可用，以上為老師預設提示）');
+      }catch(err){hintBody.textContent='⚠️ 提示載入失敗：'+err.message;}
+    });
+    $('closeHintBtn').addEventListener('click',()=>$('hintModal').classList.add('hidden'));
+    $('hintModal').addEventListener('click',e=>{if(e.target===$('hintModal'))$('hintModal').classList.add('hidden');});
 
     // 🌟 模式狀態
     let currentMode = 'simple'; // 'simple' 或 'dse'
