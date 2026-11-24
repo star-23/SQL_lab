@@ -532,7 +532,7 @@
         <div class="credits-list" id="creditsList"></div>
         <div class="credits-studio">星願工作室</div>
         <div class="credits-studio-en">STARWARD STUDIO</div>
-        <div class="credits-ver">SQL Quest v0.5.0</div>
+        <div class="credits-ver">SQL Quest v0.5.1</div>
     </div></div>
     <div class="toast-container" id="toastContainer"></div>
     <div class="modal-overlay hidden" id="leaderboardModal"><div class="modal-box" style="max-width:420px;text-align:left;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;position:relative;z-index:2;"><h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-trophy" style="color:#F59E0B;margin-right:8px;"></i>LEADERBOARD</h2><button id="closeLbBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;"><i class="fas fa-times"></i></button></div><div id="leaderboardList" style="position:relative;z-index:2;max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div></div></div>
@@ -797,7 +797,7 @@
         const tables = sandbox.currentSchema; 
         if (tables && tables.length > 0) {
             schemaHtml = `<div class="schema-section"><h4><i class="fas fa-database" style="margin-right:3px"></i> SCHEMA</h4>`;
-            tables.forEach(table => {
+            tables.forEach((table, ti) => {
                 // 🌟 0.5.0：直接讀取已建置的模擬資料庫，顯示詳細數據；類型以括號寫在欄位旁
                 const dataRes = sandbox.executeSql('SELECT * FROM "' + table.name + '"');
                 const rows = (dataRes.success && dataRes.data && dataRes.data[0]) ? dataRes.data[0].rows : [];
@@ -806,7 +806,7 @@
                 const bodyRows = rows.length
                     ? rows.map(r => '<tr>' + r.map(v => '<td>' + (v === null ? '<span class="cell-null">NULL</span>' : esc(String(v))) + '</td>').join('') + '</tr>').join('')
                     : '<tr><td colspan="' + table.columns.length + '" class="no-data">（此表暫無資料）</td></tr>';
-                schemaHtml += `<div class="schema-window" data-table="${esc(table.name)}">
+                schemaHtml += `<div class="schema-window" "" data-table="${esc(table.name)}" data-idx="${ti}">
                     <div class="schema-window-head">
                         <span class="schema-table-title">TABLE: ${esc(table.name)}<span class="row-count">${rows.length} 筆</span></span>
                         <span class="schema-window-btns">
@@ -832,7 +832,11 @@
         function floatOn(win){
             if (win.classList.contains('floating')) return;
             const r = win.getBoundingClientRect();
-            win.__home = { parent: win.parentNode, next: win.nextSibling };   // 記住原位，收回時插回
+            // 🌟 0.5.1 修：原只記單一鄰居錨點——若該鄰居也被拉出浮動，收回時 insertBefore
+            // 會拋 NotFoundError，視窗掉到頁面底部；且「先拉走的表已離場」時錨點會失準。
+            // 改為記渲染時寫死的原順位（data-idx），收回時插回首個順位更大的停靠表之前。
+            win.__home = { parent: win.parentNode };
+            win.__homeIdx = parseInt(win.dataset.idx || '0', 10);
             win.style.left = r.left + 'px'; win.style.top = r.top + 'px';
             win.style.width = r.width + 'px'; win.style.height = r.height + 'px';
             document.body.appendChild(win);                                   // 移到 body，避免被面板裁切
@@ -842,7 +846,15 @@
         function floatOff(win){
             win.classList.remove('floating');
             win.style.left = ''; win.style.top = ''; win.style.width = ''; win.style.height = '';
-            if (win.__home && win.__home.parent) win.__home.parent.insertBefore(win, win.__home.next);
+            const home = win.__home;
+            if (home && home.parent && home.parent.isConnected) {
+                let ref = null;                                               // 預設：原順位最大 → 補回尾端
+                home.parent.querySelectorAll(':scope > .schema-window').forEach(function(w){
+                    if (ref) return;
+                    if (parseInt(w.dataset.idx || '0', 10) > win.__homeIdx) ref = w;
+                });
+                home.parent.insertBefore(win, ref);
+            }
             setFloatIcon(win, false);
         }
         // 🌟 0.5.0 修：視窗浮動時掛在 body 下，監聽器必須綁 document 才收得到事件
