@@ -28,14 +28,14 @@
         h1{font-family:var(--pixel);font-size:0.9rem;color:var(--accent);}
         .panel{padding:2rem;margin-bottom:2rem;position:relative;z-index:2;}
         .form-group{margin-bottom:1.5rem;position:relative;z-index:2;}
-        label{display:block;font-family:var(--pixel);font-size:0.55rem;margin-bottom:0.5rem;color:var(--text-muted);}
+        label{display:block;font-family:var(--pixel);font-size:0.68rem;margin-bottom:0.5rem;color:var(--text-muted);}
         input, textarea, select{width:100%;padding:0.8rem 1rem;border:1px solid var(--border-light);border-radius:12px;background:rgba(255,255,255,0.5);font-family:var(--body);font-size:0.9rem;outline:none;transition:all 0.2s;color:var(--text);}
         input:focus, textarea:focus, select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(249,115,22,0.1);background:rgba(255,255,255,0.8);}
         textarea{min-height:100px;font-family:'Fira Code', monospace;resize:vertical;}
-        .btn{padding:0.8rem 1.5rem;background:linear-gradient(135deg,var(--accent),var(--accent-hover));color:#fff;border:none;border-radius:50px;font-family:var(--pixel);font-size:0.5rem;cursor:pointer;box-shadow:0 4px 12px rgba(249,115,22,0.3);transition:all 0.2s;position:relative;z-index:2;}
+        .btn{padding:0.8rem 1.5rem;background:linear-gradient(135deg,var(--accent),var(--accent-hover));color:#fff;border:none;border-radius:50px;font-family:var(--pixel);font-size:0.62rem;cursor:pointer;box-shadow:0 4px 12px rgba(249,115,22,0.3);transition:all 0.2s;position:relative;z-index:2;}
         .btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(249,115,22,0.4);}
         .btn-secondary{background:linear-gradient(135deg,#6B7280,#4B5563);box-shadow:0 4px 12px rgba(0,0,0,0.2);}
-        .btn-small{padding:0.5rem 1rem;font-size:0.4rem;}
+        .btn-small{padding:0.5rem 1rem;font-size:0.55rem;}
         .menu-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;}
         .list-item{background:rgba(255,255,255,0.4);border:1px solid var(--border-light);border-radius:12px;padding:1rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2;transition:all 0.2s;}
         .list-item:hover{background:rgba(255,255,255,0.6);transform:translateX(4px);}
@@ -61,11 +61,11 @@
         .badge-ok{background:rgba(16,185,129,0.14);color:#047857;}
         .badge-bad{background:rgba(239,68,68,0.14);color:#B91C1C;}
         table.records{width:100%;border-collapse:collapse;font-size:0.78rem;position:relative;z-index:2;}
-        table.records th{font-family:var(--pixel);font-size:0.42rem;color:var(--text-muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border-light);white-space:nowrap;}
+        table.records th{font-family:var(--pixel);font-size:0.55rem;color:var(--text-muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border-light);white-space:nowrap;}
         table.records td{padding:8px 10px;border-bottom:1px solid rgba(148,163,184,0.12);vertical-align:top;}
-        table.records td code{font-family:'Fira Code',monospace;font-size:0.72rem;background:rgba(15,23,42,0.05);padding:2px 6px;border-radius:6px;}
+        table.records td code{font-family:'Fira Code',monospace;font-size:0.78rem;background:rgba(15,23,42,0.05);padding:2px 6px;border-radius:6px;}
         .form-row{display:flex;gap:10px;} .form-row .form-group{flex:1;}
-        .hint{font-size:0.72rem;color:var(--text-muted);margin-top:4px;position:relative;z-index:2;}
+        .hint{font-size:0.78rem;color:var(--text-muted);margin-top:4px;position:relative;z-index:2;}
     </style>
 </head>
 <body>
@@ -88,7 +88,7 @@
 
         <div id="dashboard" class="hidden">
             <div class="glass panel">
-                <h2 style="font-family:var(--pixel); font-size:0.6rem; margin-bottom:1rem; color:var(--text);">功能選單</h2>
+                <h2 style="font-family:var(--pixel); font-size:0.72rem; margin-bottom:1rem; color:var(--text);">功能選單</h2>
                 <div class="menu-grid">
                     <button class="btn" onclick="loadView('questions')"><i class="fas fa-question-circle"></i> 題目管理</button>
                     <button class="btn" onclick="loadView('dictionary')"><i class="fas fa-book"></i> 字典管理 v3</button>
@@ -108,7 +108,7 @@
 
     <div class="modal-overlay" id="editModal">
         <div class="modal-content">
-            <h2 id="modalTitle" style="font-family:var(--pixel); font-size:0.6rem; margin-bottom:1.5rem; color:var(--text);"></h2>
+            <h2 id="modalTitle" style="font-family:var(--pixel); font-size:0.72rem; margin-bottom:1.5rem; color:var(--text);"></h2>
             <div id="modalBody" style="position:relative;z-index:2;"></div>
             <div style="text-align:right; margin-top:2rem; position:relative;z-index:2;">
                 <button class="btn btn-secondary btn-small" onclick="closeModal()" style="margin-right:0.5rem;">取消</button>
@@ -460,7 +460,7 @@
                 <span class="badge badge-anim">平均完成 ${S.avgCompleted != null ? S.avgCompleted : 0} 題</span>
                 <div class="hint" style="margin-top:6px;">已有人嘗試的題目 ${questions.length - notTried}/${questions.length}；無人嘗試 ${notTried} 題</div>
             </div>
-            <h3 style="font-family:var(--pixel); font-size:0.5rem; margin-bottom:0.8rem; position:relative;z-index:2;">學生完成狀況（按完成題數排序）</h3>
+            <h3 style="font-family:var(--pixel); font-size:0.62rem; margin-bottom:0.8rem; position:relative;z-index:2;">學生完成狀況（按完成題數排序）</h3>
             <div style="overflow-x:auto;position:relative;z-index:2;">
             <table class="records">
                 <thead><tr><th>學生</th><th>提交</th><th>正確</th><th>完成題數</th><th>正確率</th><th>活躍天數</th><th>最近活動</th><th></th></tr></thead>
@@ -478,7 +478,7 @@
                     </tr>`).join('') || '<tr><td colspan="8">暫無學生數據</td></tr>'}
                 </tbody>
             </table></div>
-            <h3 style="font-family:var(--pixel); font-size:0.5rem; margin:1.5rem 0 0.8rem; position:relative;z-index:2;">題目通過率排行（最難前 10）</h3>
+            <h3 style="font-family:var(--pixel); font-size:0.62rem; margin:1.5rem 0 0.8rem; position:relative;z-index:2;">題目通過率排行（最難前 10）</h3>
             <div style="overflow-x:auto;position:relative;z-index:2;">
             <table class="records">
                 <thead><tr><th>題號</th><th>標題</th><th>嘗試</th><th>通過</th><th>通過率</th></tr></thead>
@@ -715,7 +715,7 @@
     #aiPanel.open{display:flex;animation:aiIn .28s ease-out;}
     @keyframes aiIn{from{opacity:0;transform:translateY(14px) scale(.97);}to{opacity:1;transform:none;}}
     .ai-head{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid rgba(148,163,184,0.18);flex:none;}
-    .ai-head h3{font-family:var(--pixel);font-size:0.52rem;color:var(--accent);flex:1;margin:0;}
+    .ai-head h3{font-family:var(--pixel);font-size:0.62rem;color:var(--accent);flex:1;margin:0;}
     .ai-mini{width:30px;height:30px;border-radius:50%;border:1px solid var(--border-light);background:rgba(255,255,255,0.6);color:var(--text-muted);cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;transition:all .2s;flex:none;}
     .ai-mini:hover{color:var(--accent);border-color:var(--accent);transform:scale(1.08);}
     #aiSettings{padding:12px 16px;border-bottom:1px solid rgba(148,163,184,0.15);flex:none;}
