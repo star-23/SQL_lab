@@ -147,6 +147,37 @@
         body.theme-night .result-dialog.error{color:#FCA5A5;}
         body.theme-night .dse-tip{color:#A7F3D0;}
         body.theme-night .plant-section h4, body.theme-night .plant-label, body.theme-night .plant-next{color:#CBD5E1;}
+        /* 🌟 0.5.0 資料表視窗：詳細數據＋最小化／浮動拖放縮放 */
+        .schema-window{position:relative;margin-bottom:10px;}
+        .schema-window-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;}
+        .schema-window-head .schema-table-title{margin-bottom:0;}
+        .schema-window-btns{display:flex;gap:4px;flex-shrink:0;}
+        .sw-btn{width:20px;height:20px;border:1px solid var(--border-light);border-radius:6px;background:rgba(255,255,255,0.55);color:var(--text-muted);cursor:pointer;font-size:0.55rem;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;}
+        .sw-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
+        .row-count{font-family:var(--body);font-size:0.6rem;color:var(--text-muted);letter-spacing:0;margin-left:6px;}
+        .col-type{font-family:var(--body);font-size:0.56rem;font-weight:400;color:var(--text-muted);text-transform:uppercase;white-space:nowrap;}
+        .pk-key{font-size:0.5rem;color:var(--accent);margin-right:2px;}
+        .cell-null{color:var(--text-muted);font-style:italic;}
+        .no-data{color:var(--text-muted);text-align:center;font-style:italic;}
+        .schema-scroll{max-height:190px;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--border-light) transparent;border-radius:8px;}
+        .schema-scroll::-webkit-scrollbar{width:6px;height:6px;}
+        .schema-scroll::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:3px;}
+        .schema-scroll::-webkit-scrollbar-track{background:transparent;}
+        .schema-window .schema-table{margin-bottom:0;}
+        .schema-window.floating{position:fixed;z-index:240;display:flex;flex-direction:column;box-shadow:0 14px 44px rgba(15,23,42,0.4);background:var(--glass-strong);border:1px solid var(--glass-border);backdrop-filter:blur(20px);border-radius:var(--radius-md);padding:8px 10px 10px;}
+        body.theme-night .schema-window.floating{background:rgba(30,41,59,0.94);}
+        body.theme-dusk .schema-window.floating{background:rgba(110,94,128,0.94);}
+        .schema-window.floating .schema-scroll{max-height:none;flex:1;min-height:0;}
+        .schema-window.floating .schema-window-head{cursor:grab;}
+        .schema-window.floating.dragging .schema-window-head{cursor:grabbing;}
+        .schema-window.floating .sw-float{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
+        .schema-window.minimized .schema-scroll,.schema-window.minimized .sw-resize{display:none;}
+        .schema-window.minimized{margin-bottom:6px;}
+        .schema-window.minimized .schema-window-head{background:rgba(255,255,255,0.5);border:1px solid var(--border-light);border-radius:8px;padding:4px 8px;margin-bottom:0;cursor:pointer;}
+        body.theme-night .schema-window.minimized .schema-window-head{background:rgba(30,41,59,0.65);}
+        body.theme-dusk .schema-window.minimized .schema-window-head{background:rgba(255,255,255,0.18);}
+        .sw-resize{position:absolute;right:2px;bottom:2px;width:14px;height:14px;cursor:nwse-resize;display:none;opacity:.55;}
+        .schema-window.floating .sw-resize{display:block;border-right:2px solid var(--text-muted);border-bottom:2px solid var(--text-muted);}
         /* 🌟 schema 表格與結果表格同構：深色主題下一併修復 */
         body.theme-dusk .schema-table{background:rgba(255,255,255,0.82);}
         body.theme-dusk .schema-table td{color:#334155;}
@@ -501,7 +532,7 @@
         <div class="credits-list" id="creditsList"></div>
         <div class="credits-studio">星願工作室</div>
         <div class="credits-studio-en">STARWARD STUDIO</div>
-        <div class="credits-ver">SQL Quest v0.4.1</div>
+        <div class="credits-ver">SQL Quest v0.5.0</div>
     </div></div>
     <div class="toast-container" id="toastContainer"></div>
     <div class="modal-overlay hidden" id="leaderboardModal"><div class="modal-box" style="max-width:420px;text-align:left;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;position:relative;z-index:2;"><h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-trophy" style="color:#F59E0B;margin-right:8px;"></i>LEADERBOARD</h2><button id="closeLbBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;"><i class="fas fa-times"></i></button></div><div id="leaderboardList" style="position:relative;z-index:2;max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div></div></div>
@@ -574,14 +605,32 @@
                 return { success: true, data: formatted };
             } catch (err) { return { success: false, error: err.message }; }
         }
+        // 🌟 0.5.0 判題修訂：大小階只在「資料值」上嚴格配對。
+        // 表頭（SQL 語句的鏡像文本）規範化：關鍵字／函數名／欄名不分大小階（min == MIN），
+        // 裸欄名以 schema 原名為準；資料值（rows）保持原樣嚴格比對。
+        canonicalHeader(col) {
+            const s = String(col);
+            if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(s)) {
+                const lower = s.toLowerCase();
+                const tables = this.currentSchema || [];
+                for (const t of tables) {
+                    for (const c of t.columns) {
+                        if (c.name.toLowerCase() === lower) return c.name;   // 裸欄名 → schema 原名（SQLite 標識符本就不分大小階）
+                    }
+                }
+                return lower;                                                // 別名等標籤 → 折疊大小階
+            }
+            return s.replace(/\s+/g, '').toLowerCase();                      // 表達式表頭 → 折疊空白與大小階
+        }
         normalizeResult(data, autoOrder) {
             if (!data || data.length === 0) return null;
             let res = data[0];
             if (!res || !res.columns || !res.rows) return null;
+            const cols = res.columns.map(c => this.canonicalHeader(c));
             let processedRows = res.rows.map(row => row.map(cell => cell === null ? 'NULL' : String(cell)));
             processedRows = processedRows.map(r => r.join('|||'));
             if (autoOrder) processedRows.sort();
-            return { columns: res.columns, sortedRows: processedRows };
+            return { columns: cols, sortedRows: processedRows };
         }
         checkAnswer(studentSql, answerSql, autoOrder) {
             const studentRes = this.executeSql(studentSql);
@@ -741,6 +790,7 @@
     }
     
     function renderQuestionDetail() {
+        document.querySelectorAll('.schema-window.floating').forEach(function(el){ el.remove(); }); // 換題時收回浮動視窗
         const q = DB_QUESTIONS.find(q=>q.id===currentQId);
         if(!q) { questionDetail.innerHTML = '<div class="result-idle"><p>選擇題目開始</p></div>'; return; }
         let schemaHtml = '';
@@ -748,14 +798,91 @@
         if (tables && tables.length > 0) {
             schemaHtml = `<div class="schema-section"><h4><i class="fas fa-database" style="margin-right:3px"></i> SCHEMA</h4>`;
             tables.forEach(table => {
-                schemaHtml += `<div class="schema-table-title">TABLE: ${table.name}</div>
-                <table class="schema-table"><thead><tr><th>Column</th><th>Type</th></tr></thead>
-                <tbody>${table.columns.map(c=>`<tr><td class="${c.pk?'pk':''}">${c.name}</td><td>${c.type}</td></tr>`).join('')}</tbody></table>`;
+                // 🌟 0.5.0：直接讀取已建置的模擬資料庫，顯示詳細數據；類型以括號寫在欄位旁
+                const dataRes = sandbox.executeSql('SELECT * FROM "' + table.name + '"');
+                const rows = (dataRes.success && dataRes.data && dataRes.data[0]) ? dataRes.data[0].rows : [];
+                const headCells = table.columns.map(c => '<th>' + (c.pk ? '<i class="fas fa-key pk-key" title="Primary Key"></i>' : '')
+                    + '<span class="' + (c.pk ? 'pk' : '') + '">' + esc(c.name) + '</span> <span class="col-type">(' + esc(c.type) + ')</span></th>').join('');
+                const bodyRows = rows.length
+                    ? rows.map(r => '<tr>' + r.map(v => '<td>' + (v === null ? '<span class="cell-null">NULL</span>' : esc(String(v))) + '</td>').join('') + '</tr>').join('')
+                    : '<tr><td colspan="' + table.columns.length + '" class="no-data">（此表暫無資料）</td></tr>';
+                schemaHtml += `<div class="schema-window" data-table="${esc(table.name)}">
+                    <div class="schema-window-head">
+                        <span class="schema-table-title">TABLE: ${esc(table.name)}<span class="row-count">${rows.length} 筆</span></span>
+                        <span class="schema-window-btns">
+                            <button type="button" class="sw-btn sw-float" title="浮動視窗：可拖移／縮放"><i class="fas fa-expand"></i></button>
+                            <button type="button" class="sw-btn sw-min" title="最小化／還原"><i class="fas fa-minus"></i></button>
+                        </span>
+                    </div>
+                    <div class="schema-scroll"><table class="schema-table"><thead><tr>${headCells}</tr></thead><tbody>${bodyRows}</tbody></table></div>
+                    <div class="sw-resize" title="拖曳縮放"></div>
+                </div>`;
             });
             schemaHtml += `</div>`;
         }
         questionDetail.innerHTML = `<div class="detail-title"><span style="font-family:var(--pixel);font-size:0.4rem;color:var(--accent);">[${q.category.toUpperCase()}]</span><br>${q.title}</div><div class="detail-desc">${q.description}</div><div class="dse-tip"><i class="fas fa-lightbulb"></i><span>${q.dse_tip}</span></div>${schemaHtml}`;
     }
+
+    // ══════════ 0.5.0 資料表視窗：最小化／浮動拖放縮放 ══════════
+    (function initSchemaWindows(){
+        let drag = null, resize = null;
+        const MIN_W = 170, MIN_H = 110;
+        function setFloatIcon(win, floating){ const b = win.querySelector('.sw-float'); if (b) { b.innerHTML = floating ? '<i class="fas fa-thumbtack"></i>' : '<i class="fas fa-expand"></i>'; b.title = floating ? '收回面板原位' : '浮動視窗：可拖移／縮放'; } }
+        function setMinIcon(win, minimized){ const b = win.querySelector('.sw-min'); if (b) { b.innerHTML = minimized ? '<i class="fas fa-window-restore"></i>' : '<i class="fas fa-minus"></i>'; b.title = minimized ? '還原視窗' : '最小化'; } }
+        function floatOn(win){
+            if (win.classList.contains('floating')) return;
+            const r = win.getBoundingClientRect();
+            win.__home = { parent: win.parentNode, next: win.nextSibling };   // 記住原位，收回時插回
+            win.style.left = r.left + 'px'; win.style.top = r.top + 'px';
+            win.style.width = r.width + 'px'; win.style.height = r.height + 'px';
+            document.body.appendChild(win);                                   // 移到 body，避免被面板裁切
+            win.classList.add('floating');
+            setFloatIcon(win, true);
+        }
+        function floatOff(win){
+            win.classList.remove('floating');
+            win.style.left = ''; win.style.top = ''; win.style.width = ''; win.style.height = '';
+            if (win.__home && win.__home.parent) win.__home.parent.insertBefore(win, win.__home.next);
+            setFloatIcon(win, false);
+        }
+        // 🌟 0.5.0 修：視窗浮動時掛在 body 下，監聽器必須綁 document 才收得到事件
+        document.addEventListener('click', function(e){
+            const win = e.target.closest('.schema-window'); if (!win) return;
+            if (e.target.closest('.sw-float')) { win.classList.contains('floating') ? floatOff(win) : floatOn(win); return; }
+            if (e.target.closest('.sw-min')) {
+                if (win.classList.contains('minimized')) { win.classList.remove('minimized'); setMinIcon(win, false); }
+                else { if (win.classList.contains('floating')) floatOff(win); win.classList.add('minimized'); setMinIcon(win, true); }
+                return;
+            }
+            if (win.classList.contains('minimized') && e.target.closest('.schema-window-head')) { win.classList.remove('minimized'); setMinIcon(win, false); }
+        });
+        document.addEventListener('pointerdown', function(e){
+            const win = e.target.closest('.schema-window');
+            if (!win || !win.classList.contains('floating') || win.classList.contains('minimized')) return;
+            const r = win.getBoundingClientRect();
+            if (e.target.closest('.sw-resize')) { resize = { win: win, sx: e.clientX, sy: e.clientY, w: r.width, h: r.height }; }
+            else if (e.target.closest('.schema-window-head') && !e.target.closest('.sw-btn')) {
+                drag = { win: win, dx: e.clientX - r.left, dy: e.clientY - r.top };
+                win.classList.add('dragging');
+            } else return;
+            e.preventDefault();
+        });
+        document.addEventListener('pointermove', function(e){
+            if (drag) {
+                const w = drag.win;
+                w.style.left = Math.max(4, Math.min(window.innerWidth - 80, e.clientX - drag.dx)) + 'px';
+                w.style.top = Math.max(4, Math.min(window.innerHeight - 36, e.clientY - drag.dy)) + 'px';
+            } else if (resize) {
+                const w = resize.win;
+                w.style.width = Math.max(MIN_W, resize.w + (e.clientX - resize.sx)) + 'px';
+                w.style.height = Math.max(MIN_H, resize.h + (e.clientY - resize.sy)) + 'px';
+            }
+        });
+        document.addEventListener('pointerup', function(){
+            if (drag) { drag.win.classList.remove('dragging'); drag = null; }
+            resize = null;
+        });
+    })();
 
     function updateLineNumbers(){const lines=sqlEditor.value.split('\n').length;const nums=[];for(let i=1;i<=Math.max(lines,8);i++)nums.push(`<div>${i}</div>`);lineNumbers.innerHTML=nums.join('');}
     sqlEditor.addEventListener('input',()=>{updateLineNumbers();charCount.textContent=sqlEditor.value.length+' 字元';scheduleDraftSave();});
