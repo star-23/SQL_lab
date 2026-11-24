@@ -96,6 +96,7 @@
                     <button class="btn" onclick="loadView('announcements')"><i class="fas fa-bullhorn"></i> 公告管理</button>
                     <button class="btn" onclick="loadView('analytics')"><i class="fas fa-user-graduate"></i> 學生分析</button>
                     <button class="btn" onclick="loadView('submissions')"><i class="fas fa-clipboard-list"></i> 答題記錄</button>
+                    <button class="btn" onclick="loadView('hintlogs')"><i class="fas fa-lightbulb"></i> 提示記錄</button>
                     <button class="btn btn-secondary" onclick="openCategoryModal()"><i class="fas fa-tags"></i> 分類管理</button>
                 </div>
             </div>
@@ -213,6 +214,7 @@
 
         try {
             if (view === 'submissions') { await renderSubmissions(contentArea); return; }
+            if (view === 'hintlogs') { await renderHintLogs(contentArea); return; }
             if (view === 'analytics') { await renderAnalytics(contentArea); return; }
 
             const actionMap = {
@@ -309,6 +311,7 @@
                 <div class="form-group"><label>標題</label><input type="text" id="f_title" value="${esc(data.title || '')}"></div>
                 <div class="form-group"><label>題目描述</label><textarea id="f_description">${esc(data.description || '')}</textarea></div>
                 <div class="form-group"><label>DSE 提示</label><textarea id="f_dse_tip">${esc(data.dse_tip || '')}</textarea></div>
+                <div class="form-group"><label>提示內容（AI 提示方向，可留空）</label><textarea id="f_hint" placeholder="給 AI 的提示方向／要點；學生按「提示」時會同步到 AI 提示詞">${esc(data.hint || '')}</textarea></div>
                 <div class="form-group"><label>標準答案</label><textarea id="f_answer_sql">${esc(data.answer_sql || '')}</textarea></div>
                 <div class="form-row">
                     <div class="form-group"><label>自動排序</label>
@@ -376,6 +379,35 @@
             `;
         }
         document.getElementById('editModal').style.display = 'flex';
+    }
+
+    // ── 提示記錄（v0.3.0，只讀，對應後端 HintLogs 工作表） ──
+    async function renderHintLogs(contentArea) {
+        const limit = 200;
+        const rows = await apiGetAdmin('getHintLogs&limit=' + limit);
+        if (!Array.isArray(rows)) throw new Error('無法載入提示記錄');
+        const nAi = rows.filter(r => r.source === 'ai').length;
+        const byUser = {};
+        rows.forEach(r => { byUser[r.username] = (byUser[r.username] || 0) + 1; });
+        const topUsers = Object.entries(byUser).sort((a,b)=>b[1]-a[1]).slice(0,5)
+            .map(([u,n]) => `<span class="badge badge-cat" style="margin:2px;">${esc(u)} × ${n}</span>`).join(' ');
+        contentArea.innerHTML = `
+            <div style="position:relative;z-index:2;margin-bottom:1rem;">
+                <span class="badge badge-ok">最近 ${rows.length} 筆（上限 ${limit}）</span>
+                <span class="badge badge-ok">AI 提示 ${nAi}</span>
+                <span class="badge badge-bad">預設提示 ${rows.length - nAi}</span>
+                <span class="hint" style="margin-top:8px;">使用提示最多：${topUsers || '—'}</span>
+            </div>
+            <div style="overflow-x:auto;position:relative;z-index:2;">
+            <table class="records">
+                <thead><tr><th>時間</th><th>學生</th><th>題號</th><th>題目</th><th>來源</th><th>提示內容</th></tr></thead>
+                <tbody>
+                ${rows.map(r => `
+                    <tr><td>${esc(String(r.timestamp).replace('T',' ').slice(0,19))}</td><td>${esc(r.username)}</td><td>${esc(r.question_id)}</td><td>${esc(r.question_title)}</td><td>${r.source === 'ai' ? 'AI' : '預設'}</td><td style="max-width:420px;white-space:pre-wrap;">${esc(r.hint)}</td></tr>
+                `).join('')}
+                </tbody>
+            </table></div>
+        `;
     }
 
     // ── 答題記錄（只讀，需 Apps Script 新增 getSubmissions） ──
@@ -524,6 +556,7 @@
                 title: document.getElementById('f_title').value,
                 description: document.getElementById('f_description').value,
                 dse_tip: document.getElementById('f_dse_tip').value,
+                hint: document.getElementById('f_hint').value,
                 answer_sql: document.getElementById('f_answer_sql').value,
                 auto_order: document.getElementById('f_auto_order').value,
                 difficulty: document.getElementById('f_difficulty').value,
@@ -673,7 +706,7 @@
     </script>
 
 <style>
-    /* ══════════ AI 題目助手（v3.2） ══════════ */
+    /* ══════════ AI 題目助手（v0.3.0：通用 OpenAI 兼容 API） ══════════ */
     #aiFab{position:fixed;right:22px;bottom:22px;width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent-hover));color:#fff;font-size:1.35rem;box-shadow:0 8px 24px rgba(249,115,22,0.45);z-index:95;display:none;align-items:center;justify-content:center;transition:transform .2s;}
     #aiFab:hover{transform:translateY(-3px) scale(1.06);}
     #aiFab.show{display:flex;animation:aiPulse 2.6s ease-in-out infinite;}
@@ -725,10 +758,12 @@
 
     <div id="aiSettings" class="hidden">
         <div id="aiCfgStatus" class="hint" style="margin-bottom:8px;">讀取設定中…</div>
-        <label>Gemini API Key</label>
-        <input type="password" id="ai_apikey" placeholder="貼上 Gemini API Key（AIza…）">
+        <label>API 網址（OpenAI 兼容，以 /v1 結尾）</label>
+        <input type="text" id="ai_apibase" placeholder="https://api.openai.com/v1 或 API 接入軟件網址">
+        <label>API Key</label>
+        <input type="password" id="ai_apikey" placeholder="貼上 API Key">
         <label>模型</label>
-        <input type="text" id="ai_model" placeholder="gemini-2.5-flash">
+        <input type="text" id="ai_model" placeholder="gpt-4o-mini">
         <button class="btn btn-small" onclick="aiSaveConfig()"><i class="fas fa-floppy-disk"></i> 儲存設定</button>
         <div class="hint">Key 僅存於 Apps Script 的 Script Properties（或 Code.gs 內建），不會存於瀏覽器、不會回傳前端。</div>
     </div>
@@ -1011,7 +1046,7 @@
     // —— 面板與設定 ——
     window.aiTogglePanel = function () {
         // 休眠保護：未設定 API Key 時不開啟面板（正常情況下入口已隱藏）
-        if (aiState.configured !== true) { showToast('AI 題目助手未啟用：請先設定 Gemini API Key（見接入說明第 2 節）'); return; }
+        if (aiState.configured !== true) { showToast('AI 題目助手未啟用：請先設定 AI API（見「AI 題目助手_接入說明」第 2 節）'); return; }
         var p = document.getElementById('aiPanel');
         var opening = !p.classList.contains('open');
         p.classList.toggle('open', opening);
@@ -1046,9 +1081,10 @@
             var r = await aiPost({ action: 'aiGetConfig' });
             if (r.success) {
                 st.innerHTML = r.configured
-                    ? '<span class="badge badge-ok">✓ API Key 已設定（' + (r.keySource === 'properties' ? 'Script Properties' : 'Code.gs 內建') + '）</span>　模型：<code>' + esc(r.model) + '</code>'
-                    : '<span class="badge badge-bad">⚠ 未設定 API Key</span>　請於下方貼上';
-                document.getElementById('ai_model').value = r.model || 'gemini-2.5-flash';
+                    ? '<span class="badge badge-ok">✓ API Key 已設定（' + (r.keySource === 'properties' ? 'Script Properties' : 'Code.gs 內建') + '）</span>　模型：<code>' + esc(r.model) + '</code>　網址：<code>' + esc(r.apiBase || '預設 OpenAI') + '</code>'
+                    : '<span class="badge badge-bad">⚠ 未設定 API Key</span>　請於下方填入 API 網址／Key／模型';
+                document.getElementById('ai_apibase').value = r.apiBase && r.apiBase !== 'https://api.openai.com/v1' ? r.apiBase : '';
+                document.getElementById('ai_model').value = r.model || 'gpt-4o-mini';
             }
         } catch (e) { st.textContent = '讀取失敗：' + e.message; }
     }
@@ -1067,10 +1103,11 @@
 
     window.aiSaveConfig = async function () {
         var key = val('ai_apikey');
+        var base = val('ai_apibase');
         var model = val('ai_model');
-        if (!key && !model) { showToast('請貼上 API Key 或填寫模型名稱'); return; }
+        if (!key && !base && !model) { showToast('請填寫 API 網址／Key／模型其中至少一項'); return; }
         try {
-            var r = await aiPost({ action: 'aiSetConfig', apiKey: key, model: model });
+            var r = await aiPost({ action: 'aiSetConfig', apiKey: key, apiBase: base, model: model });
             if (r.success) {
                 showToast(r.configured ? '設定已儲存 ✓' : '已儲存，但尚未設定 API Key');
                 document.getElementById('ai_apikey').value = '';
