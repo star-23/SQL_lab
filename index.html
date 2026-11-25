@@ -178,6 +178,14 @@
         body.theme-dusk .schema-window.minimized .schema-window-head{background:rgba(255,255,255,0.18);}
         .sw-resize{position:absolute;right:2px;bottom:2px;width:14px;height:14px;cursor:nwse-resize;display:none;opacity:.55;}
         .schema-window.floating .sw-resize{display:block;border-right:2px solid var(--text-muted);border-bottom:2px solid var(--text-muted);}
+        /* 🌟 0.6.0 觸控支援：拖曳熱區 touch-action:none——沒有它，手指一動就被瀏覽器
+           攔去捲動頁面並觸發 pointercancel，拖移縮放立即失效；並加大觸控熱區 */
+        .schema-window.floating .schema-window-head, .schema-window.floating .sw-resize{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+        @media (pointer: coarse){
+            .schema-window.floating .sw-resize{width:30px;height:30px;right:0;bottom:0;opacity:.5;}
+            .schema-window.floating .schema-window-head{padding:5px 2px;}
+            .sw-btn{width:26px;height:26px;font-size:0.62rem;}
+        }
         /* 🌟 schema 表格與結果表格同構：深色主題下一併修復 */
         body.theme-dusk .schema-table{background:rgba(255,255,255,0.82);}
         body.theme-dusk .schema-table td{color:#334155;}
@@ -532,7 +540,7 @@
         <div class="credits-list" id="creditsList"></div>
         <div class="credits-studio">星願工作室</div>
         <div class="credits-studio-en">STARWARD STUDIO</div>
-        <div class="credits-ver">SQL Quest v0.5.1</div>
+        <div class="credits-ver">SQL Quest v0.6.0</div>
     </div></div>
     <div class="toast-container" id="toastContainer"></div>
     <div class="modal-overlay hidden" id="leaderboardModal"><div class="modal-box" style="max-width:420px;text-align:left;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;position:relative;z-index:2;"><h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-trophy" style="color:#F59E0B;margin-right:8px;"></i>LEADERBOARD</h2><button id="closeLbBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;"><i class="fas fa-times"></i></button></div><div id="leaderboardList" style="position:relative;z-index:2;max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div></div></div>
@@ -868,18 +876,40 @@
             }
             if (win.classList.contains('minimized') && e.target.closest('.schema-window-head')) { win.classList.remove('minimized'); setMinIcon(win, false); }
         });
+        // 🌟 0.6.0 觸控支援（iPad／平板）：同一套 Pointer Events 同時服務滑鼠／手指／手寫筆。
+        // 單指拖標題欄移動；第二指按下進入雙指 Pinch 縮放；放開一指無縫轉回拖移；
+        // pointercancel 一併收尾（iOS 把手勢交還系統時不會殘留狀態）。
+        const ptrs = new Map();                                   // pointerId -> {x,y}
+        let pinch = null;                                         // 雙指縮放狀態
+        function twoPts(){ const a = Array.from(ptrs.values()); return { ax: a[0].x, ay: a[0].y, bx: a[1].x, by: a[1].y }; }
+        function startPinch(win, r){
+            const p = twoPts();
+            drag = null;
+            pinch = { win: win, d0: Math.hypot(p.bx - p.ax, p.by - p.ay) || 1, w0: r.width, h0: r.height };
+        }
         document.addEventListener('pointerdown', function(e){
             const win = e.target.closest('.schema-window');
             if (!win || !win.classList.contains('floating') || win.classList.contains('minimized')) return;
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
             const r = win.getBoundingClientRect();
-            if (e.target.closest('.sw-resize')) { resize = { win: win, sx: e.clientX, sy: e.clientY, w: r.width, h: r.height }; }
-            else if (e.target.closest('.schema-window-head') && !e.target.closest('.sw-btn')) {
-                drag = { win: win, dx: e.clientX - r.left, dy: e.clientY - r.top };
-                win.classList.add('dragging');
+            if (e.target.closest('.sw-resize')) {
+                if (drag || pinch) return;
+                ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                resize = { win: win, sx: e.clientX, sy: e.clientY, w: r.width, h: r.height };
+                try { e.target.setPointerCapture(e.pointerId); } catch(_){}
+            } else if (e.target.closest('.schema-window-head') && !e.target.closest('.sw-btn')) {
+                if (resize) return;
+                ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                try { e.target.setPointerCapture(e.pointerId); } catch(_){}
+                if (pinch) return;                                 // 已在雙指縮放：忽略第三指
+                if (ptrs.size === 2) { startPinch(win, r); }       // 第二指按下 → 進入 Pinch 縮放
+                else { drag = { win: win, dx: e.clientX - r.left, dy: e.clientY - r.top }; win.classList.add('dragging'); }
             } else return;
             e.preventDefault();
         });
         document.addEventListener('pointermove', function(e){
+            if (!ptrs.has(e.pointerId)) return;
+            ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (drag) {
                 const w = drag.win;
                 w.style.left = Math.max(4, Math.min(window.innerWidth - 80, e.clientX - drag.dx)) + 'px';
@@ -888,12 +918,30 @@
                 const w = resize.win;
                 w.style.width = Math.max(MIN_W, resize.w + (e.clientX - resize.sx)) + 'px';
                 w.style.height = Math.max(MIN_H, resize.h + (e.clientY - resize.sy)) + 'px';
+            } else if (pinch && ptrs.size >= 2) {
+                const w = pinch.win, p = twoPts();
+                const k = Math.max(0.4, Math.min(3, Math.hypot(p.bx - p.ax, p.by - p.ay) / pinch.d0));
+                w.style.width = Math.max(MIN_W, Math.min(window.innerWidth - 12, pinch.w0 * k)) + 'px';
+                w.style.height = Math.max(MIN_H, Math.min(window.innerHeight - 12, pinch.h0 * k)) + 'px';
+                const rr = w.getBoundingClientRect();              // 縮放後拉回視野內
+                if (rr.left + rr.width > window.innerWidth - 4) w.style.left = Math.max(4, window.innerWidth - rr.width - 4) + 'px';
+                if (rr.top + rr.height > window.innerHeight - 4) w.style.top = Math.max(4, window.innerHeight - rr.height - 4) + 'px';
             }
+            if (drag || resize || pinch) e.preventDefault();
         });
-        document.addEventListener('pointerup', function(){
-            if (drag) { drag.win.classList.remove('dragging'); drag = null; }
-            resize = null;
-        });
+        function endPointer(e){
+            ptrs.delete(e.pointerId);
+            if (ptrs.size === 0) {                                  // 所有手指／按鍵離開 → 收尾
+                if (drag) { drag.win.classList.remove('dragging'); drag = null; }
+                resize = null; pinch = null;
+            } else if (pinch && ptrs.size === 1) {                  // 放開一指 → 無縫轉回拖移
+                const w = pinch.win, rest = Array.from(ptrs.values())[0], r = w.getBoundingClientRect();
+                drag = { win: w, dx: rest.x - r.left, dy: rest.y - r.top };
+                pinch = null; w.classList.add('dragging');
+            }
+        }
+        document.addEventListener('pointerup', endPointer);
+        document.addEventListener('pointercancel', endPointer);    // iOS 把手勢交還系統時也要收尾
     })();
 
     function updateLineNumbers(){const lines=sqlEditor.value.split('\n').length;const nums=[];for(let i=1;i<=Math.max(lines,8);i++)nums.push(`<div>${i}</div>`);lineNumbers.innerHTML=nums.join('');}
