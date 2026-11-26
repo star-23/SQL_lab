@@ -168,6 +168,28 @@
         body.theme-night .result-dialog.error{color:#FCA5A5;}
         body.theme-night .dse-tip{color:#A7F3D0;}
         body.theme-night .plant-section h4, body.theme-night .plant-label, body.theme-night .plant-next{color:#CBD5E1;}
+        /* 🌟 0.7.2 深色主題對比度修正：縮放按鈕/TABLE 名/花園/通知 不再使用亮灰 */
+        body.theme-night .sw-btn{background:rgba(51,65,85,0.85);border-color:rgba(148,163,184,0.4);color:#F1F5F9;}
+        body.theme-night .sw-btn:hover{background:rgba(56,189,248,0.25);border-color:var(--accent);color:var(--accent);}
+        body.theme-dusk .sw-btn{background:rgba(15,23,42,0.5);border-color:rgba(255,255,255,0.4);color:#FFF7ED;}
+        body.theme-dusk .sw-btn:hover{background:rgba(254,180,117,0.25);border-color:var(--accent);color:var(--accent-hover);}
+        body.theme-dusk .schema-table-title{color:#7C2D12;}
+        body.theme-dusk .schema-table-title .row-count{color:#9A3412;}
+        body.theme-night .plant-section{background:rgba(15,23,42,0.5);border-top-color:rgba(148,163,184,0.12);}
+        body.theme-night .plant-progress{background:rgba(51,65,85,0.9);}
+        body.theme-dusk .ann-card{background:rgba(15,23,42,0.42);border-color:rgba(255,255,255,0.22);}
+        body.theme-dusk .ann-card:hover{background:rgba(15,23,42,0.55);box-shadow:0 4px 12px rgba(7,65,136,0.25);}
+        body.theme-dusk .ann-date{color:#FDBA74;}
+        body.theme-dusk .ann-title{color:#FFF7ED;}
+        body.theme-dusk .ann-content{color:#E2E8F0;}
+        body.theme-night .ann-card{background:rgba(30,41,59,0.75);border-color:rgba(148,163,184,0.25);}
+        body.theme-night .ann-card:hover{background:rgba(30,41,59,0.95);}
+        body.theme-night .ann-date{color:#94A3B8;}
+        body.theme-night .ann-title{color:#F1F5F9;}
+        body.theme-night .ann-content{color:#CBD5E1;}
+        /* 🌟 0.7.2 排行榜：隱藏縱向／橫向原生捲動條（滾輪與觸控捲動保留） */
+        #leaderboardList{scrollbar-width:none;-ms-overflow-style:none;overflow-x:hidden;}
+        #leaderboardList::-webkit-scrollbar{width:0;height:0;display:none;}
         /* 🌟 0.5.0 資料表視窗：詳細數據＋最小化／浮動拖放縮放 */
         .schema-window{position:relative;margin-bottom:10px;}
         .schema-window-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;}
@@ -569,7 +591,7 @@
         <div class="credits-list" id="creditsList"></div>
         <div class="credits-studio">星願工作室</div>
         <div class="credits-studio-en">STARWARD STUDIO</div>
-        <div class="credits-ver">SQL Quest v0.7.1</div>
+        <div class="credits-ver">SQL Quest v0.7.2</div>
     </div></div>
     <div class="toast-container" id="toastContainer"></div>
     <div class="modal-overlay hidden" id="leaderboardModal"><div class="modal-box" style="max-width:420px;text-align:left;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;position:relative;z-index:2;"><h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-trophy" style="color:#F59E0B;margin-right:8px;"></i>LEADERBOARD</h2><button id="closeLbBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;"><i class="fas fa-times"></i></button></div><div id="leaderboardList" style="position:relative;z-index:2;max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div></div></div>
@@ -910,7 +932,6 @@
             win.classList.add('floating');
             setFloatIcon(win, true);
         }
-        
         function floatOff(win){
             win.classList.remove('floating');
             win.style.left = ''; win.style.top = ''; win.style.width = ''; win.style.height = '';
