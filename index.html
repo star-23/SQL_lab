@@ -343,8 +343,27 @@
         .anim-dot{cursor:pointer;}
         /* 🌟 v3 性能優化：動畫層開啟時暫停背景動畫，減少 GPU 負擔 */
         body.anim-open .bg-canvas .blob, body.anim-open .bg-canvas, body.anim-open .result-idle .idle-icon{animation-play-state:paused !important;}
-        .bg-canvas,.blob{transition:background 1.5s ease;}
-        .glass,.editor-area{transition:background 1.5s ease,border-color 1.5s ease;}
+        /* 🌟 晝夜切換動畫 v3「扇舞」：主題色沿用原三款配色，0.4s 快速過渡；
+           一柄半透明扇形色帶以右緣中點為軸、由右向左旋掃點綴（快→慢→快）。
+           扇形只在背景層（z-index:1，UI 之下），不遮蓋頁面、可隨時被打斷。 */
+        .bg-canvas,.blob{transition:background 0.4s ease;}
+        .glass,.editor-area{transition:background 0.4s ease,border-color 0.4s ease;}
+        .dn-fan{position:fixed;top:50%;right:0;width:240vmax;height:240vmax;margin-top:-120vmax;margin-right:-120vmax;pointer-events:none;z-index:1;opacity:0;will-change:transform,opacity;}
+        .dn-fan.is-running{animation:dnFanSpin 1.15s linear both;}
+        /* 扇形以原三款主題配色上色（與 body.theme-X .bg-canvas 同源），柔邊約 12° */
+        .dn-fan--day{background:conic-gradient(from -36deg at 50% 50%,transparent 0deg,#F8FAFC 12deg,#EFF6FF 28deg,#F0FDF4 44deg,#FFF7ED 60deg,transparent 72deg);}
+        .dn-fan--dusk{background:conic-gradient(from -36deg at 50% 50%,transparent 0deg,#074188 12deg,#806F93 36deg,#FEB475 60deg,transparent 72deg);}
+        .dn-fan--night{background:conic-gradient(from -36deg at 50% 50%,transparent 0deg,#0F172A 12deg,#1E293B 28deg,#334155 44deg,#475569 60deg,transparent 72deg);}
+        /* 轉盤由右（指東，屏外）反時針旋向左（指西）；分兩段 easing：快→慢、慢→快 */
+        @keyframes dnFanSpin{
+            0%{transform:rotate(90deg);opacity:0;animation-timing-function:cubic-bezier(0.2,0.7,0.45,1);}
+            50%{transform:rotate(0deg);opacity:0.55;animation-timing-function:cubic-bezier(0.55,0,0.8,0.3);}
+            100%{transform:rotate(-90deg);opacity:0;}
+        }
+        @media (prefers-reduced-motion: reduce){
+            .dn-fan{display:none!important;}
+            .bg-canvas,.blob,.glass,.editor-area{transition:none!important;}
+        }
         @media(max-width:1100px){main{grid-template-columns:1fr;height:auto;}} @media(max-width:768px){.nav-categories{display:none;}}
         .lb-row { display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0.8rem; background:rgba(255,255,255,0.5); border:1px solid var(--border-light); border-radius:12px; transition: all 0.2s; }
         .lb-row:hover { background:rgba(255,255,255,0.8); transform: translateX(4px); }
@@ -1558,29 +1577,82 @@
     };
 
     // 🌟 時光機主題系統：跟隨系統 / 白天 / 黃昏火燒雲 / 夜晚星空
+    // 🌟 晝夜切換動畫 v3「扇舞」：主題色沿用原三款配色 0.4s 快速過渡；
+    //    一柄半透明扇形色帶以右緣中點為軸由右向左旋掃（快→慢→快），
+    //    只在背景層、UI 之下，不遮蓋頁面、可隨時被打斷、流暢不停頓。
     const themeBtns = document.querySelectorAll('.theme-btn');
     const themeSlider = $('themeSlider');
+    const DN_FAN_MS = 1150; // 扇形旋掃時長
+    const DN_SWAP_MS = 700; // 扇形掃過中段後套用新主題色（0.4s 過渡收尾）
+    const dnState = { current: 'day', pending: null, fan: null, swapTimer: null, fanTimer: null };
     function updateThemeSlider(){
         const active = document.querySelector('.theme-btn.active');
         if (active && themeSlider) themeSlider.style.left = active.offsetLeft + 'px';
     }
-    function applyTheme(mode){
+    function dnEffective(mode){
         if (!['auto','day','dusk','night'].includes(mode)) mode = 'auto';
-        let effective = mode;
-        if (mode === 'auto') {
-            const h = new Date().getHours();
-            effective = (h >= 6 && h < 17) ? 'day' : (h >= 17 && h < 19) ? 'dusk' : 'night';
-        }
+        if (mode !== 'auto') return mode;
+        const h = new Date().getHours();
+        return (h >= 6 && h < 17) ? 'day' : (h >= 17 && h < 19) ? 'dusk' : 'night';
+    }
+    function dnSetBodyTheme(effective){
         document.body.classList.remove('theme-day','theme-dusk','theme-night');
         document.body.classList.add('theme-' + effective);
+    }
+    function dnRemoveFan(){
+        if (dnState.fanTimer) { clearTimeout(dnState.fanTimer); dnState.fanTimer = null; }
+        if (dnState.fan) { dnState.fan.remove(); dnState.fan = null; }
+    }
+    function dnCancelTransition(){
+        // 打斷：靜靜撤走扇形並取消未套用的換色，畫面留在當下狀態，無跳動
+        if (dnState.swapTimer) { clearTimeout(dnState.swapTimer); dnState.swapTimer = null; }
+        dnState.pending = null;
+        dnRemoveFan();
+    }
+    function dnApplyPending(){
+        // 即刻完成未套用的換色（0.4s 快速過渡）
+        if (dnState.swapTimer) { clearTimeout(dnState.swapTimer); dnState.swapTimer = null; }
+        if (dnState.pending) { dnSetBodyTheme(dnState.pending); dnState.pending = null; }
+    }
+    function dnStartFan(effective){
+        dnCancelTransition(); // 上一場仍在掃的話先靜靜撤走，立即開新的一場
+        const fan = document.createElement('div');
+        fan.className = 'dn-fan is-running dn-fan--' + effective;
+        document.body.appendChild(fan);
+        dnState.fan = fan; dnState.pending = effective; dnState.current = effective;
+        fan.addEventListener('animationend', () => {
+            if (dnState.fan === fan) { dnState.fan = null; fan.remove(); }
+            if (dnState.fanTimer) { clearTimeout(dnState.fanTimer); dnState.fanTimer = null; }
+        }, { once: true });
+        dnState.fanTimer = setTimeout(() => { if (dnState.fan === fan) { dnState.fan = null; fan.remove(); } }, DN_FAN_MS + 400); // 保險絲
+        dnState.swapTimer = setTimeout(dnApplyPending, DN_SWAP_MS);
+    }
+    function applyTheme(mode, opts){
+        opts = opts || {};
+        const effective = dnEffective(mode);
         try { localStorage.setItem('sqlquest_theme', mode); } catch(e) {}
         themeBtns.forEach(b => b.classList.toggle('active', b.dataset.theme === mode));
         updateThemeSlider();
+        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (opts.instant || reduced) {
+            dnCancelTransition();
+            dnSetBodyTheme(effective);
+            dnState.current = effective;
+        } else if (effective === dnState.current && !dnState.pending) {
+            // 狀態不變，毋須動畫
+        } else if (effective === dnState.current) {
+            // 同主題重按：即刻完成換色並撤走扇形
+            dnApplyPending();
+            dnRemoveFan();
+        } else {
+            dnStartFan(effective);
+        }
     }
     themeBtns.forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.theme)));
     window.addEventListener('resize', updateThemeSlider);
     let savedTheme = 'auto'; try { savedTheme = localStorage.getItem('sqlquest_theme') || 'auto'; } catch(e) {}
-    applyTheme(savedTheme);
+    applyTheme(savedTheme, { instant: true }); // 開機直接套用，不播扇形
+    window.applyTheme = applyTheme; // 供控制台偵錯／測試用
 
     async function initApp() {
         updateStatus('engine', 'off'); updateStatus('cloud', 'off'); updateStatus('db', 'off');
