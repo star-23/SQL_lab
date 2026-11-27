@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- admin v0.3.3 ｜ 本版新增：模組B 題目名稱重複審查 NameGuard v1（新增前彈窗審查）
+     ＋ 對應 Code.gs v0.3.2 後端同名防線（status:'dup' → 彈同一確認框 → force=1 重送） -->
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
@@ -564,6 +566,11 @@
             };
             actionName = currentEditId ? 'updateQuestion' : 'addQuestion';
             if (currentEditId) payload.id = currentEditId;
+            // ── NameGuard（admin v0.3.3）：新增題目同名審查——同名彈窗列出後果，確認後才放行 ──
+            if (actionName === 'addQuestion' && window.NameGuard) {
+                const okNg = await NameGuard.check(payload.data.title, document.getElementById('f_title'));
+                if (!okNg) { showToast('已取消：同名題目未新增（可重新命名後再儲存）'); return; }
+            }
         } else if (currentView === 'dictionary') {
             // ── v3：完整欄位 ＋ d_json 格式驗證 ──
             const dRaw = document.getElementById('f_d_json').value.trim() || '{}';
@@ -607,13 +614,20 @@
         payload.action = actionName;
 
         try {
-            const res = await fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
-            const result = await res.json();
+            const sendNg = () => fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+            let result = await (await sendNg()).json();
+            // ── 後端同名防線（Code.gs v0.3.2）：status:'dup' → 彈同一確認框，「仍要新增」以 force=1 重送 ──
+            if (result.status === 'dup' && actionName === 'addQuestion' && window.NameGuard) {
+                const okNg = await NameGuard.check(payload.data.title, document.getElementById('f_title'));
+                if (!okNg) { showToast('已取消：同名題目未寫入'); return; }
+                payload.data.force = '1';
+                result = await (await sendNg()).json();
+            }
             if (result.success) {
                 showToast(currentEditId ? '更新成功！' : '新增成功！');
                 closeModal();
                 loadView(currentView);
-            } else { showToast(result.error || '儲存失敗'); }
+            } else { showToast(result.error || result.message || '儲存失敗'); }
         } catch (err) { showToast('網路錯誤'); }
     }
 
@@ -1210,5 +1224,159 @@
     }
 })();
 </script>
+<!-- ═══════ 模組B：題目名稱重複審查 NameGuard v1 ═══════ -->
+<style id="ngCSS">
+.ng-mask{position:fixed;inset:0;z-index:999998;display:none;align-items:center;justify-content:center;
+  background:rgba(6,8,14,.55);backdrop-filter:blur(3px);padding:20px}
+.ng-mask.on{display:flex}
+.ng-card{width:min(440px,92vw);background:var(--panel,#1d2331);color:var(--fg,#eef1f7);
+  border:1px solid var(--border,rgba(255,255,255,.14));border-radius:14px;
+  padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.5);font-size:15px;line-height:1.65}
+.ng-title{font-weight:700;font-size:17px;margin-bottom:10px}
+.ng-name{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  vertical-align:bottom;font-weight:700;color:#ffd75e}
+.ng-dupinfo{margin-top:6px;font-size:12.5px;color:rgba(238,241,247,.68)}
+.ng-conseq{margin:12px 0 0;padding:10px 12px;border-radius:8px;font-size:13.5px;
+  background:rgba(229,72,77,.12);border:1px solid rgba(229,72,77,.4);color:#ffb4b6}
+.ng-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.ng-btn{appearance:none;border:1px solid transparent;border-radius:9px;padding:9px 16px;
+  font:inherit;font-size:14px;cursor:pointer;color:#fff}
+.ng-btn:hover{filter:brightness(1.12)}
+.ng-btn.cancel{background:transparent;border-color:var(--border,rgba(255,255,255,.28));color:var(--fg,#eef1f7)}
+.ng-btn.rename{background:var(--accent,#4c8dff)}
+.ng-btn.confirm{background:#e5484d}
+</style>
+<script>
+(function(){
+'use strict';
+if(window.NameGuard)return;
+var CFG={
+  getNames:null,           /* ← 由資料來源指定：async function(){return [...題目名...];} */
+  caseSensitive:false,     /* 英文名稱是否區分大小寫 */
+  /* 找不到 getNames 時，自動探測這些全域變數當題目庫 */
+  sources:['questions','allQuestions','questionList','questionArr','QUES']
+};
+var warned=false;
+function norm(s){
+  s=String(s==null?'':s).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim();
+  s=s.replace(/[\uFF01-\uFF5E]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);}); /* 全形→半形 */
+  return CFG.caseSensitive?s:s.toLowerCase();
+}
+function pickName(q){
+  if(typeof q==='string')return q.trim();   /* getNames 亦兼容「名稱字串陣列」 */
+  return q&&(q.name||q.title||q.questionName||q['題目名稱']||q['名稱']||'');
+}
+async function allNames(){
+  if(CFG.getNames){
+    try{var r=await CFG.getNames();if(Array.isArray(r))return r.map(pickName).filter(Boolean);}
+    catch(e){}
+  }
+  for(var i=0;i<CFG.sources.length;i++){
+    var a=window[CFG.sources[i]];
+    if(Array.isArray(a)&&a.length)return a.map(pickName).filter(Boolean);
+  }
+  if(!warned){warned=true;
+    console.warn('[NameGuard] 找不到題目清單來源，請用 NameGuard.config({getNames: async()=>[...]}) 指定');}
+  return [];
+}
+
+/* ── 確認對話框 ── */
+var mask,nameSpan,countSpan,lastNameInput,resolveFn;
+function build(){
+  if(mask)return;
+  mask=document.createElement('div');mask.className='ng-mask';mask.id='ngMask';
+  mask.innerHTML=
+    '<div class="ng-card" role="alertdialog" aria-modal="true" aria-label="同名題目確認">'+
+    '<div class="ng-title">檢測到同名題目</div>'+
+    '<div>題目庫中已存在名稱為 <span class="ng-name"></span> 的題目。</div>'+
+    '<div class="ng-dupinfo"></div>'+
+    '<div class="ng-conseq">名稱重複可能導致<b>顯示錯誤</b>：搜尋與載入時無法區分兩筆資料、載入到舊題目、作答紀錄與統計歸屬錯亂。</div>'+
+    '<div class="ng-btns">'+
+    '<button type="button" class="ng-btn cancel">取消</button>'+
+    '<button type="button" class="ng-btn rename">重新命名</button>'+
+    '<button type="button" class="ng-btn confirm">仍要新增</button>'+
+    '</div></div>';
+  document.body.appendChild(mask);
+  nameSpan=mask.querySelector('.ng-name');
+  countSpan=mask.querySelector('.ng-dupinfo');
+  mask.querySelector('.cancel').onclick=function(){done(false);};
+  mask.querySelector('.confirm').onclick=function(){done(true);};
+  mask.querySelector('.rename').onclick=function(){
+    done(false);
+    if(lastNameInput){lastNameInput.focus();try{lastNameInput.select();}catch(e){}}
+  };
+  mask.addEventListener('click',function(e){if(e.target===mask)done(false);});
+  document.addEventListener('keydown',function(e){
+    if(mask&&mask.classList.contains('on')&&e.key==='Escape')done(false);
+  });
+}
+function done(v){
+  if(!resolveFn)return;
+  mask.classList.remove('on');
+  var r=resolveFn;resolveFn=null;r(v);
+}
+function dialog(name,count,input){
+  build();nameSpan.textContent=name;nameSpan.title=name;
+  countSpan.textContent=count>1?('共找到 '+count+' 筆同名題目。'):'';
+  lastNameInput=input||null;
+  mask.classList.add('on');
+  mask.querySelector('.confirm').focus();
+  return new Promise(function(res){resolveFn=res;});
+}
+
+/* ── 主檢查：回傳 true 才放行新增 ── */
+async function check(name,input){
+  var n=norm(name);if(!n)return true;
+  var names=await allNames();
+  var hits=names.filter(function(x){return norm(x)===n;});
+  if(!hits.length)return true;
+  return dialog(String(name).trim(),hits.length,input);
+}
+
+/* ── 表單自動掛鉤（本專案管理端為按鈕式儲存，走手動 check；此攔截器供其他表單頁共用） ── */
+document.addEventListener('submit',function(e){
+  var form=e.target;
+  if(!(form instanceof HTMLFormElement)||!form.__ngBound||form.__ngPass)return;
+  e.preventDefault();e.stopImmediatePropagation();          /* 先攔下，審完再放行 */
+  var sel=form.__ngSel;
+  var input=sel?form.querySelector(sel):
+    form.querySelector('input[name="name"],input[name="title"],input[name="qName"],#qName,#qTitle,.q-name,input[data-role="name"]');
+  var val=input?input.value:'';
+  Promise.resolve(check(val,input)).then(function(ok){
+    if(ok){
+      form.__ngPass=true;                                    /* 標記已審查通過 */
+      form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+      setTimeout(function(){form.__ngPass=false;},0);
+    }
+  });
+},true);
+function bind(form,nameSel){
+  if(!form)return;
+  form.__ngBound=true;form.__ngSel=nameSel||null;
+}
+
+window.NameGuard={
+  check:check,                                              /* 手動：const ok=await NameGuard.check(名稱, 標題輸入框); */
+  bind:bind,
+  config:function(o){for(var k in o)CFG[k]=o[k];},
+  norm:norm
+};
+})();
+</script>
+<script>
+/* ── NameGuard 資料來源綁定（admin v0.3.3）：題目庫＝後端 getQuestions（每次檢查即時抓最新） ── */
+(function(){
+'use strict';
+if(!window.NameGuard||!window.apiGet)return;
+window.NameGuard.config({getNames:async function(){
+  try{
+    var r=await apiGet('getQuestions');
+    var list=Array.isArray(r)?r:(r&&Array.isArray(r.data)?r.data:[]);
+    return list.map(function(q){return q&&(q.title||q.name||'');}).filter(Boolean);
+  }catch(e){return [];}
+}});
+})();
+</script>
+
 </body>
 </html>
