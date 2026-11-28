@@ -343,27 +343,8 @@
         .anim-dot{cursor:pointer;}
         /* 🌟 v3 性能優化：動畫層開啟時暫停背景動畫，減少 GPU 負擔 */
         body.anim-open .bg-canvas .blob, body.anim-open .bg-canvas, body.anim-open .result-idle .idle-icon{animation-play-state:paused !important;}
-        /* 🌟 晝夜切換動畫 v3「扇舞」：主題色沿用原三款配色，0.4s 快速過渡；
-           一柄半透明扇形色帶以右緣中點為軸、由右向左旋掃點綴（快→慢→快）。
-           扇形只在背景層（z-index:1，UI 之下），不遮蓋頁面、可隨時被打斷。 */
-        .bg-canvas,.blob{transition:background 0.4s ease;}
-        .glass,.editor-area{transition:background 0.4s ease,border-color 0.4s ease;}
-        .dn-fan{position:fixed;top:50%;right:0;width:240vmax;height:240vmax;margin-top:-120vmax;margin-right:-120vmax;pointer-events:none;z-index:1;opacity:0;will-change:transform,opacity;}
-        .dn-fan.is-running{animation:dnFanSpin 1.15s linear both;}
-        /* 扇形以原三款主題配色上色（與 body.theme-X .bg-canvas 同源），柔邊約 12° */
-        .dn-fan--day{background:conic-gradient(from -36deg at 50% 50%,transparent 0deg,#F8FAFC 12deg,#EFF6FF 28deg,#F0FDF4 44deg,#FFF7ED 60deg,transparent 72deg);}
-        .dn-fan--dusk{background:conic-gradient(from -36deg at 50% 50%,transparent 0deg,#074188 12deg,#806F93 36deg,#FEB475 60deg,transparent 72deg);}
-        .dn-fan--night{background:conic-gradient(from -36deg at 50% 50%,transparent 0deg,#0F172A 12deg,#1E293B 28deg,#334155 44deg,#475569 60deg,transparent 72deg);}
-        /* 轉盤由右（指東，屏外）反時針旋向左（指西）；分兩段 easing：快→慢、慢→快 */
-        @keyframes dnFanSpin{
-            0%{transform:rotate(90deg);opacity:0;animation-timing-function:cubic-bezier(0.2,0.7,0.45,1);}
-            50%{transform:rotate(0deg);opacity:0.55;animation-timing-function:cubic-bezier(0.55,0,0.8,0.3);}
-            100%{transform:rotate(-90deg);opacity:0;}
-        }
-        @media (prefers-reduced-motion: reduce){
-            .dn-fan{display:none!important;}
-            .bg-canvas,.blob,.glass,.editor-area{transition:none!important;}
-        }
+        .bg-canvas,.blob{transition:background 1.5s ease;}
+        .glass,.editor-area{transition:background 1.5s ease,border-color 1.5s ease;}
         @media(max-width:1100px){main{grid-template-columns:1fr;height:auto;}} @media(max-width:768px){.nav-categories{display:none;}}
         .lb-row { display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0.8rem; background:rgba(255,255,255,0.5); border:1px solid var(--border-light); border-radius:12px; transition: all 0.2s; }
         .lb-row:hover { background:rgba(255,255,255,0.8); transform: translateX(4px); }
@@ -406,31 +387,90 @@
         .dse-marks { font-family:var(--pixel); font-size:0.65rem; color:var(--text-muted); flex-shrink:0; }
         .dse-marks.got { color:var(--success); }
 
-        /* ============ 開機載入動畫（Boot Splash） ============ */
+        /* ============ 開機載入動畫 v4（Boot Splash：描線 → 纖細粒子重建 logo／文字 → 登入頁 → 歡迎） ============ */
         body.boot-lock{overflow:hidden;}
-        #bootOverlay{position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .55s ease,visibility .55s ease;}
-        #bootOverlay::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,var(--accent-soft,rgba(249,115,22,.12)),transparent 55%);}
+        #bootOverlay{position:fixed;inset:0;z-index:2000;overflow:hidden;transition:opacity .6s ease,visibility .6s ease;}
+        /* 背景跟隨主頁三模式（晨光 day／黃昏 dusk／夜間 night），開場即定調、不做重建 */
+        body.theme-night #bootOverlay,#bootOverlay{background:linear-gradient(135deg,#0F172A 0%,#1E293B 40%,#334155 80%,#475569 100%);}
+        body.theme-day #bootOverlay{background:linear-gradient(135deg,#F8FAFC 0%,#EFF6FF 30%,#F0FDF4 60%,#FFF7ED 100%);}
+        body.theme-dusk #bootOverlay{background:linear-gradient(135deg,#074188 0%,#806F93 55%,#FEB475 100%);}
+        /* 極淡像素網格：呼應全站像素化設計（顏色跟隨主題） */
+        /* 格仔線：載入全程保留；載入結束（grid-off）以漸出動畫移除 */
+        #bootOverlay::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.045) 1px,transparent 1px);background-size:26px 26px;pointer-events:none;opacity:1;transition:opacity .6s ease;}
+        #bootOverlay.grid-off::before{opacity:0;}
+        body.theme-day #bootOverlay::before{background-image:linear-gradient(rgba(15,23,42,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,0.05) 1px,transparent 1px);}
         #bootOverlay.exit{opacity:0;visibility:hidden;pointer-events:none;}
-        .boot-inner{position:relative;text-align:center;padding:2rem;transition:transform .45s cubic-bezier(.34,1.56,.64,1),opacity .45s;}
-        #bootOverlay.exit .boot-inner{transform:translateY(-26px) scale(.92);opacity:0;}
-        .boot-logo{width:76px;height:76px;margin:0 auto 1.1rem;background:linear-gradient(135deg,var(--accent),var(--accent-hover));border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:var(--pixel);font-size:1rem;color:#fff;box-shadow:0 8px 30px var(--accent-glow);animation:bootPulse 1.8s ease-in-out infinite;position:relative;}
-        .boot-logo::after{content:'';position:absolute;inset:-8px;border-radius:20px;border:2px dashed var(--accent-glow);animation:bootOrbit 6s linear infinite;}
-        @keyframes bootPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
-        @keyframes bootOrbit{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-        .boot-title{font-family:var(--pixel);font-size:1.15rem;color:var(--text);letter-spacing:1px;} .boot-title span{color:var(--accent);}
-        .boot-sub{font-size:.72rem;color:var(--text-muted);margin:.35rem 0 1.3rem;letter-spacing:.2px;}
-        .boot-chips{display:flex;gap:8px;justify-content:center;margin-bottom:1.5rem;}
-        .boot-chips span{font-family:var(--pixel);font-size:.5rem;color:var(--text-light);background:var(--glass);border:1px solid var(--glass-border);padding:4px 10px;border-radius:50px;animation:bootFloat 2.6s ease-in-out infinite;}
-        .boot-chips span:nth-child(2){animation-delay:.35s;} .boot-chips span:nth-child(3){animation-delay:.7s;}
-        @keyframes bootFloat{0%,100%{transform:translateY(0);opacity:.75;}50%{transform:translateY(-6px);opacity:1;}}
-        .boot-bar{width:min(300px,68vw);height:8px;margin:0 auto;background:var(--glass);border:1px solid var(--glass-border);border-radius:50px;overflow:hidden;position:relative;}
-        .boot-fill{height:100%;width:0%;border-radius:50px;background:linear-gradient(90deg,var(--accent),var(--accent-hover));transition:width .5s cubic-bezier(.4,0,.2,1);position:relative;}
-        .boot-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:bootSheen 1.2s linear infinite;}
-        @keyframes bootSheen{from{transform:translateX(-100%);}to{transform:translateX(100%);}}
-        .boot-phase{font-family:var(--pixel);font-size:.52rem;color:var(--text-muted);margin-top:.75rem;letter-spacing:.5px;}
+        #bootCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;z-index:1;}
+        /* 加載頁（百分比儀表）：logo 重整完成後整頁退場 */
+        .boot-load{position:absolute;left:0;right:0;z-index:2;display:flex;justify-content:center;pointer-events:none;transition:opacity .45s ease,transform .45s ease,visibility .45s;}
+        .boot-load.gone{opacity:0;visibility:hidden;transform:translateY(-14px) scale(.97);}
+        /* 登入頁（加載完成後的新頁面）：獨立登場，歡迎 pill 亦在此頁內切換 */
+        .boot-gate{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;gap:14px;padding:0 18px;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s;}
+        .boot-gate.show{opacity:1;visibility:visible;}
+        /* 液態玻璃部件（共用）：透明玻璃＋頂部內高光＋主題色光邊 */
+        .boot-glass{background:linear-gradient(160deg,rgba(30,41,59,0.55),rgba(30,41,59,0.32));backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);border:1px solid rgba(148,163,184,0.22);box-shadow:0 14px 40px rgba(2,8,23,0.5),inset 0 1px 0 rgba(255,255,255,0.14),inset 0 -1px 0 rgba(255,255,255,0.04),inset 0 0 0 1px rgba(56,189,248,0.14);}
+        body.theme-day .boot-glass{background:linear-gradient(160deg,rgba(255,255,255,0.74),rgba(255,255,255,0.52));border:1px solid rgba(255,255,255,0.92);box-shadow:0 14px 40px rgba(15,23,42,0.12),inset 0 1px 0 rgba(255,255,255,0.95),inset 0 -1px 0 rgba(255,255,255,0.4),inset 0 0 0 1px rgba(249,115,22,0.10);}
+        body.theme-dusk .boot-glass{background:linear-gradient(160deg,rgba(80,70,110,0.45),rgba(80,70,110,0.24));border:1px solid rgba(255,255,255,0.30);box-shadow:0 14px 40px rgba(7,65,136,0.35),inset 0 1px 0 rgba(255,255,255,0.45),inset 0 -1px 0 rgba(255,255,255,0.06),inset 0 0 0 1px rgba(254,180,117,0.18);}
+        /* 液態流光：緩慢掃過玻璃表面（高級感；reduce 時停用） */
+        .boot-sheen{position:absolute;top:-40%;bottom:-40%;left:-46%;width:44%;background:linear-gradient(100deg,transparent,rgba(255,255,255,0.10),rgba(255,255,255,0.02),transparent);transform:skewX(-14deg);animation:bootSheen 3.4s ease-in-out infinite;pointer-events:none;}
+        body.theme-day .boot-sheen{background:linear-gradient(100deg,transparent,rgba(255,255,255,0.6),rgba(255,255,255,0.12),transparent);}
+        @keyframes bootSheen{0%,18%{left:-46%;}58%,100%{left:118%;}}
+        /* 百分比儀表 */
+        .boot-meter{display:flex;flex-direction:column;align-items:center;gap:9px;border-radius:16px;padding:10px 18px 11px;opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .45s ease,transform .45s ease,visibility .45s;position:relative;overflow:hidden;}
+        .boot-meter.show{opacity:1;visibility:visible;transform:none;}
+        .boot-pct{font-family:var(--pixel);font-size:.72rem;color:var(--text);letter-spacing:1px;position:relative;}
+        .boot-bar{width:min(260px,62vw);height:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.18);border-radius:50px;overflow:hidden;position:relative;}
+        body.theme-day .boot-bar{background:rgba(15,23,42,0.08);border-color:rgba(15,23,42,0.14);}
+        .boot-fill{height:100%;width:0%;border-radius:50px;background:linear-gradient(90deg,var(--accent),var(--accent-hover));box-shadow:0 0 8px var(--accent-glow);position:relative;}
+        .boot-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:bootGlide 1.4s linear infinite;}
+        @keyframes bootGlide{from{transform:translateX(-100%);}to{transform:translateX(100%);}}
+        .boot-phase{font-family:var(--pixel);font-size:.48rem;color:var(--text-muted);letter-spacing:.4px;text-align:center;position:relative;}
         .boot-phase b{color:var(--accent);font-weight:600;}
-        #bootOverlay.boot-error .boot-fill{background:linear-gradient(90deg,#EF4444,#DC2626);}
-        #bootOverlay.boot-error .boot-phase b{color:var(--error,#EF4444);}
+        #bootOverlay.boot-error .boot-fill{background:linear-gradient(90deg,#EF4444,#DC2626);box-shadow:0 0 8px rgba(239,68,68,0.55);}
+        #bootOverlay.boot-error .boot-phase b{color:var(--error);}
+        /* 登入卡：液態玻璃＋像素風標題 */
+        .boot-login{opacity:0;visibility:hidden;transform:translateY(18px) scale(.96);transition:opacity .5s ease,transform .55s cubic-bezier(.22,1,.36,1),visibility .5s;}
+        .boot-login.show{opacity:1;visibility:visible;transform:none;}
+        .boot-login.hidden-slot{display:none;}   /* 切換至歡迎 pill 時收起登入卡佔位 */
+        .boot-login-frame{width:min(340px,92vw);border-radius:20px;padding:1.3rem 1.4rem 1.15rem;text-align:center;position:relative;overflow:hidden;}
+        .boot-login-frame::before{content:'';position:absolute;inset:0;border-radius:20px;background:radial-gradient(120% 60% at 50% -12%,rgba(255,255,255,0.16),transparent 55%);pointer-events:none;}
+        body.theme-day .boot-login-frame::before{background:radial-gradient(120% 60% at 50% -12%,rgba(255,255,255,0.9),transparent 55%);}
+        .boot-login-head{font-family:var(--pixel);font-size:.6rem;color:var(--text);letter-spacing:1px;margin-bottom:.5rem;position:relative;}
+        .boot-login-head i{color:var(--accent);margin-right:6px;}
+        .boot-login-sub{font-size:.78rem;color:var(--text-muted);margin-bottom:1rem;position:relative;}
+        .boot-google-slot{display:flex;justify-content:center;min-height:44px;position:relative;}
+        .boot-login-err{font-size:.72rem;color:var(--error);margin:.7rem 0 0;display:none;position:relative;}
+        .boot-login-skip{font-size:.7rem;color:var(--text-muted);cursor:pointer;margin-top:.85rem;text-decoration:underline;position:relative;}
+        .boot-login-skip:hover{color:var(--accent);}
+        /* 歡迎登入（用戶名稱）：像素風純文字、全頁置中漸入（無玻璃框）——與 logo／登入頁同一像素語彙 */
+        .boot-welcome{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;opacity:0;transform:translateY(14px);transition:opacity .65s ease,transform .65s ease;}
+        .boot-welcome.show{opacity:1;transform:none;}
+        .boot-welcome-kicker{font-family:var(--pixel);font-size:.5rem;color:var(--accent);letter-spacing:2.5px;margin-bottom:.8rem;display:flex;align-items:center;gap:9px;}
+        .boot-welcome-kicker::before,.boot-welcome-kicker::after{content:'';width:5px;height:5px;background:var(--accent);opacity:.9;}
+        .boot-welcome-kicker::before{box-shadow:-9px 0 0 -2px var(--accent);}    /* 左側錯位小像素 */
+        .boot-welcome-kicker::after{box-shadow:9px 0 0 -2px var(--accent);}      /* 右側錯位小像素 */
+        .boot-welcome-line{font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:.7rem;position:relative;padding-bottom:.85rem;}
+        .boot-welcome-line::after{content:'';position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(230px,64vw);height:3px;background:repeating-linear-gradient(90deg,var(--accent) 0 7px,transparent 7px 11px);opacity:.8;}   /* 像素階梯底線 */
+        .boot-welcome-line .wl-name{font-family:var(--pixel);font-size:.72rem;color:var(--accent);word-break:break-all;vertical-align:.08em;}
+        .wl-cursor{display:inline-block;width:9px;height:14px;margin-left:7px;background:var(--accent);vertical-align:-2px;animation:wlBlink 1.1s steps(1,end) infinite;}   /* 終端機閃爍游標 */
+        @keyframes wlBlink{0%,58%{opacity:.95}59%,100%{opacity:0}}
+        .boot-welcome-brand{font-family:var(--pixel);font-size:.5rem;color:var(--text-muted);letter-spacing:1px;line-height:1.8;position:relative;}
+        /* 🌟 開機完成：主頁部件交錯進場（平滑、一次性） */
+        body.boot-done header{animation:bootIn .55s cubic-bezier(.22,1,.36,1) both;}
+        body.boot-done .view-grid>*:nth-child(1){animation:bootIn .55s cubic-bezier(.22,1,.36,1) .12s both;}
+        body.boot-done .view-grid>*:nth-child(2){animation:bootIn .55s cubic-bezier(.22,1,.36,1) .22s both;}
+        body.boot-done .view-grid>*:nth-child(3){animation:bootIn .55s cubic-bezier(.22,1,.36,1) .32s both;}
+        body.boot-done .sys-status{animation:bootIn .55s cubic-bezier(.22,1,.36,1) .4s both;}
+        @keyframes bootIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
+        /* 短畫面（橫向手機）壓縮版面 */
+        @media (max-height:520px){
+            .boot-login-frame{padding:.85rem 1rem .75rem;}
+            .boot-login-sub{display:none;}
+            .boot-google-slot{min-height:40px;}
+            .boot-meter{padding:6px 14px 7px;gap:6px;}
+            .boot-welcome-line{font-size:.95rem;}
+            .boot-welcome-line .wl-name{font-size:.62rem;}
+        }
         /* ============ 通用等待動畫（Busy 卡片，帶網站頭像） ============ */
         #busyOverlay{position:fixed;inset:0;z-index:1500;background:rgba(15,23,42,.28);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;}
         #busyOverlay.show{opacity:1;visibility:visible;}
@@ -444,7 +484,7 @@
         .busy-dots span{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:busyBounce 1s ease-in-out infinite;}
         .busy-dots span:nth-child(2){animation-delay:.15s;} .busy-dots span:nth-child(3){animation-delay:.3s;}
         @keyframes busyBounce{0%,100%{transform:translateY(0);opacity:.5;}50%{transform:translateY(-7px);opacity:1;}}
-        @media (prefers-reduced-motion:reduce){.boot-logo,.boot-logo::after,.boot-chips span,.boot-fill::after,.busy-logo::before,.busy-dots span{animation:none!important;}#bootOverlay,#busyOverlay,.busy-card,.boot-inner{transition-duration:.15s!important;}}
+        @media (prefers-reduced-motion:reduce){.busy-logo::before,.busy-dots span,.boot-sheen,.boot-fill::after,.wl-cursor{animation:none!important;}#bootOverlay,#bootOverlay::before,#busyOverlay,.busy-card,.boot-load,.boot-gate,.boot-meter,.boot-login,.boot-welcome{transition-duration:.15s!important;}body.boot-done header,body.boot-done .view-grid>*:nth-child(1),body.boot-done .view-grid>*:nth-child(2),body.boot-done .view-grid>*:nth-child(3),body.boot-done .sys-status{animation:none!important;}}
 
         /* ============ SQL 草稿自動儲存狀態指示 ============ */
         #draftStatus{font-family:var(--pixel);font-size:0.5rem;letter-spacing:.3px;transition:color .2s;}
@@ -472,13 +512,31 @@
 </head>
 <body>
     <div id="bootOverlay" aria-hidden="true">
-        <div class="boot-inner">
-            <div class="boot-logo">SQL</div>
-            <div class="boot-title"><span>SQL</span> Quest</div>
-            <div class="boot-sub">數據庫操練平台 · 正在準備你的練習環境</div>
-            <div class="boot-chips"><span>SELECT</span><span>JOIN</span><span>WHERE</span></div>
-            <div class="boot-bar"><div class="boot-fill" id="bootFill"></div></div>
-            <div class="boot-phase" id="bootPhase"><b>START</b> · 準備中…</div>
+        <canvas id="bootCanvas"></canvas>
+        <div class="boot-load" id="bootLoad">
+            <div class="boot-meter boot-glass" id="bootMeter">
+                <span class="boot-sheen"></span>
+                <div class="boot-pct" id="bootPct">0%</div>
+                <div class="boot-bar"><div class="boot-fill" id="bootFill"></div></div>
+                <div class="boot-phase" id="bootPhase"><b>START</b> · 準備中…</div>
+            </div>
+        </div>
+        <div class="boot-gate" id="bootGate">
+            <div class="boot-login" id="bootLogin">
+                <div class="boot-login-frame boot-glass">
+                    <span class="boot-sheen"></span>
+                    <div class="boot-login-head"><i class="fas fa-sign-in-alt"></i>SQL QUEST LOGIN</div>
+                    <p class="boot-login-sub">請使用學校 Google 帳戶登入</p>
+                    <div class="boot-google-slot" id="bootGoogleBtn"></div>
+                    <p class="boot-login-err" id="bootLoginError"></p>
+                    <div class="boot-login-skip" id="bootSkipBtn">稍後再登入，先逛逛 →</div>
+                </div>
+            </div>
+            <div class="boot-welcome" id="bootWelcome">
+                <div class="boot-welcome-kicker" id="bootWelcomeKicker">WELCOME</div>
+                <div class="boot-welcome-line" id="bootWelcomeLine">歡迎來到 SQL Quest</div>
+                <div class="boot-welcome-brand" id="bootWelcomeBrand">SQL QUEST · 數據庫操練平台</div>
+            </div>
         </div>
     </div>
     <div id="busyOverlay" aria-hidden="true">
@@ -579,7 +637,7 @@
             <div id="dictContainer" class="dict-container"></div>
         </div>
     </main>
-    <div class="modal-overlay" id="loginModal"><div class="modal-box"><h2>SQL Quest LOGIN</h2><p style="font-size:0.8rem;color:var(--text-light);margin-bottom:1.2rem;position:relative;z-index:2;">請使用學校 Google 帳戶登入</p><div id="googleLoginBtn" style="position:relative;z-index:2;display:flex;justify-content:center;"></div><p id="loginErrorMsg" style="font-size:0.75rem;color:var(--error);margin-top:1rem;display:none;position:relative;z-index:2;"></p><div id="loginSkipBtn" style="font-size:0.7rem;color:var(--text-muted);cursor:pointer;margin-top:1rem;text-decoration:underline;position:relative;z-index:2;">稍後再登入，先瀏覽題目 →</div></div></div>
+    <div class="modal-overlay hidden" id="loginModal"><div class="modal-box"><h2>SQL Quest LOGIN</h2><p style="font-size:0.8rem;color:var(--text-light);margin-bottom:1.2rem;position:relative;z-index:2;">請使用學校 Google 帳戶登入</p><div id="googleLoginBtn" style="position:relative;z-index:2;display:flex;justify-content:center;"></div><p id="loginErrorMsg" style="font-size:0.75rem;color:var(--error);margin-top:1rem;display:none;position:relative;z-index:2;"></p><div id="loginSkipBtn" style="font-size:0.7rem;color:var(--text-muted);cursor:pointer;margin-top:1rem;text-decoration:underline;position:relative;z-index:2;">稍後再登入，先瀏覽題目 →</div></div></div>
     <div class="modal-overlay hidden" id="connErrorModal" style="z-index:305;"><div class="modal-box" style="border-color:var(--error);"><h2 style="color:var(--error);">CONNECTION ERROR</h2><p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1.2rem;position:relative;z-index:2;line-height:1.6;">無法連接至后臺伺服器。<br>請檢查網路連線或聯絡管理員。</p><button class="modal-btn" style="background:var(--error);" onclick="location.reload()">重試連線</button></div></div>
     <div class="anim-overlay hidden" id="animOverlay">
         <div class="anim-panel">
@@ -610,7 +668,7 @@
         <div class="credits-list" id="creditsList"></div>
         <div class="credits-studio">星願工作室</div>
         <div class="credits-studio-en">STARWARD STUDIO</div>
-        <div class="credits-ver">SQL Quest v0.7.2</div>
+        <div class="credits-ver">SQL Quest v0.7.3</div>
     </div></div>
     <div class="toast-container" id="toastContainer"></div>
     <div class="modal-overlay hidden" id="leaderboardModal"><div class="modal-box" style="max-width:420px;text-align:left;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;position:relative;z-index:2;"><h2 style="margin:0;font-size:0.65rem;"><i class="fas fa-trophy" style="color:#F59E0B;margin-right:8px;"></i>LEADERBOARD</h2><button id="closeLbBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;"><i class="fas fa-times"></i></button></div><div id="leaderboardList" style="position:relative;z-index:2;max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div></div></div>
@@ -801,12 +859,17 @@
     window.onload = function() {
         if (window.google) {
             google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
-            google.accounts.id.renderButton(document.getElementById('googleLoginBtn'), { theme: "outline", size: "large", text: "signin_with", shape: "pill", width: 280, locale: "zh-HK" });
+            const gbtnOpts = { theme: "outline", size: "large", text: "signin_with", shape: "pill", width: 280, locale: "zh-HK" };
+            google.accounts.id.renderButton(document.getElementById('googleLoginBtn'), gbtnOpts);
+            // 🌟 開機動畫內的登入卡同樣渲染 Google 登入按鈕（沿用原部件，融入載入流程）
+            const bootSlot = document.getElementById('bootGoogleBtn');
+            if (bootSlot) google.accounts.id.renderButton(bootSlot, gbtnOpts);
         } else {
-            // 🌟 Google 登入元件載入失敗時，在彈窗內提示，避免彈窗內一片空白
+            // 🌟 Google 登入元件載入失敗時，同時在開機登入卡與舊彈窗內提示，避免一片空白
             const errorMsgEl = document.getElementById('loginErrorMsg');
-            errorMsgEl.textContent = 'Google 登入元件載入失敗，請檢查網路連線後重新整理頁面。';
-            errorMsgEl.style.display = 'block';
+            if (errorMsgEl) { errorMsgEl.textContent = 'Google 登入元件載入失敗，請檢查網路連線後重新整理頁面。'; errorMsgEl.style.display = 'block'; }
+            const bootErrEl = document.getElementById('bootLoginError');
+            if (bootErrEl) { bootErrEl.textContent = 'Google 登入元件載入失敗，可先「稍後再登入」瀏覽題目。'; bootErrEl.style.display = 'block'; }
         }
         moveModeSlider(); moveCatSlider(); // 字體/資源載入完成後重新校正滑軌指示器位置
     };
@@ -814,29 +877,34 @@
 
     function handleCredentialResponse(response) {
         const errorMsgEl = document.getElementById('loginErrorMsg');
-        errorMsgEl.style.display = 'none';
+        const bootErrEl = document.getElementById('bootLoginError');
+        const showErr = m => { if (errorMsgEl) { errorMsgEl.textContent = m; errorMsgEl.style.display = 'block'; } if (bootErrEl) { bootErrEl.textContent = m; bootErrEl.style.display = 'block'; } };
+        const hideErr = () => { if (errorMsgEl) errorMsgEl.style.display = 'none'; if (bootErrEl) bootErrEl.style.display = 'none'; };
+        hideErr();
         showToast('info', '正在驗證學校身份...');
         fetch(API_BASE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'verifyToken', id_token: response.credential }) })
         .then(res => res.json())
         .then(data => {
             if (data.success && data.email) {
                 studentName = data.email; isLoggedIn = true; loginModal.classList.add('hidden');
+                // 🌟 開機流程：logo／文字重建完成 → 登入成功 → 才顯示「歡迎登入（用戶名稱）」
+                if (window.Boot && window.Boot.notifyLogin) window.Boot.notifyLogin(studentName);
                 showToast('info', '正在讀取作答紀錄...');
                 loadUserProgress(studentName); syncCloudDrafts(studentName);
             } else {
-                errorMsgEl.textContent = data.error || '登入失敗，請重試。';
-                errorMsgEl.style.display = 'block';
+                showErr(data.error || '登入失敗，請重試。');
                 showToast('error', data.error || '登入失敗');
             }
         })
-        .catch(err => { console.error('Token驗證請求失敗:', err); errorMsgEl.textContent = '網路錯誤，請重試。'; errorMsgEl.style.display = 'block'; });
+        .catch(err => { console.error('Token驗證請求失敗:', err); showErr('網路錯誤，請重試。'); });
     }
     
     avatarBtn.addEventListener('click',()=>{if(!isLoggedIn){loginModal.classList.remove('hidden');}else showToast('info','身份：'+studentName);});
 
-    // 🌟 修復：未登入時打開網頁自動彈出登入視窗（無需手動點擊用戶按鈕）
+    // 🌟 開機登入卡（融入載入動畫）：跳過 → 以訪客身份繼續開機流程。
+    //    未登入時不再自動彈出舊登入彈窗（改由開機動畫內的登入步驟接管；頭像按鈕仍可開啟舊彈窗）
     $('loginSkipBtn').addEventListener('click', () => loginModal.classList.add('hidden'));
-    if (!isLoggedIn) loginModal.classList.remove('hidden');
+    $('bootSkipBtn').addEventListener('click', () => { if (window.Boot && window.Boot.notifySkip) window.Boot.notifySkip(); });
 
     document.querySelectorAll('.nav-categories .view-tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -1577,82 +1645,29 @@
     };
 
     // 🌟 時光機主題系統：跟隨系統 / 白天 / 黃昏火燒雲 / 夜晚星空
-    // 🌟 晝夜切換動畫 v3「扇舞」：主題色沿用原三款配色 0.4s 快速過渡；
-    //    一柄半透明扇形色帶以右緣中點為軸由右向左旋掃（快→慢→快），
-    //    只在背景層、UI 之下，不遮蓋頁面、可隨時被打斷、流暢不停頓。
     const themeBtns = document.querySelectorAll('.theme-btn');
     const themeSlider = $('themeSlider');
-    const DN_FAN_MS = 1150; // 扇形旋掃時長
-    const DN_SWAP_MS = 700; // 扇形掃過中段後套用新主題色（0.4s 過渡收尾）
-    const dnState = { current: 'day', pending: null, fan: null, swapTimer: null, fanTimer: null };
     function updateThemeSlider(){
         const active = document.querySelector('.theme-btn.active');
         if (active && themeSlider) themeSlider.style.left = active.offsetLeft + 'px';
     }
-    function dnEffective(mode){
+    function applyTheme(mode){
         if (!['auto','day','dusk','night'].includes(mode)) mode = 'auto';
-        if (mode !== 'auto') return mode;
-        const h = new Date().getHours();
-        return (h >= 6 && h < 17) ? 'day' : (h >= 17 && h < 19) ? 'dusk' : 'night';
-    }
-    function dnSetBodyTheme(effective){
+        let effective = mode;
+        if (mode === 'auto') {
+            const h = new Date().getHours();
+            effective = (h >= 6 && h < 17) ? 'day' : (h >= 17 && h < 19) ? 'dusk' : 'night';
+        }
         document.body.classList.remove('theme-day','theme-dusk','theme-night');
         document.body.classList.add('theme-' + effective);
-    }
-    function dnRemoveFan(){
-        if (dnState.fanTimer) { clearTimeout(dnState.fanTimer); dnState.fanTimer = null; }
-        if (dnState.fan) { dnState.fan.remove(); dnState.fan = null; }
-    }
-    function dnCancelTransition(){
-        // 打斷：靜靜撤走扇形並取消未套用的換色，畫面留在當下狀態，無跳動
-        if (dnState.swapTimer) { clearTimeout(dnState.swapTimer); dnState.swapTimer = null; }
-        dnState.pending = null;
-        dnRemoveFan();
-    }
-    function dnApplyPending(){
-        // 即刻完成未套用的換色（0.4s 快速過渡）
-        if (dnState.swapTimer) { clearTimeout(dnState.swapTimer); dnState.swapTimer = null; }
-        if (dnState.pending) { dnSetBodyTheme(dnState.pending); dnState.pending = null; }
-    }
-    function dnStartFan(effective){
-        dnCancelTransition(); // 上一場仍在掃的話先靜靜撤走，立即開新的一場
-        const fan = document.createElement('div');
-        fan.className = 'dn-fan is-running dn-fan--' + effective;
-        document.body.appendChild(fan);
-        dnState.fan = fan; dnState.pending = effective; dnState.current = effective;
-        fan.addEventListener('animationend', () => {
-            if (dnState.fan === fan) { dnState.fan = null; fan.remove(); }
-            if (dnState.fanTimer) { clearTimeout(dnState.fanTimer); dnState.fanTimer = null; }
-        }, { once: true });
-        dnState.fanTimer = setTimeout(() => { if (dnState.fan === fan) { dnState.fan = null; fan.remove(); } }, DN_FAN_MS + 400); // 保險絲
-        dnState.swapTimer = setTimeout(dnApplyPending, DN_SWAP_MS);
-    }
-    function applyTheme(mode, opts){
-        opts = opts || {};
-        const effective = dnEffective(mode);
         try { localStorage.setItem('sqlquest_theme', mode); } catch(e) {}
         themeBtns.forEach(b => b.classList.toggle('active', b.dataset.theme === mode));
         updateThemeSlider();
-        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (opts.instant || reduced) {
-            dnCancelTransition();
-            dnSetBodyTheme(effective);
-            dnState.current = effective;
-        } else if (effective === dnState.current && !dnState.pending) {
-            // 狀態不變，毋須動畫
-        } else if (effective === dnState.current) {
-            // 同主題重按：即刻完成換色並撤走扇形
-            dnApplyPending();
-            dnRemoveFan();
-        } else {
-            dnStartFan(effective);
-        }
     }
     themeBtns.forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.theme)));
     window.addEventListener('resize', updateThemeSlider);
     let savedTheme = 'auto'; try { savedTheme = localStorage.getItem('sqlquest_theme') || 'auto'; } catch(e) {}
-    applyTheme(savedTheme, { instant: true }); // 開機直接套用，不播扇形
-    window.applyTheme = applyTheme; // 供控制台偵錯／測試用
+    applyTheme(savedTheme);
 
     async function initApp() {
         updateStatus('engine', 'off'); updateStatus('cloud', 'off'); updateStatus('db', 'off');
@@ -1665,39 +1680,323 @@
             showToast('error', 'SQLite 引擎載入失敗，請重新整理'); 
         }
     }
-    // ==================== 開機載入動畫控制器（Splash） ====================
-    // 進度條跟隨真實載入階段（引擎 → 雲端同步 → 就緒），以緩動逼近目標值，完成後流暢退場。
+    // ==================== 開機載入動畫 v4（Boot Splash） ====================
+    // 顏色全程跟隨主頁三模式（晨光 day／黃昏 dusk／夜間 night，取 applyTheme 已設定的 body class）。
+    // ① 中空描線 logo／標題漸入（背景跟隨主題＋像素網格定調，背景不再重建）
+    // → ② 纖細主題色粒子由畫面外飛入，依「真實載入百分比」均速重整 logo／文字：
+    //    粒子抵達部件即縮小淡出、完全消失（絕不積累在部件上），實體改以左→右掃掠顯現
+    //    （恆定速率、被真實進度封頂，絕不突然加速）
+    // → ③ 載入頁退場 → 格仔線＋logo／文字漸出 → 登入頁獨立登場（液態玻璃＋像素風，沿用 Google 登入部件＋纖細粒子賀禮＋隨機緩慢飄浮粒子）
+    //    （載入卡頓時：hover 粒子每 70ms 兩顆續飛不消失、飛行／停留放慢 1.4 倍——量足慢而明顯不滯；飄浮粒子減速 0.65 倍；
+    //      登入／歡迎頁常駐緩慢飄動，登入頁一登場即預填散佈全畫面的飄浮粒子）
+    // → ④ 歡迎頁內切換「歡迎登入（用戶名稱）」（純文字置中，無玻璃框）→ 疊層淡出，主頁部件交錯進場（body.boot-done）。
     const Boot = window.Boot = (() => {
-        const ov = $('bootOverlay'), fill = $('bootFill'), phase = $('bootPhase');
-        let cur = 0, target = 0, raf = null, done = false;
+        const ov=$('bootOverlay'), cv=$('bootCanvas'), meter=$('bootMeter'), fill=$('bootFill'),
+              pct=$('bootPct'), phase=$('bootPhase'), loadPage=$('bootLoad'), gate=$('bootGate'),
+              login=$('bootLogin'), welcome=$('bootWelcome'),
+              wlKicker=$('bootWelcomeKicker'), wlLine=$('bootWelcomeLine'), wlBrand=$('bootWelcomeBrand');
+        const ctx = cv ? cv.getContext('2d') : null;
+        const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+        const RATE = 100 / 3.4;   // 百分比均速（0→100 約 3.4 秒）；只被真實進度封頂，不會突然加速
+        const FLY_MS = 640;       // 單顆粒子飛行時間恆定 → 重建節奏平均
+        const FADE_MS = 240;      // 粒子抵達後淡出時限：到點完全消失，不在部件上積累殘影
+        const MAX_FLY = 380;      // 同時在屏粒子上限：確保低階裝置依然流暢
+        // 主題調色盤（與主頁 CSS 變數一致）：描線／logo 框／標題／粒子／光暈
+        const THEMES = {
+            day:  { hollow:'rgba(15,23,42,0.85)', hollowA:0.7, box:['#F97316','#EA580C'], sql:'#F97316', quest:'#0F172A',
+                    parts:['#F97316','#FB923C','#EA580C','#FDBA74'], white:'#CBD5E1', glow:'rgba(249,115,22,0.55)' },
+            dusk: { hollow:'rgba(255,255,255,0.9)', hollowA:0.62, box:['#FEB475','#FBA85E'], sql:'#FEB475', quest:'#FFFFFF',
+                    parts:['#FEB475','#FDBA74','#F97316','#FFF7ED'], white:'#FFFFFF', glow:'rgba(254,180,117,0.55)' },
+            night:{ hollow:'rgba(255,255,255,0.9)', hollowA:0.62, box:['#38BDF8','#0EA5E9'], sql:'#38BDF8', quest:'#F1F5F9',
+                    parts:['#38BDF8','#7DD3FC','#0EA5E9','#E0F2FE'], white:'#FFFFFF', glow:'rgba(56,189,248,0.5)' }
+        };
+        function curTheme(){ const cl=document.body.classList; return cl.contains('theme-dusk')?'dusk':cl.contains('theme-night')?'night':'day'; }
+        let PAL = THEMES[curTheme()];
+        let dpr=1, VW=0, VH=0, LY=150, glowGrad=null;
+        let cur=0, target=0, realDone=false, okFlag=true, done=false;
+        let stage='intro', stageAt=performance.now();
+        let glyphs=[], gi=0, fly=[], solidCv=null, solidCtx=null;
+        let landedMaxX=0, revealed=false, solidFadeAt=0, raf=null, lastT=0, exited=false;
+        let drift=[];   // 環境飄浮粒子（卡頓時減速續飄；登入／歡迎頁常駐緩慢飄動）
+        let hoverT=0;   // 上次派發卡頓 hover 粒子的時間（控制減速節奏）
         document.body.classList.add('boot-lock');
-        function tick() {
-            cur += (target - cur) * 0.12;
-            if (target - cur < 0.3) cur = target;
-            fill.style.width = cur + '%';
-            if (target < 100 || Math.abs(target - cur) > 0.3) raf = requestAnimationFrame(tick); else raf = null;
+
+        function layout(){
+            if(!ctx) return;
+            PAL=THEMES[curTheme()];   // 主題跟隨 body class（applyTheme 已於本模組前執行）
+            dpr=Math.min(window.devicePixelRatio||1,2);
+            VW=innerWidth; VH=innerHeight;
+            cv.width=Math.round(VW*dpr); cv.height=Math.round(VH*dpr);
+            cv.style.width=VW+'px'; cv.style.height=VH+'px';
+            ctx.setTransform(dpr,0,0,dpr,0,0);
+            LY=Math.max(VH<520?70:96, Math.min(VH*0.26,190));
+            glowGrad=ctx.createRadialGradient(VW/2,LY,10,VW/2,LY,280);
+            glowGrad.addColorStop(0,PAL.glow); glowGrad.addColorStop(1,'rgba(0,0,0,0)');
+            // 加載頁：儀表位於 logo 文字下方；登入頁：內容自 logo 下方起作獨立新頁
+            if(loadPage) loadPage.style.top=(LY+(VH<520?96:112))+'px';
+            if(gate) gate.style.paddingTop=(LY+(VH<520?104:140))+'px';
         }
-        function set(p, label) {
-            if (done) return;
-            target = p;
-            if (label) { const seg = label.split(' '); phase.innerHTML = '<b>' + seg[0] + '</b> · ' + seg.slice(1).join(' '); }
-            if (!raf) raf = requestAnimationFrame(tick);
+        function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+        // 「實心最終稿」（深色底配色）畫進離屏畫布；同時掃描落點供粒子飛行，依 x 由左至右均勻鋪排
+        function buildTargets(){
+            if(!ctx) return;
+            glyphs=[]; gi=0; fly=[]; landedMaxX=0;
+            solidCv=document.createElement('canvas'); solidCv.width=Math.round(VW*dpr); solidCv.height=Math.round(VH*dpr);
+            solidCtx=solidCv.getContext('2d'); solidCtx.setTransform(dpr,0,0,dpr,0,0);
+            const s=document.createElement('canvas'); s.width=Math.max(1,VW); s.height=Math.max(1,VH);
+            const c=s.getContext('2d'); c.fillStyle='#000'; c.strokeStyle='#000';
+            const tSize=Math.max(17,Math.min(VW*0.055,29));
+            rr(c,VW/2-42,LY-42,84,84,18); c.lineWidth=7; c.stroke();
+            c.textAlign='center'; c.textBaseline='middle';
+            c.font='21px "Press Start 2P", monospace'; c.fillText('SQL',VW/2,LY+2);
+            c.font=tSize+'px "Press Start 2P", monospace'; c.fillText('SQL Quest',VW/2,LY+86);
+            const id=c.getImageData(0,0,s.width,s.height).data;
+            for(let y=0;y<VH;y+=2.5)for(let x=0;x<VW;x+=2.5){
+                const p=(Math.round(y)*s.width+Math.round(x))*4;
+                if(id[p+3]>110) glyphs.push({x:x,y:y,a:0});
+            }
+            if(glyphs.length>1100) glyphs=glyphs.filter((_,i)=>i%2===0);
+            glyphs.sort((p,q)=>p.x-q.x);
+            glyphs.forEach((p,i)=>p.a=6+92*(i/Math.max(1,glyphs.length-1)));
+            drawSolidInto(solidCtx);
         }
-        function finish(ok, errMsg) {
-            if (done) return; done = true;
-            if (raf) cancelAnimationFrame(raf);
-            fill.style.width = '100%';
-            phase.innerHTML = ok ? '<b>READY</b> · 載入完成，祝練習愉快！' : '<b>ERROR</b> · ' + (errMsg || '載入失敗');
-            if (!ok) ov.classList.add('boot-error');
-            setTimeout(() => {
-                ov.classList.add('exit');            // 流暢退場：內容上浮縮小 → 疊層淡出
-                document.body.classList.remove('boot-lock');
-                setTimeout(() => { ov.remove(); }, 650);  // 退場完畢後自 DOM 移除
-            }, ok ? 420 : 1100);
+        function drawSolidInto(g){ // 實體（與主頁品牌同構；配色跟隨主題：logo 框＋標題）
+            const tSize=Math.max(17,Math.min(VW*0.055,29));
+            const grd=g.createLinearGradient(VW/2-42,LY-42,VW/2+42,LY+42);
+            grd.addColorStop(0,PAL.box[0]); grd.addColorStop(1,PAL.box[1]);
+            rr(g,VW/2-42,LY-42,84,84,18); g.fillStyle=grd;
+            g.shadowColor=PAL.glow; g.shadowBlur=30; g.fill(); g.shadowBlur=0;
+            g.textAlign='center'; g.textBaseline='middle';
+            g.fillStyle='#FFFFFF'; g.font='21px "Press Start 2P", monospace'; g.fillText('SQL',VW/2,LY+2);
+            g.font=tSize+'px "Press Start 2P", monospace';
+            const w1=g.measureText('SQL ').width, w2=g.measureText('Quest').width, x0=VW/2-(w1+w2)/2;
+            g.textAlign='left';
+            g.fillStyle=PAL.sql; g.fillText('SQL ',x0,LY+86);
+            g.fillStyle=PAL.quest; g.fillText('Quest',x0+w1,LY+86);
         }
-        // 15 秒保險：任何階段卡住都會強制結束，使用者不會被困在開機畫面
-        setTimeout(() => finish(false, '載入逾時，請重新整理'), 15000);
-        return { set, finish, isDone: () => done };
+        function edgeSpawn(){ // 粒子由畫面外四緣飛入
+            const r=Math.random();
+            if(r<0.4) return [VW+30+Math.random()*90, Math.random()*VH];
+            if(r<0.8) return [-30-Math.random()*90, Math.random()*VH];
+            if(r<0.9) return [Math.random()*VW, -30-Math.random()*80];
+            return [Math.random()*VW, VH+30+Math.random()*80];
+        }
+        // 依目前百分比派發粒子（catchUp=true：字型補償／視窗改變／減少動態 → 直接推進掃掠前沿）
+        function dispatch(p,catchUp){
+            let n=0;
+            while(gi<glyphs.length && glyphs[gi].a<=p && (catchUp||n<6) && (catchUp||REDUCED||fly.length<MAX_FLY)){
+                const t=glyphs[gi++];
+                if(catchUp||REDUCED){ landedMaxX=Math.max(landedMaxX,t.x); continue; }
+                const e=edgeSpawn();
+                fly.push({sx:e[0],sy:e[1],tx:t.x,ty:t.y,t0:performance.now()+Math.random()*70,
+                          c:Math.random()<0.78?PAL.parts[(Math.random()*PAL.parts.length)|0]:PAL.white,
+                          s:(gi%2)?1.6:2.2, mode:'settle', landed:0});   // 纖細粒子（1.6–2.2px，主題色）
+                n++;
+            }
+        }
+        // 卡頓（進度追平真實進度）時：粒子效果減速但不停擺——持續派發「hover」粒子
+        // 飛向已重建部件附近（每 70ms 兩顆、飛行／停留放慢 1.4 倍：量足、慢而明顯不滯），
+        // 但不推進掃掠前沿（landedMaxX），重建範圍仍嚴格由真實進度封頂。
+        function dispatchHover(now){
+            if(REDUCED||stage!=='build'||!glyphs.length||cur<=0) return;
+            if(!(cur>=target && !realDone)) return;                    // 僅在卡頓時運作
+            if(fly.length>=MAX_FLY||now-hoverT<70) return;
+            hoverT=now;
+            for(let k=0;k<2;k++){                                      // 每拍兩顆：卡頓時粒子量更充足
+                let tx,ty;
+                if(gi>=1){ const g=glyphs[(Math.random()*gi)|0]; tx=g.x+(Math.random()-0.5)*26; ty=g.y+(Math.random()-0.5)*26; }
+                else { tx=VW/2+(Math.random()-0.5)*150; ty=LY+(Math.random()-0.5)*150; }   // 尚未有部件解鎖：環繞 logo 中央
+                const e=edgeSpawn();
+                fly.push({sx:e[0],sy:e[1],tx,ty,t0:now+k*40,
+                          c:Math.random()<0.78?PAL.parts[(Math.random()*PAL.parts.length)|0]:PAL.white,
+                          s:(Math.random()<0.5)?1.6:2.0, mode:'hover', landed:0,
+                          fm:FLY_MS*1.4, fd:FADE_MS*1.4});             // 減速 1.4 倍：慢而不滯
+            }
+        }
+        function drawParticle(f,t,alpha,s){
+            ctx.globalAlpha=Math.max(0,alpha); ctx.fillStyle=f.c;
+            ctx.fillRect(Math.round(f.sx+(f.tx-f.sx)*t-s/2),Math.round(f.sy+(f.ty-f.sy)*t-s/2),Math.max(1,Math.round(s)),Math.max(1,Math.round(s)));
+        }
+        function stepFly(now){
+            for(let i=fly.length-1;i>=0;i--){
+                const f=fly[i]; const t=(now-f.t0)/(f.fm||FLY_MS);
+                if(t<0) continue;
+                if(t>=1){
+                    if(f.mode==='settle'){ f.mode='fade'; f.landed=now; landedMaxX=Math.max(landedMaxX,f.tx); }
+                    else if(!f.landed) f.landed=now;
+                    const k=(now-f.landed)/(f.fd||FADE_MS);
+                    if(k>=1){ fly.splice(i,1); continue; }   // 淡出完畢：粒子完全消失、不殘留
+                    drawParticle(f,1,(1-k)*0.95,f.s*(1-0.55*k)); // 抵達部件後縮小淡出
+                } else drawParticle(f,t,0.95,f.s);
+            }
+            ctx.globalAlpha=1;
+        }
+        function drawHollow(alpha){ // ① 中空描線（顏色跟隨主題；僅存於未重建區域，掃掠過後即被實體取代）
+            if(alpha<=0.02||revealed||landedMaxX>=VW) return;
+            ctx.save();
+            ctx.globalAlpha=alpha*PAL.hollowA; ctx.strokeStyle=PAL.hollow; ctx.lineWidth=1.6;
+            ctx.beginPath(); ctx.rect(landedMaxX,0,VW-landedMaxX,VH); ctx.clip();
+            rr(ctx,VW/2-42,LY-42,84,84,18); ctx.stroke();
+            ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineWidth=1.1;
+            const tSize=Math.max(17,Math.min(VW*0.055,29));
+            ctx.font='21px "Press Start 2P", monospace'; ctx.strokeText('SQL',VW/2,LY+2);
+            ctx.font=tSize+'px "Press Start 2P", monospace'; ctx.strokeText('SQL Quest',VW/2,LY+86);
+            ctx.restore();
+        }
+        function render(now,dt){
+            if(!ctx) return;
+            ctx.clearRect(0,0,VW,VH);
+            const a1 = stage==='intro' ? Math.min(1,(now-stageAt)/900) : 1;
+            // 載入結束（進入登入頁）時：光暈與 logo／文字實體同步漸出，與格仔線一起退場
+            const sA = solidFadeAt ? Math.max(0,1-(now-solidFadeAt)/650) : 1;
+            if(sA>0){
+                ctx.globalAlpha=0.16*a1*sA; ctx.fillStyle=glowGrad; ctx.fillRect(0,0,VW,VH);   // 主題色氛圍光（背景不重建）
+                ctx.globalAlpha=a1*sA;
+                if(solidCv){ // 實體以左→右掃掠顯現（取代粒子堆疊）；完成後全幅定格
+                    if(revealed) ctx.drawImage(solidCv,0,0,VW,VH);
+                    else if(landedMaxX>0){
+                        ctx.save(); ctx.beginPath(); ctx.rect(0,0,landedMaxX+1,VH); ctx.clip();
+                        ctx.drawImage(solidCv,0,0,VW,VH); ctx.restore();
+                    }
+                }
+                drawHollow(a1);
+            }
+            ctx.globalAlpha=1;
+            stepFly(now);
+            stepDrift(now,dt);
+            if(!revealed && okFlag && cur>=100 && realDone && gi>=glyphs.length && fly.length===0 && glyphs.length){
+                revealed=true;               // 所有粒子（含淡出尾巴）已完全消失 → 定格實體
+                if(stage==='build') toLogin();
+            }
+        }
+        // ===== 環境飄浮粒子（隨機緩慢飄動）=====
+        // 載入卡頓（真實進度停滯）時以低密度持續飄浮並整體減速——效果明顯放慢、不停擺；
+        // 登入頁／歡迎頁常駐更高密度（登入頁一登場即預填散佈全畫面），增添呼吸感。主題色、微光閃爍。
+        function spawnDrift(scatter){
+            const c=Math.random()<0.62?PAL.parts[(Math.random()*PAL.parts.length)|0]:PAL.white;
+            const ang=-Math.PI/2+(Math.random()-0.5)*1.1;           // 大致向上、隨機偏角
+            const sp=10+Math.random()*16;                            // 慢速（px/s）
+            drift.push({x:Math.random()*VW,
+                        y:scatter?Math.random()*VH*0.92:VH+12+Math.random()*50,
+                        vx:Math.cos(ang)*sp*0.55,vy:Math.sin(ang)*sp,
+                        ph:Math.random()*Math.PI*2,ps:0.5+Math.random()*0.9,
+                        s:1+Math.random()*1.5,tw:0.5+Math.random()*1.3,
+                        a:0.10+Math.random()*0.26,c});
+        }
+        function fillDrift(n,scatter){ for(let i=0;i<n;i++) spawnDrift(scatter); }   // 一次性預填（登入頁登場前）
+        function stepDrift(now,dt){
+            if(REDUCED||!ctx) return;
+            const stalled = stage==='build' && cur>=target && cur>0 && !realDone;   // 卡頓：進度追平真實進度
+            const want = stalled ? 18 : (stage==='login'||stage==='welcome') ? 30 : 0;
+            if(drift.length<want && Math.random()<0.5) spawnDrift();       // 逐漸補充，不一次性湧現
+            const sf = stalled ? 0.65 : 1;                                 // 卡頓時整體減速（慢而明顯、不滯）
+            for(let i=drift.length-1;i>=0;i--){
+                const p=drift[i];
+                p.ph+=p.ps*dt;
+                p.x+=(p.vx*dt+Math.sin(now/1000*p.ps*2+p.ph)*8*dt)*sf;     // 緩慢橫向搖曳（卡頓時減速）
+                p.y+=p.vy*dt*sf;
+                if(want===0) p.a-=dt*0.18;                                  // 不需要時漸弱退場
+                if(p.y<-18||p.x<-30||p.x>VW+30||p.a<=0.02){ drift.splice(i,1); continue; }
+                const tw=0.6+0.4*Math.sin(now/1000*p.tw*2*Math.PI+p.ph);   // 微光閃爍
+                ctx.globalAlpha=Math.max(0,p.a*tw); ctx.fillStyle=p.c;
+                ctx.fillRect(Math.round(p.x-p.s/2),Math.round(p.y-p.s/2),Math.max(1,Math.round(p.s)),Math.max(1,Math.round(p.s)));
+            }
+            ctx.globalAlpha=1;
+        }
+        function toLogin(){ // ③ 載入完成 → 格仔線＋logo／文字漸出、加載頁退場 → 登入頁作為全新頁面獨立登場
+            stage='login';
+            fillDrift(18,true);                    // 預填散佈全畫面的飄浮粒子：登入頁一登場即有粒子在飄
+            ov.classList.add('grid-off');          // 格仔線漸出（CSS 過渡）
+            solidFadeAt=performance.now();         // canvas 光暈＋logo／文字同步漸出
+            if(loadPage) loadPage.classList.add('gone');
+            setTimeout(()=>{
+                if(gate) gate.classList.add('show');
+                if(login){ login.classList.remove('hidden-slot'); login.classList.add('show'); }
+                setTimeout(burstRect,150);
+            }, REDUCED?60:420);
+        }
+        function burstRect(){
+            if(!login||!ctx) return;
+            const r=login.getBoundingClientRect();
+            for(let i=0;i<26;i++){
+                const along=Math.random(); let x,y;
+                if(along<0.5){ x=r.left+r.width*Math.random(); y=Math.random()<0.5?r.top:r.bottom; }
+                else { x=Math.random()<0.5?r.left:r.right; y=r.top+r.height*Math.random(); }
+                const e=edgeSpawn();
+                fly.push({sx:e[0],sy:e[1],tx:x,ty:y,t0:performance.now()+i*24,
+                          c:Math.random()<0.6?PAL.parts[(Math.random()*PAL.parts.length)|0]:PAL.white,
+                          s:1.8, mode:'burst', landed:0});
+            }
+        }
+        // ④ 登入成功 → 登入卡淡出並收起佔位 → 歡迎 pill 於同頁原位漸入 → 退場進主頁
+        function notifyLogin(n){
+            if(stage!=='login') return;
+            stage='welcome';
+            if(login){ login.classList.remove('show'); setTimeout(()=>{ if(login) login.classList.add('hidden-slot'); },500); }
+            const short=(String(n||'').split('@')[0]||'同學');
+            if(wlKicker) wlKicker.textContent='WELCOME BACK';
+            if(wlLine) wlLine.innerHTML='歡迎登入，<span class="wl-name"></span><span class="wl-cursor" aria-hidden="true"></span>', wlLine.querySelector('.wl-name').textContent=short;
+            if(wlBrand) wlBrand.textContent='SQL QUEST · 數據庫操練平台';
+            if(welcome) welcome.classList.add('show');
+            setTimeout(exit,1600);
+        }
+        function notifySkip(){ // 訪客：跳過登入一樣進入歡迎 → 主頁
+            if(stage!=='login') return;
+            stage='welcome';
+            if(login){ login.classList.remove('show'); setTimeout(()=>{ if(login) login.classList.add('hidden-slot'); },500); }
+            if(wlKicker) wlKicker.textContent='WELCOME';
+            if(wlLine) wlLine.innerHTML='歡迎來到 SQL Quest<span class="wl-cursor" aria-hidden="true"></span>';
+            if(wlBrand) wlBrand.textContent='訪客模式 · 稍後可點右上角頭像登入';
+            if(welcome) welcome.classList.add('show');
+            setTimeout(exit,1500);
+        }
+        function exit(){ // 疊層淡出 → body.boot-done 觸發主頁部件交錯進場
+            if(exited) return; exited=true;
+            ov.classList.add('exit');
+            document.body.classList.remove('boot-lock');
+            document.body.classList.add('boot-done');
+            setTimeout(()=>{ if(raf){cancelAnimationFrame(raf); raf=null;} if(ov.parentNode) ov.remove(); },700);
+        }
+        function set(p,label){
+            if(done) return;
+            target=p;
+            if(label){ const seg=label.split(' '); phase.innerHTML='<b>'+seg[0]+'</b> · '+seg.slice(1).join(' '); }
+        }
+        function finish(ok,errMsg){
+            if(done) return; done=true; realDone=true; okFlag=ok;
+            if(ok){ target=100; phase.innerHTML='<b>READY</b> · 載入完成'; }
+            else { ov.classList.add('boot-error'); phase.innerHTML='<b>ERROR</b> · '+(errMsg||'載入失敗'); stage='error'; setTimeout(exit,1100); }
+        }
+        function loop(now){
+            raf=requestAnimationFrame(loop);
+            if(!lastT) lastT=now;
+            const dt=Math.min((now-lastT)/1000,0.12); lastT=now;
+            if(stage==='intro' && (REDUCED||now-stageAt>=950)){ stage='build'; if(meter) meter.classList.add('show'); }
+            if(stage!=='intro' && cur<target) cur = REDUCED ? target : Math.min(target,cur+RATE*dt); // 均速推進
+            dispatch(cur,false);
+            dispatchHover(now);
+            render(now,dt);
+            if(fill) fill.style.width=cur.toFixed(1)+'%';
+            if(pct) pct.textContent=Math.round(cur)+'%';
+        }
+        function fontReady(){
+            try{
+                if(document.fonts && document.fonts.load)
+                    return Promise.all([document.fonts.load('21px "Press Start 2P"'),document.fonts.load('29px "Press Start 2P"')]).catch(()=>{});
+            }catch(e){}
+            return Promise.resolve();
+        }
+        function start(){
+            layout();
+            fontReady().then(()=>{ buildTargets(); dispatch(cur,true); });
+            window.addEventListener('resize',()=>{ if(exited) return; layout(); buildTargets(); dispatch(cur,true); });
+            raf=requestAnimationFrame(loop);
+            // 15 秒保險：真實載入卡住才強制結束（登入／歡迎階段不受影響）
+            setTimeout(()=>{ if(!realDone) finish(false,'載入逾時，請重新整理'); },15000);
+        }
+        start();
+        return { set, finish, isDone: () => done, notifyLogin, notifySkip, driftCount: () => drift.length, flyCount: () => fly.length };
     })();
 
     // ==================== 通用等待動畫（帶網站頭像的 Busy 卡片） ====================
@@ -2466,5 +2765,212 @@
         loadDictFromDB();
     })();
 </script>
+<!-- ═══ SQL Quest v0.7.3 ｜ 本版新增：模組A 晝夜輪盤切換動畫 DayNightDial v1 ═══
+     （v0.7.2 已含：五項對比度修復＋排行榜滑桿隱藏。主題切換＝body class theme-day/dusk/night，
+       模組A 以 MutationObserver 監聽，不必改原本的切換主題函式） -->
+<!-- ═══════ 模組A：晝夜輪盤切換動畫 DayNightDial v1 ═══════ -->
+<style id="dnDialCSS">
+#dnDial{position:fixed;inset:0;z-index:999999;display:none;overflow:hidden;
+  contain:strict;pointer-events:none;will-change:opacity}
+#dnDial.on{display:block;pointer-events:auto;cursor:pointer;animation:dnIn .28s ease}
+@keyframes dnIn{from{opacity:0}to{opacity:1}}
+.dn-sky,.dn-sky2{position:absolute;inset:0}
+.dn-sky2{opacity:0}
+#dnDial.go .dn-sky{opacity:0;transition:opacity .9s ease}
+#dnDial.go .dn-sky2{opacity:1;transition:opacity .9s ease}
+.dn-stars{position:absolute;inset:0 0 45% 0;opacity:0;transition:opacity .8s ease}
+#dnDial.go .dn-stars{opacity:var(--dn-stars,0)}
+.dn-star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;
+  animation:dnTw 1.8s ease-in-out infinite alternate}
+@keyframes dnTw{from{opacity:.2}to{opacity:1}}
+.dn-arc{position:absolute;left:50%;bottom:0;width:100vw;height:auto;max-height:100vh;
+  transform:translateX(-50%);overflow:visible;opacity:.6}
+.dn-track{fill:none;stroke:rgba(255,255,255,.4);stroke-width:2.5;
+  stroke-dasharray:1 10;stroke-linecap:round}
+.dn-hz{stroke:rgba(255,255,255,.55);stroke-width:3;stroke-linecap:round}
+.dn-label{position:absolute;left:50%;bottom:9vh;transform:translateX(-50%);
+  font:700 clamp(22px,4vw,34px)/1.4 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  color:#fff;letter-spacing:.4em;text-indent:.4em;opacity:0;
+  text-shadow:0 2px 14px rgba(0,0,0,.35);transition:opacity .5s ease .5s}
+#dnDial.go .dn-label{opacity:.95}
+#dnDial.out{opacity:0;transition:opacity .42s ease}
+@media (prefers-reduced-motion:reduce){#dnDial{display:none!important}}
+</style>
+<script>
+(function(){
+'use strict';
+if(window.DayNightDial)return;
+
+/* ── 三個場景：角度 0°=東方地平線(左) 90°=天頂 180°=西方地平線(右) ──
+   若想改為「東=右」(地圖方位)：把下面 pt() 內的 x 改成 500+480*Math.cos(r) 即可 */
+var SCENES={
+  morning:{label:'早上',sky:['#1d2b5e','#5d7fc0','#f0a868','#ff8f5e'],stars:0,rest:42,rise:10},
+  dusk:  {label:'黃昏',sky:['#2a1747','#83386b','#e2605a','#ffb45e'],stars:.5,rest:138,from:42},
+  night: {label:'晚上',sky:['#04061a','#0a0f2e','#182a5c'],stars:1,rest:90,set:176}
+};
+/* 主題名稱 → 場景 對照（黑暗模式併入晚上；本專案主題 class 為 theme-day/dusk/night，
+   分詞後以 day／dusk／night 命中） */
+var MAP={morning:'morning',dawn:'morning',day:'morning',sunrise:'morning',
+         dusk:'dusk',twilight:'dusk',evening:'dusk',sunset:'dusk',
+         night:'night',dark:'night',black:'night',midnight:'night'};
+var CN=[['黃昏','dusk'],['早上','morning'],['早晨','morning'],['清晨','morning'],
+        ['傍晚','dusk'],['白天','morning'],['晚上','night'],['夜晚','night'],
+        ['黑夜','night'],['黑暗','night']];
+
+var CFG={enabled:true,duration:950};           /* duration = 天體滑行毫秒數 */
+var RM=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var dial,skyA,skyB,starsBox,bodyG,sunC,moonG,track,labelEl;
+var last=null,busy=false,skip=false,rafId=0,hideT=0,curShown='';
+
+function pt(d){var r=d*Math.PI/180;return{x:500-480*Math.cos(r),y:500-480*Math.sin(r)};}
+function grad(a){return 'linear-gradient(180deg,'+a.join(',')+')';}
+
+function build(){
+  if(dial)return;
+  dial=document.createElement('div');dial.id='dnDial';dial.setAttribute('aria-hidden','true');
+  skyA=document.createElement('div');skyA.className='dn-sky';
+  skyB=document.createElement('div');skyB.className='dn-sky2';
+  starsBox=document.createElement('div');starsBox.className='dn-stars';
+  for(var i=0;i<70;i++){var s=document.createElement('i');s.className='dn-star';
+    s.style.left=(Math.random()*100)+'%';s.style.top=(Math.random()*100)+'%';
+    s.style.animationDelay=(Math.random()*1.8).toFixed(2)+'s';
+    s.style.transform='scale('+(0.6+Math.random()*1.2).toFixed(2)+')';
+    starsBox.appendChild(s);}
+  var NS='http://www.w3.org/2000/svg';
+  var svg=document.createElementNS(NS,'svg');
+  svg.setAttribute('class','dn-arc');svg.setAttribute('viewBox','0 -60 1000 570');
+  svg.setAttribute('preserveAspectRatio','xMidYMax meet');
+  var defs=document.createElementNS(NS,'defs');
+  function rg(id,stops){var g=document.createElementNS(NS,'radialGradient');g.setAttribute('id',id);
+    stops.forEach(function(st){var sp=document.createElementNS(NS,'stop');
+      sp.setAttribute('offset',st[0]);sp.setAttribute('stop-color',st[1]);g.appendChild(sp);});
+    defs.appendChild(g);}
+  rg('dnSun',[[0,'#fffbe8'],[.45,'#ffd95e'],[.8,'#ff9d2e'],[1,'rgba(255,157,46,0)']]);
+  rg('dnMoon',[[0,'#ffffff'],[.6,'#e6ebf6'],[1,'#c2cbdf']]);
+  var mk=document.createElementNS(NS,'mask');mk.setAttribute('id','dnCres');
+  var w=document.createElementNS(NS,'circle');
+  w.setAttribute('r','36');w.setAttribute('fill','#fff');
+  var cut=document.createElementNS(NS,'circle');
+  cut.setAttribute('r','34');cut.setAttribute('cx','14');cut.setAttribute('cy','-12');cut.setAttribute('fill','#000');
+  mk.appendChild(w);mk.appendChild(cut);defs.appendChild(mk);svg.appendChild(defs);
+  track=document.createElementNS(NS,'path');
+  track.setAttribute('class','dn-track');
+  track.setAttribute('d','M20,500 A480,480 0 0 1 980,500');
+  var hz=document.createElementNS(NS,'line');
+  hz.setAttribute('class','dn-hz');
+  hz.setAttribute('x1','0');hz.setAttribute('y1','500');
+  hz.setAttribute('x2','1000');hz.setAttribute('y2','500');
+  bodyG=document.createElementNS(NS,'g');
+  sunC=document.createElementNS(NS,'circle');
+  sunC.setAttribute('r','40');sunC.setAttribute('fill','url(#dnSun)');
+  bodyG.appendChild(sunC);svg.appendChild(track);svg.appendChild(hz);svg.appendChild(bodyG);
+  moonG=document.createElementNS(NS,'g');
+  var moonC=document.createElementNS(NS,'circle');
+  moonC.setAttribute('r','36');moonC.setAttribute('fill','url(#dnMoon)');
+  moonC.setAttribute('mask','url(#dnCres)');
+  moonG.appendChild(moonC);moonG.style.opacity='0';svg.appendChild(moonG);
+  labelEl=document.createElement('div');labelEl.className='dn-label';
+  dial.appendChild(skyA);dial.appendChild(skyB);dial.appendChild(starsBox);
+  dial.appendChild(svg);dial.appendChild(labelEl);
+  document.body.appendChild(dial);
+  dial.addEventListener('click',function(){skip=true;});   /* 點一下跳過 */
+}
+
+function play(fromKey,toKey,force){
+  if(!force&&(RM||!CFG.enabled))return;
+  var to=SCENES[toKey];if(!to)return;
+  build();
+  clearTimeout(hideT);
+  if(busy){try{cancelAnimationFrame(rafId);}catch(e){}busy=false;}  /* 連續切換：直接改飛新目標 */
+  skip=false;busy=true;
+  var from=SCENES[fromKey]||null,a1=to.rest,a0;
+  if(toKey==='morning')     a0=to.rise;                             /* 太陽從東方升起 */
+  else if(toKey==='dusk')   a0=(from?from.rest:to.from);            /* 劃過天頂落向西方 */
+  else                      a0=(from?from.rest:120);                /* 落日後月亮升起 */
+  dial.classList.remove('go','out');
+  dial.classList.add('on');
+  void dial.offsetWidth;
+  skyA.style.background=curShown||grad(to.sky);
+  skyB.style.background=grad(to.sky);
+  curShown=grad(to.sky);
+  dial.style.setProperty('--dn-stars',to.stars);
+  labelEl.textContent=to.label;
+  void dial.offsetWidth;
+  dial.classList.add('go');
+  var mp=pt(90);
+  moonG.setAttribute('transform','translate('+mp.x+','+mp.y+')');
+  sunC.style.opacity='1';moonG.style.opacity='0';
+  var T=CFG.duration,t0=null;
+  function frame(ts){
+    if(t0===null)t0=ts;
+    var t=skip?1:Math.min(1,(ts-t0)/T);
+    var e=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;      /* easeInOutCubic */
+    var a=a0+(a1-a0)*e,p=pt(a);
+    bodyG.setAttribute('transform','translate('+p.x+','+p.y+')');
+    if(toKey==='night'){                            /* 落日淡出、弦月浮現 */
+      sunC.style.opacity=String(Math.max(0,Math.min(1,(0.85-t)/0.25)));
+      moonG.style.opacity=String(Math.max(0,Math.min(1,(t-0.55)/0.3)));
+    }
+    if(t<1){rafId=requestAnimationFrame(frame);}else{finish();}
+  }
+  rafId=requestAnimationFrame(frame);
+}
+function finish(){
+  busy=false;
+  skyA.style.background=curShown;
+  dial.classList.remove('go');
+  dial.classList.add('out');
+  hideT=setTimeout(function(){dial.classList.remove('on','out');},430);
+}
+
+/* ── 偵測主題：data-theme / data-mode / class，中文與英文慣用名都支援 ── */
+function scan(s){
+  if(!s)return null;
+  for(var i=0;i<CN.length;i++){if(s.indexOf(CN[i][0])>-1)return CN[i][1];}
+  var t=s.split(/[^a-z]+/);
+  for(var i=0;i<t.length;i++){var m=MAP[t[i]];if(m)return m;}
+  return null;
+}
+function detect(){
+  var de=document.documentElement,b=document.body,r=null;
+  if(de)r=scan(((de.getAttribute('data-theme')||'')+' '+(de.getAttribute('data-mode')||'')+' '+de.className).toLowerCase());
+  if(!r&&b)r=scan(((b.getAttribute('data-theme')||'')+' '+(b.getAttribute('data-mode')||'')+' '+b.className).toLowerCase());
+  return r;
+}
+var mo=new MutationObserver(function(){
+  if(!CFG.enabled)return;
+  var s=detect();if(!s)return;
+  if(last===null){                      /* 開機首次只記錄，不播動畫（避免和載入動畫疊加） */
+    last=s;build();
+    curShown=grad(SCENES[s].sky);skyA.style.background=curShown;
+    dial.style.setProperty('--dn-stars',SCENES[s].stars);
+    return;
+  }
+  if(s===last)return;
+  var prev=last;last=s;play(prev,s);
+});
+function start(){
+  last=detect();build();
+  if(last){curShown=grad(SCENES[last].sky);skyA.style.background=curShown;
+    dial.style.setProperty('--dn-stars',SCENES[last].stars);}
+  var opt={attributes:true,attributeFilter:['class','data-theme','data-mode']};
+  mo.observe(document.documentElement,opt);
+  if(document.body)mo.observe(document.body,opt);
+}
+if(document.body)start();else document.addEventListener('DOMContentLoaded',start);
+
+/* 手動 API（一般不需要）：DayNightDial.play('dusk','night')、
+   DayNightDial.config({duration:1200,enabled:true}) */
+window.DayNightDial={
+  play:function(from,to){var p=last;last=to;play(from||p,to,true);},
+  config:function(o){if(!o)return;
+    if(o.duration!=null)CFG.duration=o.duration;
+    if(o.enabled!=null)CFG.enabled=o.enabled;
+    if(o.scenes)for(var k in o.scenes)SCENES[k]=o.scenes[k];},
+  detect:detect,scenes:SCENES
+};
+})();
+</script>
+
 </body>
 </html>
